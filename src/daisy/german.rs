@@ -1,34 +1,11 @@
-use super::{Impact, Symbol};
+use super::{Db, Loadable, Symbol};
 
-impl Symbol {
-    #[allow(unused)]
-    fn new(idx: u8, chr: char) -> Self {
-        Self {
-            idx,
-            chr,
-            imp: Default::default(),
-        }
-    }
-
-    #[allow(unused)]
-    fn imp(mut self, impact: Impact) -> Self {
-        self.imp = impact;
-        self
-    }
-}
-
-#[allow(unused)]
-pub struct Db {
-    symbols: [Symbol; 100],
-    unknown: Symbol,
-}
-
-impl Db {
-    pub fn new() -> Self {
-        let symbols = [
-            Symbol::new(1, '.').imp(Impact::Soft),
-            Symbol::new(2, ',').imp(Impact::Soft),
-            Symbol::new(3, '-').imp(Impact::Soft),
+impl Loadable for Db {
+    fn load() -> Box<[Symbol]> {
+        let things = [
+            Symbol::new(1, '.').soft(),
+            Symbol::new(2, ',').soft(),
+            Symbol::new(3, '-').soft(),
             Symbol::new(4, 'v'),
             Symbol::new(5, 'l'),
             Symbol::new(6, 'm'),
@@ -75,32 +52,32 @@ impl Db {
             Symbol::new(47, 'I'),
             Symbol::new(48, 'U'),
             Symbol::new(49, ')'),
-            Symbol::new(50, 'W').imp(Impact::Hard),
+            Symbol::new(50, 'W').hard(),
             Symbol::new(51, '_'),
             Symbol::new(52, '='),
             Symbol::new(53, ';'),
             Symbol::new(54, ':'),
-            Symbol::new(55, 'M').imp(Impact::Hard),
+            Symbol::new(55, 'M').hard(),
             Symbol::new(56, '\''),
             Symbol::new(57, 'H'),
             Symbol::new(58, '('),
             Symbol::new(59, 'K'),
             Symbol::new(60, '/'),
-            Symbol::new(61, 'O').imp(Impact::Hard),
+            Symbol::new(61, 'O').hard(),
             Symbol::new(62, '!'),
             Symbol::new(63, 'X'),
-            Symbol::new(64, '§').imp(Impact::Hard),
-            Symbol::new(65, 'Q').imp(Impact::Hard),
+            Symbol::new(64, '§').hard(),
+            Symbol::new(65, 'Q').hard(),
             Symbol::new(66, 'J'),
             Symbol::new(67, '%'),
             Symbol::new(68, '³'), // U+00B3
             Symbol::new(69, 'G'),
             Symbol::new(70, '°'),
-            Symbol::new(71, 'Ü').imp(Impact::Hard),
-            Symbol::new(72, '`').imp(Impact::Soft),
+            Symbol::new(71, 'Ü').hard(),
+            Symbol::new(72, '`').soft(),
             Symbol::new(73, 'Ö'),
             Symbol::new(74, '<'),
-            Symbol::new(75, 'Ä').imp(Impact::Hard),
+            Symbol::new(75, 'Ä').hard(),
             Symbol::new(76, '#'),
             Symbol::new(77, 't'),
             Symbol::new(78, 'x'),
@@ -127,15 +104,39 @@ impl Db {
             Symbol::new(99, 'o'),
             Symbol::new(100, 'z'),
         ];
-        let unknown = Symbol::new(41, '*');
-        Self { symbols, unknown }
+        Box::new(things)
     }
+}
 
-    #[allow(unused)]
-    pub fn get(&self, character: char) -> &Symbol {
-        if let Some(result) = self.symbols.iter().find(|symbol| symbol.chr == character) {
-            return result;
-        }
-        &(self.unknown)
+#[cfg(test)]
+mod tests {
+    use crate::daisy::*;
+
+    #[test]
+    fn test_string_to_iterator_over_symbols() {
+        let db = Db::new();
+
+        let input = "Wombat";
+        let mut first_iterator = printables(input, &db);
+
+        let mut second_iterator = printables(input, &db);
+
+        let sym_w_upper = Symbol::new(50, 'W').hard();
+
+        let sym_o = Symbol::new(99, 'o');
+
+        let sym_m = Symbol::new(6, 'm');
+
+        let value = first_iterator.next();
+        assert_eq!(value, Some(&sym_w_upper));
+
+        let value = first_iterator.next();
+        assert_eq!(value, Some(&sym_o));
+
+        let value = second_iterator.next();
+        assert_eq!(value, Some(&sym_w_upper));
+
+        let value = first_iterator.next();
+        assert_eq!(value, Some(&sym_m));
     }
 }

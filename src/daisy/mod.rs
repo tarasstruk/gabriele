@@ -4,6 +4,7 @@ use std::default::Default;
 #[derive(Default)]
 #[repr(u16)]
 #[allow(unused)]
+#[derive(PartialEq, Debug)]
 pub enum Impact {
     #[default]
     Middle = 127,
@@ -12,10 +13,38 @@ pub enum Impact {
     Custom(u16),
 }
 
+#[derive(PartialEq, Debug)]
 pub struct Symbol {
     pub idx: u8,
     pub imp: Impact,
     pub chr: char,
+}
+
+impl Symbol {
+    #[allow(unused)]
+    pub fn new(idx: u8, chr: char) -> Self {
+        Self {
+            idx,
+            chr,
+            imp: Default::default(),
+        }
+    }
+
+    #[allow(unused)]
+    pub fn imp(mut self, impact: Impact) -> Self {
+        self.imp = impact;
+        self
+    }
+
+    #[allow(unused)]
+    pub fn soft(mut self) -> Self {
+        self.imp(Impact::Soft)
+    }
+
+    #[allow(unused)]
+    pub fn hard(mut self) -> Self {
+        self.imp(Impact::Hard)
+    }
 }
 
 trait Printable {
@@ -29,38 +58,39 @@ impl Printable for Symbol {
 }
 
 #[allow(unused)]
-pub fn database() -> german::Db {
-    german::Db::new()
+pub struct Db {
+    pub symbols: Box<[Symbol]>,
+    pub unknown: Symbol,
+}
+
+pub trait Queryable {
+    fn get(&self, character: char) -> &Symbol;
+}
+
+impl Queryable for Db {
+    #[allow(unused)]
+    fn get(&self, character: char) -> &Symbol {
+        if let Some(result) = self.symbols.iter().find(|symbol| symbol.chr == character) {
+            return result;
+        }
+        &(self.unknown)
+    }
+}
+
+pub trait Loadable {
+    fn load() -> Box<[Symbol]>;
+}
+
+impl Db {
+    #[allow(unused)]
+    pub fn new() -> Self {
+        let unknown = Symbol::new(41, '*');
+        let symbols = Self::load();
+        Self { symbols, unknown }
+    }
 }
 
 #[allow(unused)]
-fn get_symbols<'a>(input: &'a str, db: &'a german::Db) -> impl Iterator<Item = u8> + 'a {
-    input
-        .chars()
-        .enumerate()
-        .map(move |(_, chr)| db.get(chr).index())
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::daisy::*;
-
-    #[test]
-    fn test_string_to_iterator_over_symbols() {
-        let db = database();
-        let mut first_iterator = get_symbols("Wombat", &db);
-
-        let mut second_iterator = get_symbols("Wombat", &db);
-        let value = first_iterator.next();
-        assert_eq!(value, Some(50_u8));
-
-        let value = first_iterator.next();
-        assert_eq!(value, Some(99_u8));
-
-        let value = second_iterator.next();
-        assert_eq!(value, Some(50_u8));
-
-        let value = first_iterator.next();
-        assert_eq!(value, Some(6_u8));
-    }
+pub fn printables<'a>(input: &'a str, db: &'a Db) -> impl Iterator<Item = &'a Symbol> {
+    input.chars().enumerate().map(move |(_, chr)| db.get(chr))
 }
