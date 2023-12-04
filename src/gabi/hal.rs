@@ -1,4 +1,5 @@
 use super::{Commands, Machine, SerialConnection};
+use crate::daisy;
 use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
 use std::io::Write;
 use std::thread;
@@ -127,5 +128,12 @@ impl Commands for Machine {
         println!("move the carriage <-backward");
         self.command(&[0b1110_0000, steps]);
         self.wait((steps as u64) * 10);
+    }
+    fn print(&mut self, input: &str) {
+        let bytes: Vec<u8> = daisy::printables(input, &self.db).map(|x| x.idx).collect();
+        for byte in bytes {
+            self.command(&[0b1000_0011, byte]);
+            self.wait_tiny();
+        }
     }
 }

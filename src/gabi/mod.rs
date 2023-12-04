@@ -1,8 +1,10 @@
 mod hal;
 
+use crate::daisy::Db;
 use serialport::SerialPort;
 
 pub struct Machine {
+    pub db: Db,
     conn: Box<dyn SerialPort>,
 }
 
@@ -24,11 +26,12 @@ pub trait Commands {
     fn roll_backward(&mut self, steps: u8);
     fn carriage_forward(&mut self, steps: u8);
     fn carriage_backward(&mut self, steps: u8);
+    fn print(&mut self, input: &str);
 }
 
 impl Machine {
-    pub fn new(path: &str) -> Self {
+    pub fn new(path: &str, db: Db) -> Self {
         let conn = Self::connect(path);
-        Self { conn }
+        Self { conn, db }
     }
 }

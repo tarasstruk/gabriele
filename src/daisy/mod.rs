@@ -1,4 +1,4 @@
-mod german;
+pub mod german;
 use std::default::Default;
 
 #[derive(Default)]
@@ -63,34 +63,25 @@ pub struct Db {
     pub unknown: Symbol,
 }
 
-pub trait Queryable {
-    fn get(&self, character: char) -> &Symbol;
-}
-
-impl Queryable for Db {
+impl Db {
     #[allow(unused)]
-    fn get(&self, character: char) -> &Symbol {
+    pub fn get(&self, character: char) -> &Symbol {
         if let Some(result) = self.symbols.iter().find(|symbol| symbol.chr == character) {
             return result;
         }
         &(self.unknown)
     }
-}
 
-pub trait Loadable {
-    fn load() -> Box<[Symbol]>;
-}
+    fn unknown_symbol() -> Symbol {
+        Symbol::new(41, '*')
+    }
 
-impl Db {
-    #[allow(unused)]
-    pub fn new() -> Self {
-        let unknown = Symbol::new(41, '*');
-        let symbols = Self::load();
+    pub fn new(symbols: Box<[Symbol]>) -> Self {
+        let unknown = Self::unknown_symbol();
         Self { symbols, unknown }
     }
 }
 
-#[allow(unused)]
 pub fn printables<'a>(input: &'a str, db: &'a Db) -> impl Iterator<Item = &'a Symbol> {
     input.chars().enumerate().map(move |(_, chr)| db.get(chr))
 }
