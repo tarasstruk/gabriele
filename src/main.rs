@@ -31,11 +31,6 @@ fn main() {
     //
     // machine.carriage_backward(255);
 
-
-
-
-
-
     // println!("move the carriage forward->");
     // machine.command(&[0b1100_0001, 0b1111_1111]);
     //

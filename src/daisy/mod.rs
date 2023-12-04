@@ -4,7 +4,7 @@ use std::default::Default;
 #[derive(Default)]
 #[repr(u16)]
 #[allow(unused)]
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum Impact {
     #[default]
     Middle = 127,
@@ -13,7 +13,7 @@ pub enum Impact {
     Custom(u16),
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Symbol {
     pub idx: u8,
     pub imp: Impact,
