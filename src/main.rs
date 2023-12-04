@@ -11,10 +11,30 @@ fn main() {
 
     machine.prepare();
 
-    machine.carriage_forward(255);
-    machine.wait_short();
+    // machine.carriage_forward(255);
+    //
+    // println!("homing the daisy-wheel motor");
+    // machine.command(&[0b1000_0010, 0b0000_0101]);
+    // machine.wait_long();
+    //
+    // println!("homing the carriage motor");
+    // machine.command(&[0b1000_0010, 0b0000_0011]);
+    // machine.wait_long();
+    //
+    // println!("homing the tape motor");
+    // machine.command(&[0b1000_0010, 0b0000_1001]);
+    // machine.wait_long();
+    //
+    // machine.carriage_forward(255);
+    //
     machine.print("Grüß Gott");
-    machine.carriage_backward(255);
+    //
+    // machine.carriage_backward(255);
+
+
+
+
+
 
     // println!("move the carriage forward->");
     // machine.command(&[0b1100_0001, 0b1111_1111]);
@@ -46,14 +66,13 @@ fn main() {
     // let mut cbuf = [0_u8; 2];
     // cbuf[1] = 0b1001_0110;
     //
-    // for c in 50..106 {
+    // for c in 50..101 {
     //     cbuf[0] = c;
     //     println!("type a character {:?}", cbuf);
-    //     thread::sleep(Duration::from_millis(100));
+    //     machine.wait_short();
     //     machine.command(&cbuf);
-    //     // cbuf[0] += 1;
     //     if c.wrapping_rem(5) == 0 {
-    //         thread::sleep(Duration::from_millis(100));
+    //         machine.wait_short();
     //         machine.command(&[0b1000_0011, 0b0000_0000]);
     //     }
     // }

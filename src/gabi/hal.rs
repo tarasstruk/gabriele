@@ -132,8 +132,9 @@ impl Commands for Machine {
     fn print(&mut self, input: &str) {
         let bytes: Vec<u8> = daisy::printables(input, &self.db).map(|x| x.idx).collect();
         for byte in bytes {
-            self.command(&[0b1000_0011, byte]);
-            self.wait_tiny();
+            println!("byte printed: {:?}", &byte);
+            self.command(&[byte, 0b1001_0110]);
+            self.wait_short();
         }
     }
 }
