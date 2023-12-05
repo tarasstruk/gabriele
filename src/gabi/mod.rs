@@ -1,6 +1,6 @@
 mod hal;
 
-use crate::daisy::Db;
+use crate::daisy::{Db, Printable};
 use serialport::SerialPort;
 
 pub struct Machine {
@@ -27,6 +27,7 @@ pub trait Commands {
     fn carriage_forward(&mut self, steps: u8);
     fn carriage_backward(&mut self, steps: u8);
     fn print(&mut self, input: &str);
+    fn print_character(&mut self, printable: &impl Printable);
 }
 
 impl Machine {

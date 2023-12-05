@@ -47,7 +47,7 @@ impl Symbol {
     }
 }
 
-trait Printable {
+pub trait Printable {
     fn index(&self) -> u8;
 }
 

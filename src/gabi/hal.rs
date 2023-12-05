@@ -1,6 +1,6 @@
 use super::{Commands, Machine, SerialConnection};
 use crate::daisy;
-use crate::daisy::Symbol;
+use crate::daisy::{Printable, Symbol};
 use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
 use std::io::Write;
 use std::thread;
@@ -131,11 +131,13 @@ impl Commands for Machine {
         self.wait((steps as u64) * 10);
     }
     fn print(&mut self, input: &str) {
-        let symbols: Vec<Symbol> = daisy::printables(input, &self.db).cloned().collect();
-        for sym in symbols {
-            println!("symbol printed: {:?}", &sym);
-            self.command(&[sym.idx, 0b1001_0110]);
-            self.wait_short();
+        let things: Vec<Symbol> = daisy::printables(input, &self.db).cloned().collect();
+        for thing in things {
+            self.print_character(&thing);
         }
+    }
+    fn print_character(&mut self, printable: &impl Printable) {
+        self.command(&[printable.index(), 0b1001_0110]);
+        self.wait_short();
     }
 }
