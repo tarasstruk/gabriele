@@ -1,13 +1,14 @@
 mod daisy;
 mod gabi;
 use crate::daisy::{german, Db};
-use gabi::*;
+use crate::gabi::commando::Commands;
+use gabi::machine::Machine;
 
 fn main() {
     let path = std::env::args().nth(1).unwrap();
 
     let db = Db::new(german::symbols());
-    let mut machine = Machine::new(&path, db);
+    let mut machine = Machine::new(&path);
 
     machine.prepare();
 
@@ -27,7 +28,7 @@ fn main() {
     //
     // machine.carriage_forward(255);
     //
-    machine.print("Grüß Gott");
+    machine.print("Grüß Gott", &db);
     //
     // machine.carriage_backward(255);
 

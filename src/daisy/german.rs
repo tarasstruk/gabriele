@@ -115,9 +115,9 @@ mod tests {
         let db = Db::new(super::symbols());
 
         let input = "Wombat";
-        let mut first_iterator = printables(input, &db);
+        let mut first_iterator = db.printables(input);
 
-        let mut second_iterator = printables(input, &db);
+        let mut second_iterator = db.printables(input);
 
         let sym_w_upper = Symbol::new(50, 'W').hard();
 

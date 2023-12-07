@@ -47,16 +47,6 @@ impl Symbol {
     }
 }
 
-pub trait Printable {
-    fn index(&self) -> u8;
-}
-
-impl Printable for Symbol {
-    fn index(&self) -> u8 {
-        self.idx
-    }
-}
-
 #[allow(unused)]
 pub struct Db {
     pub symbols: Box<[Symbol]>,
@@ -80,8 +70,8 @@ impl Db {
         let unknown = Self::unknown_symbol();
         Self { symbols, unknown }
     }
-}
 
-pub fn printables<'a>(input: &'a str, db: &'a Db) -> impl Iterator<Item = &'a Symbol> {
-    input.chars().enumerate().map(move |(_, chr)| db.get(chr))
+    pub fn printables<'a>(&'a self, input: &'a str) -> impl Iterator<Item = &'a Symbol> {
+        input.chars().enumerate().map(move |(_, chr)| self.get(chr))
+    }
 }
