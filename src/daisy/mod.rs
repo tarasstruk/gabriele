@@ -20,12 +20,6 @@ pub struct Symbol {
     pub chr: char,
 }
 
-pub enum Action {
-    CarriageReturn(Option<u16>),
-    Space(Option<u16>),
-    PrintSymbol(Option<u16>, Symbol),
-}
-
 impl Symbol {
     #[allow(unused)]
     pub fn new(idx: u8, chr: char) -> Self {
