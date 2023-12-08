@@ -1,5 +1,3 @@
-use crate::daisy::Symbol;
-
 pub trait Commands {
     fn write_byte(&mut self, input: u8);
     fn await_acknowledge(&mut self);
@@ -14,5 +12,4 @@ pub trait Commands {
     fn roll_backward(&mut self, steps: u8);
     fn carriage_forward(&mut self, steps: u8);
     fn carriage_backward(&mut self, steps: u8);
-    fn print_symbol(&mut self, symbol: &Symbol);
 }

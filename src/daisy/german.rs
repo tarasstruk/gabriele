@@ -102,6 +102,7 @@ pub fn symbols() -> Box<[Symbol]> {
         Symbol::new(98, 'b'),
         Symbol::new(99, 'o'),
         Symbol::new(100, 'z'),
+        Symbol::whitespace(),
     ];
     Box::new(things)
 }
@@ -109,6 +110,7 @@ pub fn symbols() -> Box<[Symbol]> {
 #[cfg(test)]
 mod tests {
     use crate::daisy::*;
+    use crate::database::Db;
 
     #[test]
     fn test_string_to_iterator_over_symbols() {

@@ -13,11 +13,19 @@ pub enum Impact {
     Custom(u16),
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Default)]
+pub enum ActionMapping {
+    #[default]
+    Print,
+    Whitespace,
+}
+
+#[derive(PartialEq, Debug, Clone, Default)]
 pub struct Symbol {
     pub idx: u8,
     pub imp: Impact,
     pub chr: char,
+    pub act: ActionMapping,
 }
 
 impl Symbol {
@@ -26,7 +34,16 @@ impl Symbol {
         Self {
             idx,
             chr,
+            ..Default::default()
+        }
+    }
+
+    pub fn whitespace() -> Self {
+        Self {
+            idx: 128,
+            chr: ' ',
             imp: Default::default(),
+            act: ActionMapping::Whitespace,
         }
     }
 
@@ -44,34 +61,5 @@ impl Symbol {
     #[allow(unused)]
     pub fn hard(mut self) -> Self {
         self.imp(Impact::Hard)
-    }
-}
-
-#[allow(unused)]
-pub struct Db {
-    pub symbols: Box<[Symbol]>,
-    pub unknown: Symbol,
-}
-
-impl Db {
-    #[allow(unused)]
-    pub fn get(&self, character: char) -> &Symbol {
-        if let Some(result) = self.symbols.iter().find(|symbol| symbol.chr == character) {
-            return result;
-        }
-        &(self.unknown)
-    }
-
-    fn unknown_symbol() -> Symbol {
-        Symbol::new(41, '*')
-    }
-
-    pub fn new(symbols: Box<[Symbol]>) -> Self {
-        let unknown = Self::unknown_symbol();
-        Self { symbols, unknown }
-    }
-
-    pub fn printables<'a>(&'a self, input: &'a str) -> impl Iterator<Item = &'a Symbol> {
-        input.chars().enumerate().map(move |(_, chr)| self.get(chr))
     }
 }

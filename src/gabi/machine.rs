@@ -1,4 +1,5 @@
-use crate::daisy::{Db, Symbol};
+use crate::action::Action;
+use crate::database::Db;
 use crate::gabi::commando::Commands;
 use serialport::SerialPort;
 use std::thread;
@@ -121,11 +122,6 @@ impl Commands for Machine {
         self.command(&[0b1110_0000, steps]);
         self.wait((steps as u64) * 10);
     }
-
-    fn print_symbol(&mut self, symbol: &Symbol) {
-        self.command(&[symbol.idx, 0b1001_0110]);
-        self.wait_short();
-    }
 }
 
 impl Machine {
@@ -136,7 +132,11 @@ impl Machine {
 
     pub fn print(&mut self, input: &str, db: &Db) {
         for symbol in db.printables(input) {
-            self.print_symbol(symbol)
+            let action: Action = symbol.clone().into();
+            for cmd in action.commands() {
+                self.command(&cmd.to_bytes());
+                self.wait_short();
+            }
         }
     }
 }

@@ -1,8 +1,10 @@
 mod action;
 mod daisy;
+mod database;
 mod gabi;
 
-use crate::daisy::{german, Db};
+use crate::daisy::german;
+use crate::database::Db;
 use crate::gabi::commando::Commands;
 use gabi::machine::Machine;
 
