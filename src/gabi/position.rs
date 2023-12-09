@@ -6,14 +6,14 @@ use std::default::Default;
 
 #[derive(Debug, Clone)]
 pub struct Position {
-    x: u32,
-    y: u32,
-    x_abs: u32,
-    y_abs: u32,
-    x_res: u32,
-    y_res: u32,
-    margin_left_abs: u32,
-    margin_right_abs: u32,
+    x: i32,
+    y: i32,
+    x_abs: i32,
+    y_abs: i32,
+    x_res: i32,
+    y_res: i32,
+    margin_left_abs: i32,
+    margin_right_abs: i32,
 }
 
 impl Default for Position {
@@ -57,5 +57,13 @@ impl Position {
     pub fn step_dn(&mut self) -> Result<()> {
         self.y += 1;
         self.re_calc()
+    }
+
+    pub fn delta_x_from(&mut self, base: &Position) -> i32 {
+        self.x_abs - base.x_abs
+    }
+
+    pub fn delta_y_from(&mut self, base: &Position) -> i32 {
+        self.x_abs - base.x_abs
     }
 }
