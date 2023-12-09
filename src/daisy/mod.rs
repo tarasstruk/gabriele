@@ -18,6 +18,7 @@ pub enum ActionMapping {
     #[default]
     Print,
     Whitespace,
+    CarriageReturn,
 }
 
 #[derive(PartialEq, Debug, Clone, Default)]
@@ -44,6 +45,15 @@ impl Symbol {
             chr: ' ',
             imp: Default::default(),
             act: ActionMapping::Whitespace,
+        }
+    }
+
+    pub fn cr() -> Self {
+        Self {
+            idx: 129,
+            chr: '\n',
+            imp: Default::default(),
+            act: ActionMapping::CarriageReturn,
         }
     }
 

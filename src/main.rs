@@ -6,7 +6,6 @@ mod gabi;
 
 use crate::daisy::german;
 use crate::database::Db;
-use crate::gabi::commando::Commands;
 use gabi::machine::Machine;
 
 /// command-line args:
@@ -38,10 +37,13 @@ fn main() {
     //
     // machine.print("Grüß Gott!", &db);
 
-    println!("roll the paper down]");
-    machine.command(&[0b1111_0000, 16]);
-    machine.wait_long();
-    machine.print("Grüß Gott!", &db);
+    // println!("roll the paper down]");
+    // machine.command(&[0b1111_0000, 16]);
+    // machine.wait_long();
+    machine.print(
+        "Grüß Gott!\nIch bin die Gabriele 9009.\nSchön, dass Du da bist!\n",
+        &db,
+    );
 
     // machine.wait_short();
     // println!("move the carriage <-backward");

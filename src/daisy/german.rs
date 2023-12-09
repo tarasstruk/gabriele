@@ -103,6 +103,7 @@ pub fn symbols() -> Box<[Symbol]> {
         Symbol::new(99, 'o'),
         Symbol::new(100, 'z'),
         Symbol::whitespace(),
+        Symbol::cr(),
     ];
     Box::new(things)
 }
