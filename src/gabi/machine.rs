@@ -1,12 +1,16 @@
 use crate::action::Action;
 use crate::database::Db;
 use crate::gabi::commando::Commands;
+use crate::gabi::position::Position;
 use serialport::SerialPort;
+use std::default::Default;
 use std::thread;
 use std::time::Duration;
 
+#[allow(unused)]
 pub struct Machine {
     conn: Box<dyn SerialPort>,
+    pos: Position,
 }
 
 impl Commands for Machine {
@@ -122,7 +126,8 @@ impl Commands for Machine {
 
 impl Machine {
     pub fn new(conn: Box<dyn SerialPort>) -> Self {
-        Self { conn }
+        let pos: Position = Default::default();
+        Self { conn, pos }
     }
 
     pub fn print(&mut self, input: &str, db: &Db) {

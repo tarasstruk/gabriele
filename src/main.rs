@@ -36,7 +36,19 @@ fn main() {
     //
     // machine.carriage_forward(255);
     //
-    machine.print("Grüß Gott", &db);
+    // machine.print("Grüß Gott!", &db);
+
+    println!("roll the paper down]");
+    machine.command(&[0b1111_0000, 16]);
+    machine.wait_long();
+    machine.print("Grüß Gott!", &db);
+
+    // machine.wait_short();
+    // println!("move the carriage <-backward");
+    // machine.command(&[0b1110_0000, 120]);
+    // machine.wait_long();
+    // machine.print("Grüß Gott!", &db);
+
     //
     // machine.carriage_backward(255);
 
