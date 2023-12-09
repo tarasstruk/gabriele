@@ -9,10 +9,6 @@ pub struct Machine {
     conn: Box<dyn SerialPort>,
 }
 
-pub trait Connection {
-    fn connect(path: &str) -> Box<dyn SerialPort>;
-}
-
 impl Commands for Machine {
     fn write_byte(&mut self, input: u8) {
         self.wait_tiny();
@@ -125,8 +121,7 @@ impl Commands for Machine {
 }
 
 impl Machine {
-    pub fn new(path: &str) -> Self {
-        let conn = Self::connect(path);
+    pub fn new(conn: Box<dyn SerialPort>) -> Self {
         Self { conn }
     }
 

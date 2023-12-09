@@ -1,4 +1,5 @@
 mod action;
+mod connection;
 mod daisy;
 mod database;
 mod gabi;
@@ -8,11 +9,14 @@ use crate::database::Db;
 use crate::gabi::commando::Commands;
 use gabi::machine::Machine;
 
+/// command-line args:
+/// 1. serial port path, example: /dev/tty.usbserial-A10OFCFV
 fn main() {
     let path = std::env::args().nth(1).unwrap();
+    let conn = connection::uart(&path);
+    let mut machine = Machine::new(conn);
 
     let db = Db::new(german::symbols());
-    let mut machine = Machine::new(&path);
 
     machine.prepare();
 
