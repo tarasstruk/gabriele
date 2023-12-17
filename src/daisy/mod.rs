@@ -4,16 +4,17 @@ use std::default::Default;
 #[derive(Default)]
 #[allow(unused)]
 #[derive(PartialEq, Debug, Clone)]
-/// In order to obtain the best possible impression
-/// the impression compensation should be specified
-/// for each printable character individually.
-/// The impression compensation range is between
-/// 0b0000_0000 and 0b0011_1111 (0d63)
-/// which corresponds to 5 least significant bit
-/// in the second of byte of the Print-command.
-/// The user has 3 pre-defined options and
-/// the custom impression compensation can be specified.
-/// For the custom one the range is between 0.0 and 1.0
+/// To reach the best printing quality
+/// of each character on the paper,
+/// the Impression value should be specified
+///
+/// The Impression range is 0..64
+/// which corresponds to the 5 least-significant bits
+/// in the 2-bytes printing command.
+///
+/// The User has 4 pre-defined options and
+/// the custom impression value can be specified
+/// as a ratio between the base (0) and maximum (63).
 pub enum Impression {
     #[default]
     /// Normal impression, middle of the range
@@ -29,18 +30,18 @@ pub enum Impression {
 
 impl Impression {
     #[allow(unused)]
-    fn convert_value(rate: &f32) -> u16 {
-        (rate * 63.0) as u16
+    fn convert_value(ratio: f32) -> u16 {
+        (ratio * 63.0) as u16
     }
 
     #[allow(unused)]
     fn value(&self) -> u16 {
         match self {
-            Self::Custom(rate) => Self::convert_value(rate),
-            Self::Strongest => Self::convert_value(&1.0),
-            Self::Strong => Self::convert_value(&0.75),
-            Self::Normal => Self::convert_value(&0.5),
-            Self::Mild => Self::convert_value(&0.25),
+            Self::Custom(ratio) => Self::convert_value(*ratio),
+            Self::Strongest => Self::convert_value(1.0),
+            Self::Strong => Self::convert_value(0.75),
+            Self::Normal => Self::convert_value(0.5),
+            Self::Mild => Self::convert_value(0.25),
         }
     }
 }
