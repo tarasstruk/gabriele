@@ -2,9 +2,9 @@ use super::Symbol;
 
 pub fn symbols() -> Box<[Symbol]> {
     let things = [
-        Symbol::new(1, '.').soft(),
-        Symbol::new(2, ',').soft(),
-        Symbol::new(3, '-').soft(),
+        Symbol::new(1, '.').mild(),
+        Symbol::new(2, ',').mild(),
+        Symbol::new(3, '-').mild(),
         Symbol::new(4, 'v'),
         Symbol::new(5, 'l'),
         Symbol::new(6, 'm'),
@@ -51,32 +51,32 @@ pub fn symbols() -> Box<[Symbol]> {
         Symbol::new(47, 'I'),
         Symbol::new(48, 'U'),
         Symbol::new(49, ')'),
-        Symbol::new(50, 'W').hard(),
+        Symbol::new(50, 'W').strong(),
         Symbol::new(51, '_'),
         Symbol::new(52, '='),
         Symbol::new(53, ';'),
         Symbol::new(54, ':'),
-        Symbol::new(55, 'M').hard(),
+        Symbol::new(55, 'M').strong(),
         Symbol::new(56, '\''),
         Symbol::new(57, 'H'),
         Symbol::new(58, '('),
         Symbol::new(59, 'K'),
         Symbol::new(60, '/'),
-        Symbol::new(61, 'O').hard(),
+        Symbol::new(61, 'O').strong(),
         Symbol::new(62, '!'),
         Symbol::new(63, 'X'),
-        Symbol::new(64, '§').hard(),
-        Symbol::new(65, 'Q').hard(),
+        Symbol::new(64, '§').strong(),
+        Symbol::new(65, 'Q').strong(),
         Symbol::new(66, 'J'),
         Symbol::new(67, '%'),
         Symbol::new(68, '³'), // U+00B3
         Symbol::new(69, 'G'),
         Symbol::new(70, '°'),
-        Symbol::new(71, 'Ü').hard(),
-        Symbol::new(72, '`').soft(),
+        Symbol::new(71, 'Ü').strong(),
+        Symbol::new(72, '`').mild(),
         Symbol::new(73, 'Ö'),
         Symbol::new(74, '<'),
-        Symbol::new(75, 'Ä').hard(),
+        Symbol::new(75, 'Ä').strong(),
         Symbol::new(76, '#'),
         Symbol::new(77, 't'),
         Symbol::new(78, 'x'),
@@ -122,7 +122,7 @@ mod tests {
 
         let mut second_iterator = db.printables(input);
 
-        let sym_w_upper = Symbol::new(50, 'W').hard();
+        let sym_w_upper = Symbol::new(50, 'W').strong();
 
         let sym_o = Symbol::new(99, 'o');
 
