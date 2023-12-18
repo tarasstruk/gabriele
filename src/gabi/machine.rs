@@ -1,6 +1,7 @@
 use crate::action::Action;
 use crate::database::Db;
 use crate::gabi::position::Position;
+use crate::gabi::primitives::Instruction;
 use anyhow::Result;
 use serialport::SerialPort;
 use std::default::Default;
@@ -144,8 +145,11 @@ impl Machine {
     }
 
     pub fn execute_printing_action(&mut self, action: Action) {
-        for cmd in action.commands() {
-            self.command(&cmd.to_bytes());
+        for cmd in action.instructions() {
+            match cmd {
+                Instruction::SendBytes(bytes) => self.command(&bytes),
+                Instruction::Idle(millis) => self.wait(millis),
+            }
             self.wait_short();
             self.pos.step_right().unwrap();
         }
