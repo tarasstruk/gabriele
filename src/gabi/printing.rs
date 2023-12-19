@@ -15,7 +15,7 @@ pub enum Instruction {
 }
 
 impl Instruction {
-    fn bytes(b1: u8, b2: u8) -> Self {
+    pub fn bytes(b1: u8, b2: u8) -> Self {
         Self::SendBytes([b1, b2])
     }
 }
