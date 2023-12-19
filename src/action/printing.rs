@@ -1,5 +1,5 @@
 use crate::daisy::Symbol;
-use crate::gabi::primitives::Instruction;
+use crate::gabi::printing::Instruction;
 
 fn print_single_symbol(symbol: &Symbol) -> Instruction {
     Instruction::SendBytes([symbol.idx, 0b1001_0110])
@@ -14,7 +14,7 @@ pub fn print_symbols(symbol: Symbol, repeat: Option<u16>) -> Box<dyn Iterator<It
 mod tests {
     use crate::action::Action;
     use crate::daisy::Symbol;
-    use crate::gabi::primitives::Instruction;
+    use crate::gabi::printing::Instruction;
 
     #[test]
     fn test_print_symbols_iterates_over_repeating_symbol() {

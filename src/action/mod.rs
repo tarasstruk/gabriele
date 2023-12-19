@@ -4,7 +4,7 @@
 pub mod printing;
 
 use crate::daisy::{ActionMapping, Symbol};
-use crate::gabi::primitives::Instruction;
+use crate::gabi::printing::Instruction;
 
 pub enum Action {
     BackSpace,

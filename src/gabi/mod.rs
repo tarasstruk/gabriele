@@ -1,3 +1,3 @@
 pub mod machine;
 mod position;
-pub mod primitives;
+pub mod printing;
