@@ -14,6 +14,12 @@ pub enum Instruction {
     SendBytes([u8; 2]),
 }
 
+impl Instruction {
+    fn bytes(b1: u8, b2: u8) -> Self {
+        Self::SendBytes([b1, b2])
+    }
+}
+
 /// Action defines what we do with a Symbol
 /// each instance of Action can produce a series of Instructions.
 ///
@@ -62,15 +68,15 @@ fn empty_command() -> Box<dyn Iterator<Item = Instruction>> {
 }
 
 fn space_jump_left() -> Box<dyn Iterator<Item = Instruction>> {
-    Box::new([Instruction::SendBytes([0b1000_0100, 0b0000_0000])].into_iter())
+    Box::new([Instruction::bytes(0b1000_0100, 0b0000_0000)].into_iter())
 }
 
 fn space_jump_right() -> Box<dyn Iterator<Item = Instruction>> {
-    Box::new([Instruction::SendBytes([0b1000_0011, 0b0000_0000])].into_iter())
+    Box::new([Instruction::bytes(0b1000_0011, 0b0000_0000)].into_iter())
 }
 
 fn print_single_symbol(symbol: &Symbol) -> Instruction {
-    Instruction::SendBytes([symbol.idx, 0b1001_0110])
+    Instruction::bytes(symbol.idx, 0b1001_0110)
 }
 
 pub fn print_symbols(symbol: Symbol, repeat: Option<u16>) -> Box<dyn Iterator<Item = Instruction>> {
@@ -89,8 +95,8 @@ mod tests {
         let symbol = Symbol::new(81, 'ü');
         let action = Action::PrintSymbol(symbol, Some(2));
         let mut commands = action.instructions();
-        assert_eq!(commands.next(), Some(Instruction::SendBytes([81, 0x96])));
-        assert_eq!(commands.next(), Some(Instruction::SendBytes([81, 0x96])));
+        assert_eq!(commands.next(), Some(Instruction::bytes(81, 0x96)));
+        assert_eq!(commands.next(), Some(Instruction::bytes(81, 0x96)));
         assert_eq!(commands.next(), None);
     }
 
@@ -99,7 +105,7 @@ mod tests {
         let symbol = Symbol::new(81, 'ü');
         let action = Action::PrintSymbol(symbol, None);
         let mut commands = action.instructions();
-        assert_eq!(commands.next(), Some(Instruction::SendBytes([81, 0x96])));
+        assert_eq!(commands.next(), Some(Instruction::bytes(81, 0x96)));
         assert_eq!(commands.next(), None);
     }
 }
