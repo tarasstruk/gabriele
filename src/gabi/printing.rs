@@ -2,17 +2,18 @@
 #![allow(dead_code)]
 
 use crate::daisy::{ActionMapping, Symbol};
+use crate::gabi::motion;
 use crate::gabi::position::Position;
 
 /// The basic directive for the machine
 /// Idle specifies milliseconds
 /// SendBytes specifies a sequence of 2 bytes to be send over a serial port
-///
 #[derive(PartialEq, Debug)]
 pub enum Instruction {
     #[allow(unused)]
     Idle(u64),
     SendBytes([u8; 2]),
+    Empty,
 }
 
 impl Instruction {
@@ -32,12 +33,18 @@ impl Instruction {
     }
 }
 
-/// Action defines what we do with a Symbol
-/// each instance of Action can produce a series of Instructions.
-///
-/// If a concrete Action cannot be performed in the concrete conditions
-/// then the execution of program should be stopped.
-///
+impl From<u16> for Instruction {
+    fn from(value: u16) -> Self {
+        Self::SendBytes(value.to_be_bytes())
+    }
+}
+
+// Action defines what we do with a Symbol
+// each instance of Action can produce a series of Instructions.
+//
+// If a concrete Action cannot be performed in the concrete conditions
+// then the execution of program should be stopped.
+//
 // In the future releases the Action should be able to respond with a recovery option.
 // For example a print-symbol action: when the carriage has reached the left limit,
 // we cannot perform this action. The recovery-action would the carriage return.
@@ -46,37 +53,19 @@ impl Instruction {
 // - tt responds with empty set (iterator) for instructions method;
 // - the executor party checks for a recovery actions (should be proposed by the current one)
 // - the recovery sequence would contain a copy of the current action at the end of the list
-pub enum Action {
-    BackSpace,
-    Space,
-    PrintSymbol(Symbol, Option<u16>),
-    CarriageReturn,
-}
 
-impl From<Symbol> for Action {
-    fn from(symbol: Symbol) -> Self {
-        match symbol.act {
-            ActionMapping::Whitespace => Self::Space,
-            ActionMapping::Print => Self::PrintSymbol(symbol, None),
-            ActionMapping::CarriageReturn => Self::CarriageReturn,
-        }
-    }
-}
-
-/// Actor represents a concrete Action to be performed
-/// in the current starting conditions (include current Position).
-/// It suppose to generate a sequence of Instructions
-/// and calculate the end-conditions (new Position)
-pub struct Actor {
-    pub action: Action,
+/// Action represents a concrete primitive action to be performed by the Machine
+/// in the current conditions, taking into account the base_position and the current_position.
+pub struct Action {
+    pub symbol: Symbol,
     pub base_position: Position,
     pub current_position: Position,
 }
 
-impl Actor {
-    pub fn new(action: Action, base_position: Position, current_position: Position) -> Self {
+impl Action {
+    pub fn new(symbol: Symbol, base_position: Position, current_position: Position) -> Self {
         Self {
-            action,
+            symbol,
             base_position,
             current_position,
         }
@@ -84,12 +73,15 @@ impl Actor {
 
     /// Generates a sequence of the Instructions,
     /// taking the current Position as a reference point.
+    /// The result of these instructions is the printed Symbol or/and the associated motion.
     pub fn instructions(&self) -> impl Iterator<Item = Instruction> {
-        match &self.action {
-            Action::PrintSymbol(symbol, repeat) => print_symbols(symbol.clone(), *repeat),
-            Action::Space => space_jump_right(),
-            Action::BackSpace => space_jump_left(),
-            Action::CarriageReturn => empty_command(),
+        match self.symbol.act {
+            ActionMapping::Print => print_symbols(self.symbol.clone(), None),
+            ActionMapping::Whitespace => space_jump_right(),
+            ActionMapping::CarriageReturn => {
+                let new_pos = self.current_position.cr(&self.base_position);
+                motion::move_absolute(self.current_position.clone(), new_pos)
+            }
         }
     }
 
@@ -97,14 +89,11 @@ impl Actor {
     /// where the machine is expected to be
     /// after the generated Instructions have been executed.
     pub fn new_position(&self) -> Position {
-        let mut pos = self.current_position.clone();
-        match &self.action {
-            Action::PrintSymbol(symbol, repeat) => pos.step_right().unwrap(),
-            Action::Space => pos.step_right().unwrap(),
-            Action::BackSpace => pos.step_left().unwrap(),
-            Action::CarriageReturn => pos.carriage_return(&self.base_position).unwrap(),
+        match self.symbol.act {
+            ActionMapping::Print => self.current_position.step_right(),
+            ActionMapping::Whitespace => self.current_position.step_right(),
+            ActionMapping::CarriageReturn => self.current_position.cr(&self.base_position),
         }
-        pos
     }
 }
 
@@ -132,29 +121,16 @@ fn print_symbols(symbol: Symbol, repeat: Option<u16>) -> Box<dyn Iterator<Item =
 
 #[cfg(test)]
 mod tests {
-    use super::{Action, Actor};
+    use super::Action;
     use crate::daisy::Symbol;
     use crate::gabi::position::Position;
     use crate::gabi::printing::Instruction;
 
     #[test]
-    fn test_print_symbols_iterates_over_repeating_symbol() {
+    fn test_print_symbol() {
         let symbol = Symbol::new(81, 'ü');
-        let action = Action::PrintSymbol(symbol, Some(2));
         let pos: Position = Default::default();
-        let actor = Actor::new(action, pos.clone(), pos.clone());
-        let mut commands = actor.instructions();
-        assert_eq!(commands.next(), Some(Instruction::bytes(81, 0x96)));
-        assert_eq!(commands.next(), Some(Instruction::bytes(81, 0x96)));
-        assert_eq!(commands.next(), None);
-    }
-
-    #[test]
-    fn test_print_symbol_once() {
-        let symbol = Symbol::new(81, 'ü');
-        let action = Action::PrintSymbol(symbol, None);
-        let pos: Position = Default::default();
-        let actor = Actor::new(action, pos.clone(), pos.clone());
+        let actor = Action::new(symbol, pos.clone(), pos.clone());
         let mut commands = actor.instructions();
         assert_eq!(commands.next(), Some(Instruction::bytes(81, 0x96)));
         assert_eq!(commands.next(), None);

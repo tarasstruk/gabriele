@@ -1,7 +1,6 @@
 use crate::database::Db;
 use crate::gabi::position::Position;
-use crate::gabi::printing::{Action, Actor, Instruction};
-use anyhow::Result;
+use crate::gabi::printing::{Action, Instruction};
 use serialport::SerialPort;
 use std::default::Default;
 use std::thread;
@@ -108,100 +107,22 @@ impl Machine {
         thread::sleep(Duration::from_millis(millis));
     }
 
-    pub fn roll_forward(&mut self, steps: u16) {
-        self.wait_short();
-        println!("roll the paper forward by {:?}", &steps);
-        let steps = steps | 0b1101_0000_0000_0000;
-        // self.command(&[0b1101_0000, steps]);
-        self.command(&steps.to_be_bytes());
-        self.wait_long();
-    }
-
-    pub fn roll_backward(&mut self, steps: u16) {
-        self.wait_short();
-        println!("roll the paper backward by {:?}", &steps);
-        let steps = steps | 0b1111_0000_0000_0000;
-        // self.command(&[0b1111_0000, steps]);
-        self.command(&steps.to_be_bytes());
-        self.wait_long();
-    }
-
-    pub fn carriage_forward(&mut self, steps: u16) {
-        self.wait_short();
-        println!("move the carriage forward by {:?}", &steps);
-        let steps = steps | 0b1100_0000_0000_0000;
-        // self.command(&[0b1100_0000, steps]);
-        self.command(&steps.to_be_bytes());
-        self.wait_long();
-    }
-    pub fn carriage_backward(&mut self, steps: u16) {
-        self.wait_short();
-        println!("move the carriage <-backward by {:?}", &steps);
-        let steps = steps | 0b1110_0000_0000_0000;
-        // self.command(&[0b1110_0000, steps]);
-        self.command(&steps.to_be_bytes());
-        self.wait_long();
-    }
-
-    pub fn move_carriage(&mut self, increment: i32) -> Result<()> {
-        let value = u16::try_from(increment.abs())?;
-        if increment < 0 {
-            self.carriage_backward(value);
-        }
-        if increment > 0 {
-            self.carriage_forward(value);
-        }
-        Ok(())
-    }
-
-    pub fn move_paper(&mut self, increment: i32) -> Result<()> {
-        let value = u16::try_from(increment.abs())?;
-        if increment < 0 {
-            self.roll_backward(value);
-        }
-        if increment > 0 {
-            self.roll_forward(value);
-        }
-        Ok(())
-    }
-
-    pub fn move_relative(&mut self, increments: (i32, i32)) {
-        self.move_carriage(increments.0).unwrap();
-        self.move_paper(increments.1).unwrap();
-    }
-
-    pub fn execute_carriage_return(&mut self) {
-        println!("--------carriage-return------------");
-        println!("base position: {:?}", &self.base_pos);
-        println!("current position: {:?}", &self.pos);
-        let actual_pos = &self.pos.clone();
-        self.pos.carriage_return(&self.base_pos).unwrap();
-
-        let diffs = self.pos.diff(actual_pos);
-        println!("Increments: {:?}", &diffs);
-        println!("new position: {:?}", &self.pos);
-        self.move_relative(diffs);
-    }
-
-    pub fn execute_action(&mut self, actor: Actor) {
-        for cmd in actor.instructions() {
+    pub fn execute_action(&mut self, action: Action) {
+        for cmd in action.instructions() {
             match cmd {
                 Instruction::SendBytes(bytes) => self.command(&bytes),
                 Instruction::Idle(millis) => self.wait(millis),
+                Instruction::Empty => continue,
             }
-            self.pos = actor.new_position();
+            self.pos = action.new_position();
             self.wait_short();
         }
     }
 
     pub fn print(&mut self, input: &str, db: &Db) {
         for symbol in db.printables(input) {
-            let action: Action = symbol.clone().into();
-            let actor = Actor::new(action, self.base_pos.clone(), self.pos.clone());
-            match &actor.action {
-                Action::CarriageReturn => self.execute_carriage_return(),
-                _ => self.execute_action(actor),
-            }
+            let action = Action::new(symbol.clone(), self.base_pos.clone(), self.pos.clone());
+            self.execute_action(action);
         }
     }
 }
