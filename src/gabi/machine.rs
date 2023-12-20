@@ -1,6 +1,6 @@
 use crate::database::Db;
 use crate::gabi::position::Position;
-use crate::gabi::printing::{Action, Instruction};
+use crate::gabi::printing::{Action, Actor, Instruction};
 use anyhow::Result;
 use serialport::SerialPort;
 use std::default::Default;
@@ -143,17 +143,6 @@ impl Machine {
         self.wait_long();
     }
 
-    pub fn execute_printing_action(&mut self, action: Action) {
-        for cmd in action.instructions() {
-            match cmd {
-                Instruction::SendBytes(bytes) => self.command(&bytes),
-                Instruction::Idle(millis) => self.wait(millis),
-            }
-            self.wait_short();
-            self.pos.step_right().unwrap();
-        }
-    }
-
     pub fn move_carriage(&mut self, increment: i32) -> Result<()> {
         let value = u16::try_from(increment.abs())?;
         if increment < 0 {
@@ -185,18 +174,33 @@ impl Machine {
         println!("--------carriage-return------------");
         println!("base position: {:?}", &self.base_pos);
         println!("current position: {:?}", &self.pos);
-        let increments = self.pos.carriage_return(&self.base_pos);
-        println!("Increments: {:?}", &increments);
+        let actual_pos = &self.pos.clone();
+        self.pos.carriage_return(&self.base_pos).unwrap();
+
+        let diffs = self.pos.diff(actual_pos);
+        println!("Increments: {:?}", &diffs);
         println!("new position: {:?}", &self.pos);
-        self.move_relative(increments);
+        self.move_relative(diffs);
+    }
+
+    pub fn execute_action(&mut self, actor: Actor) {
+        for cmd in actor.instructions() {
+            match cmd {
+                Instruction::SendBytes(bytes) => self.command(&bytes),
+                Instruction::Idle(millis) => self.wait(millis),
+            }
+            self.pos = actor.new_position();
+            self.wait_short();
+        }
     }
 
     pub fn print(&mut self, input: &str, db: &Db) {
         for symbol in db.printables(input) {
             let action: Action = symbol.clone().into();
-            match action {
+            let actor = Actor::new(action, self.base_pos.clone(), self.pos.clone());
+            match &actor.action {
                 Action::CarriageReturn => self.execute_carriage_return(),
-                _ => self.execute_printing_action(action),
+                _ => self.execute_action(actor),
             }
         }
     }

@@ -63,12 +63,13 @@ impl Position {
         (self.x - base.x, self.y - base.y)
     }
 
-    pub fn carriage_return(&mut self, base: &Position) -> (i32, i32) {
+    pub fn carriage_return(&mut self, base: &Position) -> Result<()> {
         let mut new_pos = base.clone();
         new_pos.y = self.y + self.y_res;
-        let diffs = new_pos.diff(self);
+        // let diffs = new_pos.diff(self);
         self.x = new_pos.x;
         self.y = new_pos.y;
-        diffs
+        // diffs
+        Ok(())
     }
 }
