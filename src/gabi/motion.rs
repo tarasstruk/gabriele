@@ -62,3 +62,12 @@ pub fn move_absolute(actual: Position, target: Position) -> Box<dyn Iterator<Ite
     let (x, y) = target.diff(&actual);
     move_relative(x, y)
 }
+
+#[allow(unused)]
+pub fn space_jump_left() -> Box<dyn Iterator<Item = Instruction>> {
+    Box::new([Instruction::bytes(0b1000_0100, 0b0000_0000)].into_iter())
+}
+
+pub fn space_jump_right() -> Box<dyn Iterator<Item = Instruction>> {
+    Box::new([Instruction::bytes(0b1000_0011, 0b0000_0000)].into_iter())
+}

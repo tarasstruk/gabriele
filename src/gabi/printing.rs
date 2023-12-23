@@ -1,7 +1,7 @@
 #![allow(unused)]
 #![allow(dead_code)]
 
-use crate::daisy::{ActionMapping, Symbol};
+use crate::daisy::{ActionMapping, AfterSymbolPrinted, Symbol};
 use crate::gabi::motion;
 use crate::gabi::position::Position;
 
@@ -76,8 +76,8 @@ impl Action {
     /// The result of these instructions is the printed Symbol or/and the associated motion.
     pub fn instructions(&self) -> impl Iterator<Item = Instruction> {
         match self.symbol.act {
-            ActionMapping::Print => print_symbols(self.symbol.clone(), None),
-            ActionMapping::Whitespace => space_jump_right(),
+            ActionMapping::Print => self.symbol.instructions(),
+            ActionMapping::Whitespace => motion::space_jump_right(),
             ActionMapping::CarriageReturn => {
                 let new_pos = self.current_position.cr(&self.base_position);
                 motion::move_absolute(self.current_position.clone(), new_pos)
@@ -90,33 +90,15 @@ impl Action {
     /// after the generated Instructions have been executed.
     pub fn new_position(&self) -> Position {
         match self.symbol.act {
-            ActionMapping::Print => self.current_position.step_right(),
+            ActionMapping::Print => match self.symbol.after {
+                AfterSymbolPrinted::MoveRight => self.current_position.step_right(),
+                AfterSymbolPrinted::MoveLeft => self.current_position.step_left(),
+                AfterSymbolPrinted::HoldOn => self.current_position.clone(),
+            },
             ActionMapping::Whitespace => self.current_position.step_right(),
             ActionMapping::CarriageReturn => self.current_position.cr(&self.base_position),
         }
     }
-}
-
-fn empty_command() -> Box<dyn Iterator<Item = Instruction>> {
-    let cmd: [Instruction; 0] = [];
-    Box::new(cmd.into_iter())
-}
-
-fn space_jump_left() -> Box<dyn Iterator<Item = Instruction>> {
-    Box::new([Instruction::bytes(0b1000_0100, 0b0000_0000)].into_iter())
-}
-
-fn space_jump_right() -> Box<dyn Iterator<Item = Instruction>> {
-    Box::new([Instruction::bytes(0b1000_0011, 0b0000_0000)].into_iter())
-}
-
-fn print_single_symbol(symbol: &Symbol) -> Instruction {
-    Instruction::bytes(symbol.idx, 0b1001_0110)
-}
-
-fn print_symbols(symbol: Symbol, repeat: Option<u16>) -> Box<dyn Iterator<Item = Instruction>> {
-    let times = repeat.unwrap_or(1);
-    Box::new((0..times).map(move |_| print_single_symbol(&symbol)))
 }
 
 #[cfg(test)]
@@ -130,9 +112,56 @@ mod tests {
     fn test_print_symbol() {
         let symbol = Symbol::new(81, 'ü');
         let pos: Position = Default::default();
-        let actor = Action::new(symbol, pos.clone(), pos.clone());
-        let mut commands = actor.instructions();
-        assert_eq!(commands.next(), Some(Instruction::bytes(81, 0x96)));
+        let action = Action::new(symbol, pos.clone(), pos.clone());
+        let mut commands = action.instructions();
+        let new_pos = action.new_position();
+        let pos_diff = new_pos.diff(&pos);
+        assert_eq!(pos_diff, (12, 0));
+        assert_eq!(commands.next(), Some(Instruction::bytes(81, 31)));
         assert_eq!(commands.next(), None);
+    }
+
+    #[test]
+    fn test_carriage_return_coordinates() {
+        let symbol = Symbol::cr();
+        let base_pos: Position = Default::default();
+        let mut pos = base_pos.clone();
+        // emulate the motion result caused by printing of 10 characters
+        // causing the carriage to move by X=+120 units, when Y=0
+        for _ in 0..10 {
+            pos = pos.step_right();
+        }
+        let action = Action::new(symbol, base_pos.clone(), pos.clone());
+        // let mut commands = action.instructions();
+        let new_pos = action.new_position();
+        // println!("POS: {:?}", pos);
+        // the diff is the offset of the actual position (after CR is done)
+        // from the previous position:
+        //   * 120 units in -X direction (to the left side)
+        //   * 16 units in the +Y direction (the distance between rows)
+        assert_eq!(new_pos.diff(&pos), (-120, 16));
+        // at the same time, the distance between the base point should be only
+        // relevant in the +Y direction
+        assert_eq!(new_pos.diff(&base_pos), (0, 16));
+    }
+
+    #[test]
+    fn test_carriage_return_instructions() {
+        let symbol = Symbol::cr();
+        let base_pos: Position = Default::default();
+        let mut pos = base_pos.clone();
+        for _ in 0..10 {
+            pos = pos.step_right();
+        }
+        let action = Action::new(symbol, base_pos, pos);
+        let mut cmd = action.instructions();
+
+        assert_eq!(cmd.next(), Some(Instruction::Idle(200)));
+        assert_eq!(cmd.next(), Some(Instruction::bytes(0b1110_0000, 120)));
+        assert_eq!(cmd.next(), Some(Instruction::Idle(1000)));
+        assert_eq!(cmd.next(), Some(Instruction::Idle(200)));
+        assert_eq!(cmd.next(), Some(Instruction::bytes(0b1101_0000, 16)));
+        assert_eq!(cmd.next(), Some(Instruction::Idle(1000)));
+        assert_eq!(cmd.next(), None);
     }
 }
