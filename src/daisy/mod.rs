@@ -57,13 +57,13 @@ pub enum ActionMapping {
 
 #[derive(PartialEq, Debug, Clone, Default)]
 pub enum AfterSymbolPrinted {
-    // sets bits "7"=0 and "6"=0
+    // sets bits "7"=1 and "6"=0
     #[default]
     MoveRight,
-    // sets bits "7"=1 and "6"=0
+    // sets bits "7"=1 and "6"=1
     #[allow(unused)]
     MoveLeft,
-    // sets bits "7"=0 and "6"=1
+    // sets bits "7"=0 and "6"=0
     #[allow(unused)]
     HoldOn,
 }
@@ -72,9 +72,9 @@ impl AfterSymbolPrinted {
     #[allow(unused)]
     pub fn value(&self) -> u8 {
         match self {
-            Self::MoveRight => 0,
-            Self::MoveLeft => 0b1000_0000,
-            Self::HoldOn => 0b0100_0000,
+            Self::MoveRight => 0b1000_0000,
+            Self::MoveLeft => 0b1100_0000,
+            Self::HoldOn => 0b0000_0000,
         }
     }
 }
@@ -187,7 +187,7 @@ mod tests {
     fn test_instructions_with_strong_impression() {
         let symbol = Symbol::new(81, 'ü').strong();
         let mut result = symbol.instructions();
-        assert_eq!(result.next(), Some(Instruction::bytes(81, 47)));
+        assert_eq!(result.next(), Some(Instruction::bytes(81, 47 + 128)));
         assert_eq!(result.next(), None);
     }
 
@@ -195,14 +195,14 @@ mod tests {
     fn test_instructions_with_hold_after_printed() {
         let symbol = Symbol::new(81, 'ü').hold();
         let mut result = symbol.instructions();
-        assert_eq!(result.next(), Some(Instruction::bytes(81, 31 + 64)));
+        assert_eq!(result.next(), Some(Instruction::bytes(81, 31 + 0)));
         assert_eq!(result.next(), None);
     }
     #[test]
     fn test_instructions_with_left_direction() {
         let symbol = Symbol::new(81, 'ü').left();
         let mut result = symbol.instructions();
-        assert_eq!(result.next(), Some(Instruction::bytes(81, 31 + 128)));
+        assert_eq!(result.next(), Some(Instruction::bytes(81, 31 + 128 + 64)));
         assert_eq!(result.next(), None);
     }
 }

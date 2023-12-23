@@ -117,7 +117,7 @@ mod tests {
         let new_pos = action.new_position();
         let pos_diff = new_pos.diff(&pos);
         assert_eq!(pos_diff, (12, 0));
-        assert_eq!(commands.next(), Some(Instruction::bytes(81, 31)));
+        assert_eq!(commands.next(), Some(Instruction::bytes(81, 31 + 128)));
         assert_eq!(commands.next(), None);
     }
 
