@@ -90,11 +90,7 @@ impl Action {
     /// after the generated Instructions have been executed.
     pub fn new_position(&self) -> Position {
         match self.symbol.act {
-            ActionMapping::Print => match self.symbol.after {
-                AfterSymbolPrinted::MoveRight => self.current_position.step_right(),
-                AfterSymbolPrinted::MoveLeft => self.current_position.step_left(),
-                AfterSymbolPrinted::HoldOn => self.current_position.clone(),
-            },
+            ActionMapping::Print => self.current_position.increment_x(self.symbol.x_ratio()),
             ActionMapping::Whitespace => self.current_position.step_right(),
             ActionMapping::CarriageReturn => self.current_position.cr(&self.base_position),
         }

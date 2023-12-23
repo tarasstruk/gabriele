@@ -43,4 +43,10 @@ impl Position {
         pos.y = self.y + self.y_res;
         pos
     }
+
+    pub fn increment_x(&self, ratio: i32) -> Position {
+        let mut pos = self.clone();
+        pos.x = self.x + (self.x_res * ratio);
+        pos
+    }
 }

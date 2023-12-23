@@ -9,7 +9,11 @@ pub struct Db {
 impl Db {
     #[allow(unused)]
     pub fn get(&self, character: char) -> &Symbol {
-        if let Some(result) = self.symbols.iter().find(|symbol| symbol.chr == character) {
+        if let Some(result) = self
+            .symbols
+            .iter()
+            .find(|symbol| symbol.character == character)
+        {
             return result;
         }
         &(self.unknown)

@@ -80,53 +80,58 @@ impl AfterSymbolPrinted {
 }
 
 #[derive(PartialEq, Debug, Clone, Default)]
-pub struct Symbol {
+pub struct Sign {
     pub idx: u8,
     pub imp: Impression,
-    pub chr: char,
-    pub act: ActionMapping,
     pub after: AfterSymbolPrinted,
+}
+
+#[derive(PartialEq, Debug, Clone, Default)]
+pub struct Symbol {
+    pub signs: Vec<Sign>,
+    pub character: char,
+    pub act: ActionMapping,
 }
 
 impl Symbol {
     #[allow(unused)]
-    pub fn new(idx: u8, chr: char) -> Self {
-        Self {
+    pub fn new(idx: u8, character: char) -> Self {
+        let sign = Sign {
             idx,
-            chr,
+            ..Default::default()
+        };
+        Self {
+            character,
+            signs: vec![sign],
             ..Default::default()
         }
     }
 
     pub fn whitespace() -> Self {
-        Self {
-            idx: 128,
-            chr: ' ',
-            imp: Default::default(),
-            act: ActionMapping::Whitespace,
-            after: Default::default(),
-        }
+        let mut item = Self::new(128, ' ');
+        item.act = ActionMapping::Whitespace;
+        item
     }
 
     pub fn cr() -> Self {
-        Self {
-            idx: 129,
-            chr: '\n',
-            imp: Default::default(),
-            act: ActionMapping::CarriageReturn,
-            after: Default::default(),
-        }
+        let mut item = Self::new(129, '\n');
+        item.act = ActionMapping::CarriageReturn;
+        item
     }
 
     #[allow(unused)]
-    pub fn imp(mut self, impact: Impression) -> Self {
-        self.imp = impact;
+    pub fn imp(mut self, impression: Impression) -> Self {
+        for sign in self.signs.iter_mut() {
+            sign.imp = impression.clone()
+        }
         self
     }
 
     #[allow(unused)]
     pub fn after_printed(mut self, after: AfterSymbolPrinted) -> Self {
-        self.after = after;
+        for sign in self.signs.iter_mut() {
+            sign.after = after.clone()
+        }
         self
     }
 
@@ -152,9 +157,28 @@ impl Symbol {
 
     #[allow(unused)]
     pub fn instructions(&self) -> Box<dyn Iterator<Item = Instruction>> {
-        let b1 = self.idx;
-        let b2 = self.imp.value() | self.after.value();
-        Box::new([Instruction::bytes(b1, b2)].into_iter())
+        let items: Vec<Instruction> = self
+            .signs
+            .iter()
+            .map(|sign| {
+                let b1 = sign.idx;
+                let b2 = sign.imp.value() | sign.after.value();
+                Instruction::bytes(b1, b2)
+            })
+            .collect();
+        Box::new(items.into_iter())
+    }
+
+    pub fn x_ratio(&self) -> i32 {
+        let mut x = 0_i32;
+        for sign in self.signs.iter() {
+            match sign.after {
+                AfterSymbolPrinted::HoldOn => (),
+                AfterSymbolPrinted::MoveLeft => x -= 1,
+                AfterSymbolPrinted::MoveRight => x += 1,
+            }
+        }
+        x
     }
 }
 
