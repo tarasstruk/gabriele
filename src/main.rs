@@ -10,7 +10,11 @@ use std::fs;
 
 fn welcome(machine: &mut Machine, db: &Db) {
     machine.print(
-        "Grüß Gott!\nIch bin die Gabriele 9009.\nSchön, dass Du da bist!\n",
+        "\"Il Signore Gesù, Verbo Incarnato,\n\
+        ci doni la grazia della gioia nel servizio umile e generoso.\n\
+        E per favore, mi raccomando,\n\
+        non perdiamo il senso dell’umorismo, che è salute!\"\
+        [Papa Francesco]\n",
         db,
     );
 }
@@ -42,7 +46,7 @@ fn main() {
     machine.wait_long();
     machine.go_offline();
     machine.wait_short();
-    println!("Gabriele says Tschüss :)");
+    // println!("Gabriele says Tschüss :)");
 
     // TODOs
     // println!("homing the carriage motor");

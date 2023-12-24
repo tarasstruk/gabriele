@@ -102,6 +102,8 @@ pub fn symbols() -> Box<[Symbol]> {
         Symbol::new(98, 'b'),
         Symbol::new(99, 'o'),
         Symbol::new(100, 'z'),
+        Symbol::new(97, 'ù').accent(),
+        Symbol::new(93, 'è').accent(),
         Symbol::whitespace(),
         Symbol::cr(),
     ];

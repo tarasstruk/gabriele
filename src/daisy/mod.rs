@@ -107,6 +107,18 @@ impl Symbol {
         }
     }
 
+    pub fn accent(mut self) -> Self {
+        let mut sign = self.signs[0].clone();
+        sign.after = AfterSymbolPrinted::HoldOn;
+        let mark = Sign {
+            idx: 72,
+            imp: Impression::Mild,
+            ..Default::default()
+        };
+        self.signs = vec![sign, mark];
+        self
+    }
+
     pub fn whitespace() -> Self {
         let mut item = Self::new(128, ' ');
         item.act = ActionMapping::Whitespace;
