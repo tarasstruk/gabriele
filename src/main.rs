@@ -13,8 +13,8 @@ fn welcome(machine: &mut Machine, db: &Db) {
         "\"Il Signore Gesù, Verbo Incarnato,\n\
         ci doni la grazia della gioia nel servizio umile e generoso.\n\
         E per favore, mi raccomando,\n\
-        non perdiamo il senso dell’umorismo, che è salute!\"\
-        [Papa Francesco]\n",
+        non perdiamo il senso dell’umorismo, che è salute!\"\n\
+        (Papa Francesco)\n",
         db,
     );
 }

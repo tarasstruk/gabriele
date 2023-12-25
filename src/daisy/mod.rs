@@ -114,11 +114,27 @@ impl Symbol {
         }
     }
 
-    pub fn accent(mut self) -> Self {
+    /// Add a grave accent (è)
+    /// example: `caffè` (Italian "coffee", open spelling)
+    pub fn grave(mut self) -> Self {
         let mut sign = self.signs[0].clone();
         sign.after = AfterSymbolPrinted::HoldOn;
         let mark = Sign {
             idx: 72,
+            imp: Impression::Mild,
+            ..Default::default()
+        };
+        self.signs = vec![sign, mark];
+        self
+    }
+
+    /// Add an acute accent (é)
+    /// example: `perché?` (Italian "why?", closed spelling)
+    pub fn acute(mut self) -> Self {
+        let mut sign = self.signs[0].clone();
+        sign.after = AfterSymbolPrinted::HoldOn;
+        let mark = Sign {
+            idx: 14,
             imp: Impression::Mild,
             ..Default::default()
         };
