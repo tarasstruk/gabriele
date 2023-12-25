@@ -79,6 +79,13 @@ impl AfterSymbolPrinted {
     }
 }
 
+/// `Sign` represents a petal on a daisy wheel with a moulded character or punctuation mark
+/// and defines the printing parameters and after-printing behaviour.
+/// The routine is the following:
+/// 1. daisy wheel contains the entire character set, including punctuation marks;
+/// 2. servo motor rotates the daisy wheel to a specific `idx` position;
+/// 3. solenoid-operated hammer hits the selected petal with a force represented by `imp`;
+/// 4. after the character is printed, `after` determines the behavior of carriage motor.
 #[derive(PartialEq, Debug, Clone, Default)]
 pub struct Sign {
     pub idx: u8,
