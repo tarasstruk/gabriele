@@ -1,13 +1,6 @@
-mod connection;
-pub mod daisy;
-mod database;
-pub mod machine;
-mod motion;
-mod position;
-pub mod printing;
-
-use crate::database::Db;
-use machine::Machine;
+use gabriele::connection;
+use gabriele::database::Db;
+use gabriele::machine::Machine;
 use std::fs;
 
 fn welcome(machine: &mut Machine, db: &Db) {
