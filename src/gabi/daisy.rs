@@ -1,4 +1,3 @@
-pub mod german;
 use crate::gabi::printing::Instruction;
 use std::default::Default;
 

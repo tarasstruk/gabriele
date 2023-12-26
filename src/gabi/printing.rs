@@ -1,7 +1,7 @@
 #![allow(unused)]
 #![allow(dead_code)]
 
-use crate::daisy::{ActionMapping, AfterSymbolPrinted, Symbol};
+use crate::gabi::daisy::{ActionMapping, AfterSymbolPrinted, Symbol};
 use crate::gabi::motion;
 use crate::gabi::position::Position;
 
@@ -100,7 +100,7 @@ impl Action {
 #[cfg(test)]
 mod tests {
     use super::Action;
-    use crate::daisy::Symbol;
+    use crate::gabi::daisy::Symbol;
     use crate::gabi::position::Position;
     use crate::gabi::printing::Instruction;
 

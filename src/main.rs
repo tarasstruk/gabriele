@@ -1,9 +1,7 @@
 mod connection;
-mod daisy;
 mod database;
 mod gabi;
 
-use crate::daisy::german;
 use crate::database::Db;
 use gabi::machine::Machine;
 use std::fs;
@@ -32,7 +30,7 @@ fn main() {
     let conn = connection::uart(&path);
     let mut machine = Machine::new(conn);
 
-    let db = Db::new(german::symbols());
+    let db = Db::new();
 
     machine.prepare();
 
