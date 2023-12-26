@@ -1,6 +1,6 @@
 use crate::database::Db;
-use crate::gabi::position::Position;
-use crate::gabi::printing::{Action, Instruction};
+use crate::position::Position;
+use crate::printing::{Action, Instruction};
 use serialport::SerialPort;
 use std::default::Default;
 use std::thread;

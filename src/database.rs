@@ -1,4 +1,4 @@
-use crate::gabi::daisy::Symbol;
+use crate::daisy::Symbol;
 
 #[allow(unused)]
 pub struct Db {
@@ -169,7 +169,7 @@ impl Db {
 #[cfg(test)]
 mod tests {
     use super::Db;
-    use crate::gabi::daisy::Symbol;
+    use crate::daisy::Symbol;
 
     #[test]
     fn test_string_to_iterator_over_symbols() {

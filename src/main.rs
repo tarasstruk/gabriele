@@ -1,9 +1,13 @@
 mod connection;
+pub mod daisy;
 mod database;
-mod gabi;
+pub mod machine;
+mod motion;
+mod position;
+pub mod printing;
 
 use crate::database::Db;
-use gabi::machine::Machine;
+use machine::Machine;
 use std::fs;
 
 fn welcome(machine: &mut Machine, db: &Db) {

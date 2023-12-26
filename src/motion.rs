@@ -1,5 +1,5 @@
-use crate::gabi::position::Position;
-use crate::gabi::printing::Instruction;
+use crate::position::Position;
+use crate::printing::Instruction;
 
 fn wrap_motion(value: u16) -> Box<dyn Iterator<Item = Instruction>> {
     Box::new(

@@ -1,4 +1,4 @@
-use crate::gabi::printing::Instruction;
+use crate::printing::Instruction;
 use std::default::Default;
 
 #[derive(Default)]
@@ -219,7 +219,7 @@ impl Symbol {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gabi::printing::Instruction;
+    use crate::printing::Instruction;
 
     #[test]
     fn test_strong_impression() {
