@@ -1,6 +1,9 @@
+use env_logger::{Builder, Target};
 use gabriele::connection;
 use gabriele::database::Db;
 use gabriele::machine::Machine;
+use log::info;
+use std::env;
 use std::fs;
 
 fn welcome(machine: &mut Machine, db: &Db) {
@@ -23,15 +26,21 @@ fn print_file(machine: &mut Machine, db: &Db, file_path: &str) {
 /// 1. serial port path, example: /dev/tty.usbserial-A10OFCFV
 /// 2. optional path to file to read
 fn main() {
-    let path = std::env::args().nth(1).unwrap();
+    let mut builder = Builder::from_default_env();
+    // output logs to the STDOUT
+    builder.target(Target::Stdout);
+    builder.init();
+
+    let path = env::args().nth(1).unwrap();
     let conn = connection::uart(&path);
+    info!("Machine is starting up");
     let mut machine = Machine::new(conn);
 
     let db = Db::new();
 
     machine.prepare();
 
-    let second_command_line_arg = std::env::args().nth(2);
+    let second_command_line_arg = env::args().nth(2);
 
     match second_command_line_arg {
         Some(path) => print_file(&mut machine, &db, &path),
@@ -41,13 +50,12 @@ fn main() {
     machine.wait_long();
     machine.go_offline();
     machine.wait_short();
-    // println!("Gabriele says Tschüss :)");
 
     // TODOs
-    // println!("homing the carriage motor");
+    // debug!("homing the carriage motor");
     // machine.command(&[0b1000_0010, 0b0000_0011]);
-    // println!("homing the daisy-wheel motor");
+    // debug!("homing the daisy-wheel motor");
     // machine.command(&[0b1000_0010, 0b0000_0101]);
-    // println!("homing the tape motor");
+    // debug!("homing the tape motor");
     // machine.command(&[0b1000_0010, 0b0000_1001]);
 }

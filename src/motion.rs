@@ -1,5 +1,6 @@
 use crate::position::Position;
 use crate::printing::Instruction;
+use log::debug;
 
 fn wrap_motion(value: u16) -> Box<dyn Iterator<Item = Instruction>> {
     Box::new(
@@ -13,21 +14,21 @@ fn wrap_motion(value: u16) -> Box<dyn Iterator<Item = Instruction>> {
 }
 
 fn roll_forward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
-    println!("roll the paper forward by {:?}", &steps);
+    debug!("roll the paper forward by {:?}", &steps);
     wrap_motion(steps | 0b1101_0000_0000_0000)
 }
 
 fn roll_backward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
-    println!("roll the paper backward by {:?}", &steps);
+    debug!("roll the paper backward by {:?}", &steps);
     wrap_motion(steps | 0b1111_0000_0000_0000)
 }
 
 fn carriage_forward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
-    println!("move the carriage forward by {:?}", &steps);
+    debug!("move the carriage forward by {:?}", &steps);
     wrap_motion(steps | 0b1100_0000_0000_0000)
 }
 fn carriage_backward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
-    println!("move the carriage <-backward by {:?}", &steps);
+    debug!("move the carriage <-backward by {:?}", &steps);
     wrap_motion(steps | 0b1110_0000_0000_0000)
 }
 

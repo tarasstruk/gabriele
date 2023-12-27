@@ -4,6 +4,7 @@
 use crate::daisy::{ActionMapping, AfterSymbolPrinted, Symbol};
 use crate::motion;
 use crate::position::Position;
+use log::debug;
 
 /// The basic directive for the machine
 /// Idle specifies milliseconds
@@ -130,7 +131,7 @@ mod tests {
         let action = Action::new(symbol, base_pos.clone(), pos.clone());
         // let mut commands = action.instructions();
         let new_pos = action.new_position();
-        // println!("POS: {:?}", pos);
+        // debug!("POS: {:?}", pos);
         // the diff is the offset of the actual position (after CR is done)
         // from the previous position:
         //   * 120 units in -X direction (to the left side)

@@ -61,7 +61,12 @@ it is found as `/dev/tty.usbserial-`. At this point switch on the typewriter and
 It may fail for the first time run, due to the flow-control issues described below in "Known Issues".
 
 ```sh
+# print a welcome message
 cargo run -- /dev/tty.usbserial-A10OFCFV
+# print a text file:
+cargo run -- /dev/tty.usbserial-A10OFCFV example.txt
+# or with debug output:
+RUST_LOG=DEBUG cargo run -- /dev/tty.usbserial-A10OFCFV
 ```
 
 ## Known issues
