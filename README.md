@@ -17,8 +17,17 @@ These articles were published in one German magazine in July 1988 and served as 
 Second the authors of these articles, the machines like IBM Action Writer 6715 would also have similar features,
 which opens a way to use them as daisy-wheel printer.
 
-
-
+## Features
+- [x] abstraction layer for TA Gabriele 9009 serial port connection and the mission-critical low level commands;
+- [x] typewriter's coordinate system and basic printing logic, including the carriage return;
+- [x] printing of text files;
+- [x] printing of composite UTF-8 characters which don't exist on the physical daisy wheel (like "é");
+- [x] impression compensation;
+- [ ] bidirectional printing;
+- [ ] proportional characters;
+- [ ] bold characters;
+- [ ] command-line "native" typewriter mode;
+ 
 ## How to use
 
 ### Connecting the typewriter to a computer.
