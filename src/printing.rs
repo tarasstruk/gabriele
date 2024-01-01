@@ -2,6 +2,7 @@
 #![allow(dead_code)]
 
 use crate::daisy::{ActionMapping, AfterSymbolPrinted, Symbol};
+use crate::machine::InstructionRunner;
 use crate::motion;
 use crate::position::Position;
 use log::debug;
@@ -95,6 +96,17 @@ impl Action {
             ActionMapping::Whitespace => self.current_position.step_right(),
             ActionMapping::CarriageReturn => self.current_position.cr(&self.base_position),
         }
+    }
+
+    pub fn run(self, sender: &mut impl InstructionRunner) {
+        for cmd in self.instructions() {
+            match cmd {
+                Instruction::SendBytes(bytes) => sender.send_bytes(&bytes),
+                Instruction::Idle(millis) => sender.idle(millis),
+                Instruction::Empty => continue,
+            }
+        }
+        sender.update_position(self.new_position());
     }
 }
 

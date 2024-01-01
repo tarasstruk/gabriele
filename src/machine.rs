@@ -1,6 +1,6 @@
 use crate::database::Db;
 use crate::position::Position;
-use crate::printing::{Action, Instruction};
+use crate::printing::Action;
 use log::{debug, info};
 use serialport::SerialPort;
 use std::default::Default;
@@ -107,22 +107,32 @@ impl Machine {
         thread::sleep(Duration::from_millis(millis));
     }
 
-    pub fn execute_action(&mut self, action: Action) {
-        for cmd in action.instructions() {
-            match cmd {
-                Instruction::SendBytes(bytes) => self.command(&bytes),
-                Instruction::Idle(millis) => self.wait(millis),
-                Instruction::Empty => continue,
-            }
-            self.pos = action.new_position();
-            self.wait_short();
-        }
-    }
-
     pub fn print(&mut self, input: &str, db: &Db) {
         for symbol in db.printables(input) {
             let action = Action::new(symbol.clone(), self.base_pos.clone(), self.pos.clone());
-            self.execute_action(action);
+            action.run(self)
         }
+    }
+}
+
+pub trait InstructionRunner {
+    fn send_bytes(&mut self, bytes: &[u8]);
+
+    fn update_position(&mut self, pos: Position);
+
+    fn idle(&self, millis: u64) {
+        thread::sleep(Duration::from_millis(millis));
+    }
+}
+
+impl InstructionRunner for Machine {
+    fn send_bytes(&mut self, bytes: &[u8]) {
+        for byte in bytes {
+            self.write_byte(*byte);
+        }
+    }
+
+    fn update_position(&mut self, pos: Position) {
+        self.pos = pos;
     }
 }
