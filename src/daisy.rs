@@ -1,3 +1,4 @@
+use crate::machine::PrintingDirection;
 use crate::printing::Instruction;
 use std::default::Default;
 
@@ -190,7 +191,10 @@ impl Symbol {
     }
 
     #[allow(unused)]
-    pub fn instructions(&self) -> Box<dyn Iterator<Item = Instruction>> {
+    pub fn instructions(
+        &self,
+        direction: PrintingDirection,
+    ) -> Box<dyn Iterator<Item = Instruction>> {
         let items: Vec<Instruction> = self
             .signs
             .iter()
@@ -244,7 +248,7 @@ mod tests {
     #[test]
     fn test_instructions_with_strong_impression() {
         let symbol = Symbol::new(81, 'ü').strong();
-        let mut result = symbol.instructions();
+        let mut result = symbol.instructions(Default::default());
         assert_eq!(result.next(), Some(Instruction::bytes(81, 47 + 128)));
         assert_eq!(result.next(), None);
     }
@@ -252,14 +256,14 @@ mod tests {
     #[test]
     fn test_instructions_with_hold_after_printed() {
         let symbol = Symbol::new(81, 'ü').hold();
-        let mut result = symbol.instructions();
+        let mut result = symbol.instructions(Default::default());
         assert_eq!(result.next(), Some(Instruction::bytes(81, 31 + 0)));
         assert_eq!(result.next(), None);
     }
     #[test]
     fn test_instructions_with_left_direction() {
         let symbol = Symbol::new(81, 'ü').left();
-        let mut result = symbol.instructions();
+        let mut result = symbol.instructions(Default::default());
         assert_eq!(result.next(), Some(Instruction::bytes(81, 31 + 128 + 64)));
         assert_eq!(result.next(), None);
     }

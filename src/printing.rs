@@ -85,7 +85,7 @@ impl Action {
     /// The result of these instructions is the printed Symbol or/and the associated motion.
     pub fn instructions(&self) -> impl Iterator<Item = Instruction> {
         match self.symbol.act {
-            ActionMapping::Print => self.symbol.instructions(),
+            ActionMapping::Print => self.symbol.instructions(self.settings.direction),
             ActionMapping::Whitespace => motion::space_jump_right(),
             ActionMapping::CarriageReturn => {
                 let new_pos = self.current_position.cr(&self.base_position);

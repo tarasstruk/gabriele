@@ -17,7 +17,7 @@ pub struct Machine {
 
 #[derive(Default, Copy, Clone)]
 pub struct Settings {
-    direction: PrintingDirection,
+    pub direction: PrintingDirection,
 }
 #[derive(Default, Copy, Clone)]
 pub enum PrintingDirection {
@@ -36,6 +36,10 @@ impl Machine {
             base_pos,
             settings: Default::default(),
         }
+    }
+
+    pub fn set_printing_direction(&mut self, dir: PrintingDirection) {
+        self.settings.direction = dir;
     }
 
     pub fn write_byte(&mut self, input: u8) {
