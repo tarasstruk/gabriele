@@ -1,6 +1,6 @@
 use crate::database::Db;
 use crate::position::Position;
-use crate::printing::{Action, PrintingDirection};
+use crate::printing::Action;
 use log::{debug, info};
 use serialport::SerialPort;
 use std::default::Default;
@@ -12,6 +12,18 @@ pub struct Machine {
     conn: Box<dyn SerialPort>,
     base_pos: Position,
     pos: Position,
+    settings: Settings,
+}
+
+#[derive(Default, Copy, Clone)]
+pub struct Settings {
+    direction: PrintingDirection,
+}
+#[derive(Default, Copy, Clone)]
+pub enum PrintingDirection {
+    #[default]
+    Right,
+    Left,
 }
 
 impl Machine {
@@ -22,6 +34,7 @@ impl Machine {
             conn,
             pos,
             base_pos,
+            settings: Default::default(),
         }
     }
 
@@ -113,7 +126,7 @@ impl Machine {
                 symbol.clone(),
                 self.base_pos.clone(),
                 self.pos.clone(),
-                PrintingDirection::Right,
+                self.settings,
             );
             action.run(self)
         }

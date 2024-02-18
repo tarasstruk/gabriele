@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 
 use crate::daisy::{ActionMapping, AfterSymbolPrinted, Symbol};
-use crate::machine::InstructionRunner;
+use crate::machine::{InstructionRunner, Settings};
 use crate::motion;
 use crate::position::Position;
 use log::debug;
@@ -62,12 +62,7 @@ pub struct Action {
     pub symbol: Symbol,
     pub base_position: Position,
     pub current_position: Position,
-    pub direction: PrintingDirection,
-}
-
-pub enum PrintingDirection {
-    Right,
-    Left,
+    pub settings: Settings,
 }
 
 impl Action {
@@ -75,13 +70,13 @@ impl Action {
         symbol: Symbol,
         base_position: Position,
         current_position: Position,
-        direction: PrintingDirection,
+        settings: Settings,
     ) -> Self {
         Self {
             symbol,
             base_position,
             current_position,
-            direction,
+            settings,
         }
     }
 
@@ -124,7 +119,7 @@ impl Action {
 
 #[cfg(test)]
 mod tests {
-    use super::{Action, PrintingDirection};
+    use super::Action;
     use crate::daisy::Symbol;
     use crate::position::Position;
     use crate::printing::Instruction;
@@ -133,7 +128,7 @@ mod tests {
     fn test_print_symbol() {
         let symbol = Symbol::new(81, 'ü');
         let pos: Position = Default::default();
-        let action = Action::new(symbol, pos.clone(), pos.clone(), PrintingDirection::Right);
+        let action = Action::new(symbol, pos.clone(), pos.clone(), Default::default());
         let mut commands = action.instructions();
         let new_pos = action.new_position();
         let pos_diff = new_pos.diff(&pos);
@@ -152,12 +147,7 @@ mod tests {
         for _ in 0..10 {
             pos = pos.step_right();
         }
-        let action = Action::new(
-            symbol,
-            base_pos.clone(),
-            pos.clone(),
-            PrintingDirection::Right,
-        );
+        let action = Action::new(symbol, base_pos.clone(), pos.clone(), Default::default());
         // let mut commands = action.instructions();
         let new_pos = action.new_position();
         // debug!("POS: {:?}", pos);
@@ -179,7 +169,7 @@ mod tests {
         for _ in 0..10 {
             pos = pos.step_right();
         }
-        let action = Action::new(symbol, base_pos, pos, PrintingDirection::Right);
+        let action = Action::new(symbol, base_pos, pos, Default::default());
         let mut cmd = action.instructions();
 
         assert_eq!(cmd.next(), Some(Instruction::Idle(200)));
