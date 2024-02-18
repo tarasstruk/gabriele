@@ -42,7 +42,7 @@ fn main() {
 
     let second_command_line_arg = env::args().nth(2);
 
-    // machine.set_printing_direction(PrintingDirection::Left);
+    machine.set_printing_direction(PrintingDirection::Left);
 
     match second_command_line_arg {
         Some(path) => print_file(&mut machine, &db, &path),

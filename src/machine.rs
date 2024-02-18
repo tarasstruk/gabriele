@@ -176,6 +176,7 @@ pub trait InstructionRunner {
 
 impl InstructionRunner for Machine {
     fn send_bytes(&mut self, bytes: &[u8]) {
+        self.idle(30);
         for byte in bytes {
             self.write_byte(*byte);
         }
