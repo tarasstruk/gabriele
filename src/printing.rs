@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 
 use crate::daisy::{ActionMapping, AfterSymbolPrinted, Symbol};
-use crate::machine::{InstructionRunner, Settings};
+use crate::machine::{InstructionRunner, PrintingDirection, Settings};
 use crate::motion;
 use crate::position::Position;
 use log::debug;
@@ -86,7 +86,10 @@ impl Action {
     pub fn instructions(&self) -> impl Iterator<Item = Instruction> {
         match self.symbol.act {
             ActionMapping::Print => self.symbol.instructions(self.settings.direction),
-            ActionMapping::Whitespace => motion::space_jump_right(),
+            ActionMapping::Whitespace => match self.settings.direction {
+                PrintingDirection::Right => motion::space_jump_right(),
+                PrintingDirection::Left => motion::space_jump_left(),
+            },
             ActionMapping::CarriageReturn => {
                 let new_pos = self.current_position.cr(&self.base_position);
                 motion::move_absolute(self.current_position.clone(), new_pos)

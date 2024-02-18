@@ -55,7 +55,7 @@ pub enum ActionMapping {
     CarriageReturn,
 }
 
-#[derive(PartialEq, Debug, Clone, Default)]
+#[derive(PartialEq, Debug, Copy, Clone, Default)]
 pub enum AfterSymbolPrinted {
     // sets bits "7"=1 and "6"=0
     #[default]
@@ -66,6 +66,23 @@ pub enum AfterSymbolPrinted {
     // sets bits "7"=0 and "6"=0
     #[allow(unused)]
     HoldOn,
+}
+
+impl AfterSymbolPrinted {
+    fn invert(self) -> Self {
+        match self {
+            AfterSymbolPrinted::MoveRight => AfterSymbolPrinted::MoveLeft,
+            AfterSymbolPrinted::MoveLeft => AfterSymbolPrinted::MoveRight,
+            AfterSymbolPrinted::HoldOn => self,
+        }
+    }
+
+    pub fn with_direction(self, dir: PrintingDirection) -> Self {
+        match dir {
+            PrintingDirection::Right => self,
+            PrintingDirection::Left => self.invert(),
+        }
+    }
 }
 
 impl AfterSymbolPrinted {
@@ -200,7 +217,7 @@ impl Symbol {
             .iter()
             .map(|sign| {
                 let b1 = sign.idx;
-                let b2 = sign.imp.value() | sign.after.value();
+                let b2 = sign.imp.value() | sign.after.with_direction(direction).value();
                 Instruction::bytes(b1, b2)
             })
             .collect();
