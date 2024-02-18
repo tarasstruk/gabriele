@@ -102,8 +102,17 @@ impl Action {
     /// after the generated Instructions have been executed.
     pub fn new_position(&self) -> Position {
         match self.symbol.act {
-            ActionMapping::Print => self.current_position.increment_x(self.symbol.x_ratio()),
-            ActionMapping::Whitespace => self.current_position.step_right(),
+            ActionMapping::Print => match self.settings.direction {
+                PrintingDirection::Right => {
+                    self.current_position.increment_x(self.symbol.x_ratio())
+                }
+                PrintingDirection::Left => self.current_position.decrement_x(self.symbol.x_ratio()),
+            },
+
+            ActionMapping::Whitespace => match self.settings.direction {
+                PrintingDirection::Right => self.current_position.step_right(),
+                PrintingDirection::Left => self.current_position.step_left(),
+            },
             ActionMapping::CarriageReturn => self.current_position.cr(&self.base_position),
         }
     }

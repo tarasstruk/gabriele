@@ -1,6 +1,7 @@
 use crate::database::Db;
+use crate::motion;
 use crate::position::Position;
-use crate::printing::Action;
+use crate::printing::{Action, Instruction};
 use log::{debug, info};
 use serialport::SerialPort;
 use std::default::Default;
@@ -38,8 +39,34 @@ impl Machine {
         }
     }
 
+    pub fn execute_instructions(&mut self, instructions: impl Iterator<Item = Instruction>) {
+        for cmd in instructions {
+            match cmd {
+                Instruction::SendBytes(bytes) => self.send_bytes(&bytes),
+                Instruction::Idle(millis) => self.idle(millis),
+                Instruction::Empty => continue,
+            }
+        }
+    }
+
     pub fn set_printing_direction(&mut self, dir: PrintingDirection) {
         self.settings.direction = dir;
+        match self.settings.direction {
+            PrintingDirection::Left => {
+                // calculate the new base position
+                let pos = self.base_pos.align_right();
+                // update the base position
+                self.base_pos = pos.clone();
+                // move from the current place to the new base position
+                let instructions = motion::move_absolute(self.pos.clone(), pos);
+                self.execute_instructions(instructions);
+                self.wait_long();
+                // update the current position
+                self.pos = self.base_pos.clone();
+                info!("Text align: Right");
+            }
+            _ => info!("Text align: Left"),
+        }
     }
 
     pub fn write_byte(&mut self, input: u8) {

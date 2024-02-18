@@ -26,6 +26,12 @@ impl Position {
     pub fn diff(&self, base: &Position) -> (i32, i32) {
         (self.x - base.x, self.y - base.y)
     }
+
+    pub fn align_right(&self) -> Position {
+        let mut pos = self.clone();
+        pos.x += pos.x_res * 60;
+        pos
+    }
     pub fn step_right(&self) -> Position {
         let mut pos = self.clone();
         pos.x += pos.x_res;
@@ -47,6 +53,12 @@ impl Position {
     pub fn increment_x(&self, ratio: i32) -> Position {
         let mut pos = self.clone();
         pos.x = self.x + (self.x_res * ratio);
+        pos
+    }
+
+    pub fn decrement_x(&self, ratio: i32) -> Position {
+        let mut pos = self.clone();
+        pos.x = self.x - (self.x_res * ratio);
         pos
     }
 }
