@@ -1,6 +1,6 @@
 use crate::database::Db;
 use crate::position::Position;
-use crate::printing::Action;
+use crate::printing::{Action, PrintingDirection};
 use log::{debug, info};
 use serialport::SerialPort;
 use std::default::Default;
@@ -109,7 +109,12 @@ impl Machine {
 
     pub fn print(&mut self, input: &str, db: &Db) {
         for symbol in db.printables(input) {
-            let action = Action::new(symbol.clone(), self.base_pos.clone(), self.pos.clone());
+            let action = Action::new(
+                symbol.clone(),
+                self.base_pos.clone(),
+                self.pos.clone(),
+                PrintingDirection::Right,
+            );
             action.run(self)
         }
     }
