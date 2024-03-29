@@ -27,6 +27,16 @@ impl Position {
         (self.x - base.x, self.y - base.y)
     }
 
+    pub fn x_offset(&self, base: &Position) -> i32 {
+        (self.x - base.x) / self.x_res
+    }
+
+    pub fn align_to_string_length(&self, len: i32) -> Self {
+        let mut pos = self.clone();
+        pos.x = pos.x_res * (len - 1);
+        pos
+    }
+
     pub fn align_right(&self) -> Position {
         let mut pos = self.clone();
         pos.x += pos.x_res * 60;
@@ -46,6 +56,12 @@ impl Position {
 
     pub fn cr(&self, base: &Position) -> Position {
         let mut pos = base.clone();
+        pos.y = self.y + self.y_res;
+        pos
+    }
+
+    pub fn newline(&self) -> Position {
+        let mut pos = self.clone();
         pos.y = self.y + self.y_res;
         pos
     }

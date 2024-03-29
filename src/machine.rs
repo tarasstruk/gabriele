@@ -162,6 +162,43 @@ impl Machine {
             action.run(self)
         }
     }
+
+    pub fn print_line(&mut self, input: &str, db: &Db) {
+        for symbol in db.printables(input) {
+            let action = Action::new(
+                symbol.clone(),
+                self.base_pos.clone(),
+                self.pos.clone(),
+                self.settings,
+            );
+            action.run(self)
+        }
+        let new_pos = self.pos.newline();
+        let instructions = motion::move_absolute(self.pos.clone(), new_pos.clone());
+        self.execute_instructions(instructions);
+        self.pos = new_pos;
+        self.wait_short();
+    }
+
+    pub fn print_by_directional(&mut self, input: &str, db: &Db) {
+        let lines = input.lines();
+        for (line_num, line) in lines.enumerate() {
+            let line = line.trim_end();
+            if (line_num % 2) == 1 {
+                let new_pos = self.pos.align_to_string_length(line.len() as i32);
+                let instructions = motion::move_absolute(self.pos.clone(), new_pos.clone());
+                self.execute_instructions(instructions);
+                self.pos = new_pos;
+                self.wait_short();
+                self.settings.direction = PrintingDirection::Left;
+                let rev_line = line.chars().rev().collect::<String>();
+                self.print_line(&rev_line, db);
+            } else {
+                self.settings.direction = PrintingDirection::Right;
+                self.print_line(line, db);
+            }
+        }
+    }
 }
 
 pub trait InstructionRunner {

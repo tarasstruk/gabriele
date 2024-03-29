@@ -1,7 +1,7 @@
 use env_logger::{Builder, Target};
 use gabriele::connection;
 use gabriele::database::Db;
-use gabriele::machine::{Machine, PrintingDirection};
+use gabriele::machine::Machine;
 use log::info;
 use std::env;
 use std::fs;
@@ -42,7 +42,7 @@ fn main() {
 
     let second_command_line_arg = env::args().nth(2);
 
-    machine.set_printing_direction(PrintingDirection::Left);
+    // machine.set_printing_direction(PrintingDirection::Left);
 
     match second_command_line_arg {
         Some(path) => print_file(&mut machine, &db, &path),
