@@ -1,10 +1,13 @@
 use env_logger::{Builder, Target};
-use gabriele::connection;
 use gabriele::database::Db;
+use gabriele::hal::Hal;
 use gabriele::machine::Machine;
-use log::info;
+use gabriele::printing::Instruction;
+use log::{debug, info};
 use std::env;
 use std::fs;
+use tokio::sync::mpsc;
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 fn welcome(machine: &mut Machine, db: &Db) {
     machine.print(
@@ -22,42 +25,42 @@ fn print_file(machine: &mut Machine, db: &Db, file_path: &str) {
     machine.print(&content, db);
 }
 
-/// command-line args:
-/// 1. serial port path, example: /dev/tty.usbserial-A10OFCFV
-/// 2. optional path to file to read
-fn main() {
+async fn start_runner(rx: UnboundedReceiver<Instruction>) {
+    info!("Started worker");
+    let path = env::args().nth(1).unwrap();
+    let mut runner = Hal::new(&path, rx);
+    runner.prepare().await;
+    runner.run().await;
+}
+
+fn do_the_rest(tx: UnboundedSender<Instruction>) {
+    info!("Machine is starting up");
+    let mut machine = Machine::new(tx);
+    let db = Db::new();
+
+    let second_command_line_arg = env::args().nth(2);
+    match second_command_line_arg {
+        Some(path) => print_file(&mut machine, &db, &path),
+        None => welcome(&mut machine, &db),
+    };
+}
+
+#[tokio::main]
+async fn main() {
     let mut builder = Builder::from_default_env();
     // output logs to the STDOUT
     builder.target(Target::Stdout);
     builder.init();
 
-    let path = env::args().nth(1).unwrap();
-    let conn = connection::uart(&path);
-    info!("Machine is starting up");
-    let mut machine = Machine::new(conn);
+    let (tx, rx) = mpsc::unbounded_channel::<Instruction>();
+    // start_runner(rx).await;
+    // do_the_rest(tx).await;
 
-    let db = Db::new();
+    tokio::spawn(async move {
+        start_runner(rx).await;
+        debug!("start runner returned");
+    });
 
-    machine.prepare();
-
-    let second_command_line_arg = env::args().nth(2);
-
-    // machine.set_printing_direction(PrintingDirection::Left);
-
-    match second_command_line_arg {
-        Some(path) => print_file(&mut machine, &db, &path),
-        None => welcome(&mut machine, &db),
-    }
-
-    machine.wait_long();
-    machine.go_offline();
-    machine.wait_short();
-
-    // TODOs
-    // debug!("homing the carriage motor");
-    // machine.command(&[0b1000_0010, 0b0000_0011]);
-    // debug!("homing the daisy-wheel motor");
-    // machine.command(&[0b1000_0010, 0b0000_0101]);
-    // debug!("homing the tape motor");
-    // machine.command(&[0b1000_0010, 0b0000_1001]);
+    do_the_rest(tx);
+    // let (_first) = tokio::join!(start_runner(rx));
 }

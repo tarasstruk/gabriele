@@ -1,7 +1,9 @@
 pub mod connection;
 mod daisy;
 pub mod database;
+pub mod hal;
 pub mod machine;
 mod motion;
 mod position;
-mod printing;
+pub mod printing;
+pub mod times;

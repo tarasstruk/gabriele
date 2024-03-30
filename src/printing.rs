@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 
 use crate::daisy::{ActionMapping, AfterSymbolPrinted, Symbol};
-use crate::machine::{InstructionRunner, PrintingDirection, Settings};
+use crate::machine::{PrintingDirection, Settings};
 use crate::motion;
 use crate::position::Position;
 use log::debug;
@@ -16,6 +16,7 @@ pub enum Instruction {
     Idle(u64),
     SendBytes([u8; 2]),
     Empty,
+    Shutdown,
 }
 
 impl Instruction {
@@ -117,16 +118,16 @@ impl Action {
         }
     }
 
-    pub fn run(self, sender: &mut impl InstructionRunner) {
-        for cmd in self.instructions() {
-            match cmd {
-                Instruction::SendBytes(bytes) => sender.send_bytes(&bytes),
-                Instruction::Idle(millis) => sender.idle(millis),
-                Instruction::Empty => continue,
-            }
-        }
-        sender.update_position(self.new_position());
-    }
+    // pub async fn run(self, runner: &mut impl InstructionRunner) {
+    //     for cmd in self.instructions() {
+    //         match cmd {
+    //             Instruction::SendBytes(bytes) => runner.send_bytes(&bytes),
+    //             Instruction::Idle(millis) => runner.idle(millis),
+    //             Instruction::Empty => continue,
+    //         }
+    //     }
+    //     sender.update_position(self.new_position());
+    // }
 }
 
 #[cfg(test)]
