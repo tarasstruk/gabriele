@@ -10,6 +10,7 @@ use tokio::sync::mpsc;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 fn welcome(machine: &mut Machine, db: &Db) {
+    debug!("Printing text");
     machine.print(
         "\"Il Signore Gesù, Verbo Incarnato,\n\
         ci doni la grazia della gioia nel servizio umile e generoso.\n\
@@ -25,12 +26,12 @@ fn print_file(machine: &mut Machine, db: &Db, file_path: &str) {
     machine.print(&content, db);
 }
 
-async fn start_runner(rx: UnboundedReceiver<Instruction>) {
+fn start_runner(rx: UnboundedReceiver<Instruction>) {
     info!("Started worker");
     let path = env::args().nth(1).unwrap();
     let mut runner = Hal::new(&path, rx);
-    runner.prepare().await;
-    runner.run().await;
+    runner.prepare();
+    runner.run();
 }
 
 fn do_the_rest(tx: UnboundedSender<Instruction>) {
@@ -43,6 +44,7 @@ fn do_the_rest(tx: UnboundedSender<Instruction>) {
         Some(path) => print_file(&mut machine, &db, &path),
         None => welcome(&mut machine, &db),
     };
+    machine.shutdown();
 }
 
 #[tokio::main]
@@ -56,11 +58,16 @@ async fn main() {
     // start_runner(rx).await;
     // do_the_rest(tx).await;
 
-    tokio::spawn(async move {
-        start_runner(rx).await;
-        debug!("start runner returned");
-    });
-
     do_the_rest(tx);
+
+    let _ = tokio::task::spawn_blocking(move || {
+        info!("the runner is starting");
+        start_runner(rx);
+        info!("the runner is finished");
+    })
+    .await;
+
+
+
     // let (_first) = tokio::join!(start_runner(rx));
 }

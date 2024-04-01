@@ -1,6 +1,6 @@
-use crate::connection;
 use crate::printing::Instruction;
 use crate::times::*;
+use crate::{connection, times};
 use log::{debug, info};
 use serialport::SerialPort;
 use tokio::sync::mpsc::error::TryRecvError;
@@ -33,75 +33,75 @@ impl Hal {
         }
     }
 
-    pub async fn run(&mut self) {
+    pub fn run(&mut self) {
         debug!("running the loop...");
         loop {
             match self.receiver.try_recv() {
                 Ok(item) => match item {
-                    Instruction::SendBytes(bytes) => self.command(&bytes).await,
-                    Instruction::Idle(millis) => wait(millis).await,
+                    Instruction::SendBytes(bytes) => self.command(&bytes),
+                    Instruction::Idle(millis) => wait(millis),
                     Instruction::Empty => continue,
                     Instruction::Shutdown => {
-                        self.shutdown().await;
+                        self.shutdown();
                         return;
                     }
                 },
-                Err(TryRecvError::Empty) => continue,
+                Err(TryRecvError::Empty) => times::wait_short(),
                 Err(TryRecvError::Disconnected) => return,
             }
         }
     }
 
-    pub async fn write_byte(&mut self, input: u8) {
+    pub fn write_byte(&mut self, input: u8) {
         debug!("wait before writing bytes {:?}", &input);
-        wait_tiny().await;
+        wait_tiny();
         debug!("write bytes {:?}", &input);
         self.conn
             .write_all(&[input])
             .expect("byte cannot be sent to machine");
     }
 
-    pub async fn command(&mut self, bytes: &[u8]) {
+    pub fn command(&mut self, bytes: &[u8]) {
         for byte in bytes {
-            self.write_byte(*byte).await;
+            self.write_byte(*byte);
         }
-        wait_short().await;
+        wait_short();
     }
 
-    pub async fn prepare(&mut self) {
+    pub fn prepare(&mut self) {
         debug!("preparing...");
         for cmd in PREPARE_SEQUENCE_STAGE_ONE {
-            self.command(&cmd).await;
+            self.command(&cmd);
             debug!("waiting...");
-            wait_long().await;
+            wait_long();
         }
         debug!("acknowledge...");
-        self.await_acknowledge().await;
+        self.await_acknowledge();
 
         debug!("last steps...");
         for cmd in PREPARE_SEQUENCE_STAGE_TWO {
-            self.command(&cmd).await;
-            wait_long().await;
+            self.command(&cmd);
+            wait_long();
         }
 
         info!("machine is now accepting the printing commands");
     }
 
-    pub async fn shutdown(&mut self) {
-        wait_long().await;
+    pub fn shutdown(&mut self) {
+        wait_long();
         info!("stopping accepting printing commands");
-        self.command(&[0xA3, 0x00]).await;
-        wait_long().await;
+        self.command(&[0xA3, 0x00]);
+        wait_long();
         info!("going off-line");
-        self.command(&[0xA0, 0x00]).await;
-        wait_long().await;
+        self.command(&[0xA0, 0x00]);
+        wait_long();
     }
 
-    pub async fn await_acknowledge(&mut self) {
+    pub fn await_acknowledge(&mut self) {
         // reading the status from machine
-        self.command(&[0xA4, 0x00]).await;
+        self.command(&[0xA4, 0x00]);
         for _ in 0..10 {
-            wait_short().await;
+            wait_short();
             let mut buf = [0_u8];
             if let Ok(n) = self.conn.read(&mut buf) {
                 debug!("received byte {:?}", &buf[0]);
