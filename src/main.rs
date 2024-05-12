@@ -34,7 +34,7 @@ fn start_runner(rx: UnboundedReceiver<Instruction>) {
     runner.run();
 }
 
-fn do_the_rest(tx: UnboundedSender<Instruction>) {
+fn start_machine(tx: UnboundedSender<Instruction>) {
     info!("Machine is starting up");
     let mut machine = Machine::new(tx);
     let db = Db::new();
@@ -55,17 +55,12 @@ async fn main() {
     builder.init();
 
     let (tx, rx) = mpsc::unbounded_channel::<Instruction>();
-    // start_runner(rx).await;
-    // do_the_rest(tx).await;
-
-    do_the_rest(tx);
 
     let _ = tokio::task::spawn_blocking(move || {
         info!("the runner is starting");
         start_runner(rx);
         info!("the runner is finished");
-    })
-    .await;
+    });
 
-    // let (_first) = tokio::join!(start_runner(rx));
+    start_machine(tx);
 }
