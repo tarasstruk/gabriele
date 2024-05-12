@@ -85,6 +85,7 @@ impl Action {
     /// taking the current Position as a reference point.
     /// The result of these instructions is the printed Symbol or/and the associated motion.
     pub fn instructions(&self) -> impl Iterator<Item = Instruction> {
+        debug!("action {:?}", self.symbol.act);
         match self.symbol.act {
             ActionMapping::Print => self.symbol.instructions(self.settings.direction),
             ActionMapping::Whitespace => match self.settings.direction {

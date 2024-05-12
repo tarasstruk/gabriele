@@ -57,8 +57,7 @@ impl Machine {
                 self.pos.clone(),
                 self.settings,
             );
-            // action.run(self)
-            self.transmit(symbol.instructions(PrintingDirection::Right));
+            self.transmit(action.instructions());
             self.pos = action.new_position();
         }
     }

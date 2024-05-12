@@ -37,15 +37,18 @@ impl Hal {
         debug!("running the loop...");
         loop {
             match self.receiver.try_recv() {
-                Ok(item) => match item {
-                    Instruction::SendBytes(bytes) => self.command(&bytes),
-                    Instruction::Idle(millis) => wait(millis),
-                    Instruction::Empty => continue,
-                    Instruction::Shutdown => {
-                        self.shutdown();
-                        return;
+                Ok(item) => {
+                    debug!("Recv: {:?}", &item);
+                    match item {
+                        Instruction::SendBytes(bytes) => self.command(&bytes),
+                        Instruction::Idle(millis) => wait(millis),
+                        Instruction::Empty => continue,
+                        Instruction::Shutdown => {
+                            self.shutdown();
+                            return;
+                        }
                     }
-                },
+                }
                 Err(TryRecvError::Empty) => times::wait_short(),
                 Err(TryRecvError::Disconnected) => return,
             }
@@ -53,9 +56,7 @@ impl Hal {
     }
 
     pub fn write_byte(&mut self, input: u8) {
-        debug!("wait before writing bytes {:?}", &input);
         wait_tiny();
-        debug!("write bytes {:?}", &input);
         self.conn
             .write_all(&[input])
             .expect("byte cannot be sent to machine");

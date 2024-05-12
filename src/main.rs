@@ -67,7 +67,5 @@ async fn main() {
     })
     .await;
 
-
-
     // let (_first) = tokio::join!(start_runner(rx));
 }
