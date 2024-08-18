@@ -5,6 +5,7 @@ use crate::daisy::{ActionMapping, AfterSymbolPrinted, Symbol};
 use crate::machine::{PrintingDirection, Settings};
 use crate::motion;
 use crate::position::Position;
+use crate::times::*;
 use log::debug;
 
 /// The basic directive for the machine
@@ -24,15 +25,15 @@ impl Instruction {
         Self::SendBytes([b1, b2])
     }
     pub fn wait_short() -> Self {
-        Self::Idle(200)
+        Self::Idle(SHORT_MS)
     }
 
     pub fn wait_tiny() -> Self {
-        Self::Idle(50)
+        Self::Idle(TINY_MS)
     }
 
     pub fn wait_long() -> Self {
-        Self::Idle(1000)
+        Self::Idle(LONG_MS)
     }
 }
 
