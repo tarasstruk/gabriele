@@ -78,6 +78,7 @@ pub fn space_jump_right() -> Box<dyn Iterator<Item = Instruction>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::times::*;
 
     #[test]
     fn it_jumps_right() {
@@ -94,12 +95,12 @@ mod tests {
     #[test]
     fn it_moves_in_relative_increments() {
         let mut cmd = move_relative(120, 32);
-        assert_eq!(cmd.next(), Some(Instruction::Idle(200)));
+        assert_eq!(cmd.next(), Some(Instruction::Idle(SHORT_MS)));
         assert_eq!(cmd.next(), Some(Instruction::bytes(0xc0, 120)));
-        assert_eq!(cmd.next(), Some(Instruction::Idle(1000)));
-        assert_eq!(cmd.next(), Some(Instruction::Idle(200)));
+        assert_eq!(cmd.next(), Some(Instruction::Idle(LONG_MS)));
+        assert_eq!(cmd.next(), Some(Instruction::Idle(SHORT_MS)));
         assert_eq!(cmd.next(), Some(Instruction::bytes(0xd0, 32)));
-        assert_eq!(cmd.next(), Some(Instruction::Idle(1000)));
+        assert_eq!(cmd.next(), Some(Instruction::Idle(LONG_MS)));
         assert_eq!(cmd.next(), None);
     }
 }

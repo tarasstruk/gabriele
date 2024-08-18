@@ -113,11 +113,13 @@ impl Action {
 }
 
 #[cfg(test)]
+use crate::times::*;
 mod tests {
     use super::Action;
     use crate::daisy::Symbol;
     use crate::position::Position;
     use crate::printing::Instruction;
+    use crate::times::{LONG_MS, SHORT_MS};
 
     #[test]
     fn test_print_symbol() {
@@ -168,12 +170,12 @@ mod tests {
         let action = Action::new(symbol, Default::default());
         let mut cmd = action.instructions(&base_pos, &mut pos);
 
-        assert_eq!(cmd.next(), Some(Instruction::Idle(200)));
+        assert_eq!(cmd.next(), Some(Instruction::Idle(SHORT_MS)));
         assert_eq!(cmd.next(), Some(Instruction::bytes(0b1110_0000, 120)));
-        assert_eq!(cmd.next(), Some(Instruction::Idle(1000)));
-        assert_eq!(cmd.next(), Some(Instruction::Idle(200)));
+        assert_eq!(cmd.next(), Some(Instruction::Idle(LONG_MS)));
+        assert_eq!(cmd.next(), Some(Instruction::Idle(SHORT_MS)));
         assert_eq!(cmd.next(), Some(Instruction::bytes(0b1101_0000, 16)));
-        assert_eq!(cmd.next(), Some(Instruction::Idle(1000)));
+        assert_eq!(cmd.next(), Some(Instruction::Idle(LONG_MS)));
         assert_eq!(cmd.next(), None);
     }
 }
