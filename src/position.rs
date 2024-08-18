@@ -23,6 +23,11 @@ impl Default for Position {
 }
 
 impl Position {
+    pub fn jump(&mut self, new_pos: &Position) {
+        self.x = new_pos.x;
+        self.y = new_pos.y;
+    }
+
     pub fn diff(&self, base: &Position) -> (i32, i32) {
         (self.x - base.x, self.y - base.y)
     }

@@ -51,14 +51,9 @@ impl Machine {
 
     pub fn print(&mut self, input: &str, db: &Db) {
         for symbol in db.printables(input) {
-            let action = Action::new(
-                symbol.clone(),
-                self.base_pos.clone(),
-                self.pos.clone(),
-                self.settings,
-            );
-            self.transmit(action.instructions());
-            self.pos = action.new_position();
+            let action = Action::new(symbol.clone(), self.settings);
+            let instructions = action.instructions(&self.base_pos, &mut self.pos);
+            self.transmit(instructions);
         }
     }
 }

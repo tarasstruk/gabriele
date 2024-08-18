@@ -61,30 +61,24 @@ impl From<u16> for Instruction {
 /// in the current conditions, taking into account the base_position and the current_position.
 pub struct Action {
     pub symbol: Symbol,
-    pub base_position: Position,
-    pub current_position: Position,
     pub settings: Settings,
 }
 
 impl Action {
-    pub fn new(
-        symbol: Symbol,
-        base_position: Position,
-        current_position: Position,
-        settings: Settings,
-    ) -> Self {
-        Self {
-            symbol,
-            base_position,
-            current_position,
-            settings,
-        }
+    pub fn new(symbol: Symbol, settings: Settings) -> Self {
+        Self { symbol, settings }
     }
 
     /// Generates a sequence of the Instructions,
     /// taking the current Position as a reference point.
     /// The result of these instructions is the printed Symbol or/and the associated motion.
-    pub fn instructions(&self) -> impl Iterator<Item = Instruction> {
+    pub fn instructions(
+        &self,
+        base_position: &Position,
+        current_position: &mut Position,
+    ) -> impl Iterator<Item = Instruction> {
+        let old_position = current_position.clone();
+        self.update_position(base_position, current_position);
         debug!("action {:?}", self.symbol.act);
         match self.symbol.act {
             ActionMapping::Print => self.symbol.instructions(self.settings.direction),
@@ -93,8 +87,7 @@ impl Action {
                 PrintingDirection::Left => motion::space_jump_left(),
             },
             ActionMapping::CarriageReturn => {
-                let new_pos = self.current_position.cr(&self.base_position);
-                motion::move_absolute(self.current_position.clone(), new_pos)
+                motion::move_absolute(&old_position, &current_position)
             }
         }
     }
@@ -102,33 +95,21 @@ impl Action {
     /// New position represents a calculated desired Position
     /// where the machine is expected to be
     /// after the generated Instructions have been executed.
-    pub fn new_position(&self) -> Position {
-        match self.symbol.act {
+    pub fn update_position(&self, base_position: &Position, position: &mut Position) {
+        let pos = match self.symbol.act {
             ActionMapping::Print => match self.settings.direction {
-                PrintingDirection::Right => {
-                    self.current_position.increment_x(self.symbol.x_ratio())
-                }
-                PrintingDirection::Left => self.current_position.decrement_x(self.symbol.x_ratio()),
+                PrintingDirection::Right => &position.increment_x(self.symbol.x_ratio()),
+                PrintingDirection::Left => &position.decrement_x(self.symbol.x_ratio()),
             },
 
             ActionMapping::Whitespace => match self.settings.direction {
-                PrintingDirection::Right => self.current_position.step_right(),
-                PrintingDirection::Left => self.current_position.step_left(),
+                PrintingDirection::Right => &position.step_right(),
+                PrintingDirection::Left => &position.step_left(),
             },
-            ActionMapping::CarriageReturn => self.current_position.cr(&self.base_position),
-        }
+            ActionMapping::CarriageReturn => &position.cr(base_position),
+        };
+        position.jump(&pos)
     }
-
-    // pub async fn run(self, runner: &mut impl InstructionRunner) {
-    //     for cmd in self.instructions() {
-    //         match cmd {
-    //             Instruction::SendBytes(bytes) => runner.send_bytes(&bytes),
-    //             Instruction::Idle(millis) => runner.idle(millis),
-    //             Instruction::Empty => continue,
-    //         }
-    //     }
-    //     sender.update_position(self.new_position());
-    // }
 }
 
 #[cfg(test)]
@@ -141,11 +122,13 @@ mod tests {
     #[test]
     fn test_print_symbol() {
         let symbol = Symbol::new(81, 'ü');
-        let pos: Position = Default::default();
-        let action = Action::new(symbol, pos.clone(), pos.clone(), Default::default());
-        let mut commands = action.instructions();
-        let new_pos = action.new_position();
-        let pos_diff = new_pos.diff(&pos);
+        let mut pos: Position = Default::default();
+        let base_pos: Position = Default::default();
+
+        let action = Action::new(symbol, Default::default());
+        let mut commands = action.instructions(&base_pos, &mut pos);
+        let pos_diff = pos.diff(&base_pos);
+
         assert_eq!(pos_diff, (12, 0));
         assert_eq!(commands.next(), Some(Instruction::bytes(81, 31 + 128)));
         assert_eq!(commands.next(), None);
@@ -159,20 +142,18 @@ mod tests {
         // emulate the motion result caused by printing of 10 characters
         // causing the carriage to move by X=+120 units, when Y=0
         for _ in 0..10 {
-            pos = pos.step_right();
+            pos.jump(&pos.step_right());
         }
-        let action = Action::new(symbol, base_pos.clone(), pos.clone(), Default::default());
-        // let mut commands = action.instructions();
-        let new_pos = action.new_position();
-        // debug!("POS: {:?}", pos);
-        // the diff is the offset of the actual position (after CR is done)
-        // from the previous position:
-        //   * 120 units in -X direction (to the left side)
-        //   * 16 units in the +Y direction (the distance between rows)
-        assert_eq!(new_pos.diff(&pos), (-120, 16));
-        // at the same time, the distance between the base point should be only
+        assert_eq!(pos.diff(&base_pos), (120, 0));
+
+        let mut pos: Position = Default::default();
+        let base_pos: Position = Default::default();
+        let action: Action = Action::new(symbol, Default::default());
+        let _ = action.instructions(&base_pos, &mut pos);
+
+        // The distance between the base point should be only
         // relevant in the +Y direction
-        assert_eq!(new_pos.diff(&base_pos), (0, 16));
+        assert_eq!(pos.diff(&base_pos), (0, 16));
     }
 
     #[test]
@@ -181,10 +162,11 @@ mod tests {
         let base_pos: Position = Default::default();
         let mut pos = base_pos.clone();
         for _ in 0..10 {
-            pos = pos.step_right();
+            pos.jump(&pos.step_right());
         }
-        let action = Action::new(symbol, base_pos, pos, Default::default());
-        let mut cmd = action.instructions();
+
+        let action = Action::new(symbol, Default::default());
+        let mut cmd = action.instructions(&base_pos, &mut pos);
 
         assert_eq!(cmd.next(), Some(Instruction::Idle(200)));
         assert_eq!(cmd.next(), Some(Instruction::bytes(0b1110_0000, 120)));
