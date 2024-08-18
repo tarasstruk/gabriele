@@ -75,3 +75,31 @@ pub fn space_jump_left() -> Box<dyn Iterator<Item = Instruction>> {
 pub fn space_jump_right() -> Box<dyn Iterator<Item = Instruction>> {
     Box::new([Instruction::bytes(0b1000_0011, 0b0000_0000)].into_iter())
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_jumps_right() {
+        let mut cmd = space_jump_right();
+        assert_eq!(cmd.next(), Some(Instruction::SendBytes([0x83, 0])));
+    }
+
+    #[test]
+    fn it_jumps_left() {
+        let mut cmd = space_jump_left();
+        assert_eq!(cmd.next(), Some(Instruction::SendBytes([0x84, 0])));
+    }
+
+    #[test]
+    fn it_moves_in_relative_increments() {
+        let mut cmd = move_relative(120, 32);
+        assert_eq!(cmd.next(), Some(Instruction::Idle(200)));
+        assert_eq!(cmd.next(), Some(Instruction::bytes(0xc0, 120)));
+        assert_eq!(cmd.next(), Some(Instruction::Idle(1000)));
+        assert_eq!(cmd.next(), Some(Instruction::Idle(200)));
+        assert_eq!(cmd.next(), Some(Instruction::bytes(0xd0, 32)));
+        assert_eq!(cmd.next(), Some(Instruction::Idle(1000)));
+        assert_eq!(cmd.next(), None);
+    }
+}
