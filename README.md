@@ -71,11 +71,11 @@ It may fail for the first time run, due to the flow-control issues described bel
 
 ```sh
 # print a welcome message
-cargo run -- /dev/tty.usbserial-A10OFCFV
+cargo run -- --tty /dev/tty.usbserial-A10OFCFV
 # print a text file:
-cargo run -- /dev/tty.usbserial-A10OFCFV example.txt
+cargo run -- --tty /dev/tty.usbserial-A10OFCFV --text example.txt
 # or with debug output:
-RUST_LOG=DEBUG cargo run -- /dev/tty.usbserial-A10OFCFV
+RUST_LOG=DEBUG cargo run -- --tty /dev/tty.usbserial-A10OFCFV
 ```
 
 ## Known issues
