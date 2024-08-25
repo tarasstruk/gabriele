@@ -110,6 +110,16 @@ pub struct Sign {
     pub after: AfterSymbolPrinted,
 }
 
+impl Sign {
+    /// Build a single `Instruction` for the `Sign` taking ito account
+    /// current `PrintingDirection`
+    pub fn build_instruction(&self, dir: PrintingDirection) -> Instruction {
+        let b1 = self.idx;
+        let b2 = self.imp.value() | self.after.with_direction(dir).value();
+        Instruction::bytes(b1, b2)
+    }
+}
+
 #[derive(PartialEq, Debug, Clone, Default)]
 pub struct Symbol {
     pub signs: Vec<Sign>,
@@ -209,11 +219,7 @@ impl Symbol {
         let items: Vec<Instruction> = self
             .signs
             .iter()
-            .map(|sign| {
-                let b1 = sign.idx;
-                let b2 = sign.imp.value() | sign.after.with_direction(direction).value();
-                Instruction::bytes(b1, b2)
-            })
+            .map(|sign| sign.build_instruction(direction))
             .collect();
         Box::new(items.into_iter())
     }
@@ -276,6 +282,17 @@ mod tests {
         let symbol = Symbol::new(81, 'ü').left();
         let mut result = symbol.instructions(Default::default());
         assert_eq!(result.next(), Some(Instruction::bytes(81, 31 + 128 + 64)));
+        assert_eq!(result.next(), None);
+    }
+
+    #[test]
+    fn test_instructions_with_acute_marker() {
+        let symbol = Symbol::new(94, 'à').grave();
+        let mut result = symbol.instructions(Default::default());
+        // 31 for Impression normal + 0 for Direction (hold)
+        assert_eq!(result.next(), Some(Instruction::bytes(94, 31)));
+        // 15 for Impression Mild + 128 for Direction normal
+        assert_eq!(result.next(), Some(Instruction::bytes(72, 15 + 128)));
         assert_eq!(result.next(), None);
     }
 }
