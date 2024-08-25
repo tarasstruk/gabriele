@@ -118,7 +118,6 @@ pub struct Symbol {
 }
 
 impl Symbol {
-    #[allow(unused)]
     pub fn new(idx: u8, character: char) -> Self {
         let sign = Sign {
             idx,
@@ -171,7 +170,6 @@ impl Symbol {
         item
     }
 
-    #[allow(unused)]
     pub fn imp(mut self, impression: Impression) -> Self {
         for sign in self.signs.iter_mut() {
             sign.imp = impression.clone()
@@ -179,7 +177,6 @@ impl Symbol {
         self
     }
 
-    #[allow(unused)]
     pub fn after_printed(mut self, after: AfterSymbolPrinted) -> Self {
         for sign in self.signs.iter_mut() {
             sign.after = after.clone()
@@ -187,27 +184,24 @@ impl Symbol {
         self
     }
 
-    #[allow(unused)]
-    pub fn mild(mut self) -> Self {
+    pub fn mild(self) -> Self {
         self.imp(Impression::Mild)
     }
 
-    #[allow(unused)]
-    pub fn strong(mut self) -> Self {
+    pub fn strong(self) -> Self {
         self.imp(Impression::Strong)
     }
 
     #[allow(unused)]
-    pub fn hold(mut self) -> Self {
+    pub fn hold(self) -> Self {
         self.after_printed(AfterSymbolPrinted::HoldOn)
     }
 
     #[allow(unused)]
-    pub fn left(mut self) -> Self {
+    pub fn left(self) -> Self {
         self.after_printed(AfterSymbolPrinted::MoveLeft)
     }
 
-    #[allow(unused)]
     pub fn instructions(
         &self,
         direction: PrintingDirection,
@@ -224,7 +218,7 @@ impl Symbol {
         Box::new(items.into_iter())
     }
 
-    pub fn x_ratio(&self) -> i32 {
+    pub fn x_positions_increment(&self) -> i32 {
         let mut x = 0_i32;
         for sign in self.signs.iter() {
             match sign.after {

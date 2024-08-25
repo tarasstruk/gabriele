@@ -99,8 +99,12 @@ impl Action {
     pub fn update_position(&self, base_position: &Position, position: &mut Position) {
         let pos = match self.symbol.act {
             ActionMapping::Print => match self.settings.direction {
-                PrintingDirection::Right => &position.increment_x(self.symbol.x_ratio()),
-                PrintingDirection::Left => &position.decrement_x(self.symbol.x_ratio()),
+                PrintingDirection::Right => {
+                    &position.increment_x(self.symbol.x_positions_increment())
+                }
+                PrintingDirection::Left => {
+                    &position.decrement_x(self.symbol.x_positions_increment())
+                }
             },
 
             ActionMapping::Whitespace => match self.settings.direction {
