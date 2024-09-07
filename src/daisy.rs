@@ -128,16 +128,21 @@ pub struct Symbol {
 }
 
 impl Symbol {
-    pub fn new(idx: u8, character: char) -> Self {
+    pub fn new(character: char) -> Self {
+        Self {
+            character,
+            signs: Vec::with_capacity(2),
+            ..Default::default()
+        }
+    }
+
+    pub fn petal(mut self, idx: u8) -> Self {
         let sign = Sign {
             idx,
             ..Default::default()
         };
-        Self {
-            character,
-            signs: vec![sign],
-            ..Default::default()
-        }
+        self.signs.push(sign);
+        self
     }
 
     /// Add a grave accent (è)
@@ -169,13 +174,13 @@ impl Symbol {
     }
 
     pub fn whitespace() -> Self {
-        let mut item = Self::new(128, ' ');
+        let mut item = Self::new(' ');
         item.act = ActionMapping::Whitespace;
         item
     }
 
     pub fn cr() -> Self {
-        let mut item = Self::new(129, '\n');
+        let mut item = Self::new('\n');
         item.act = ActionMapping::CarriageReturn;
         item
     }
@@ -264,7 +269,7 @@ mod tests {
 
     #[test]
     fn test_instructions_with_strong_impression() {
-        let symbol = Symbol::new(81, 'ü').strong();
+        let symbol = Symbol::new('ü').petal(81).strong();
         let mut result = symbol.instructions(Default::default());
         assert_eq!(result.next(), Some(Instruction::bytes(81, 47 + 128)));
         assert_eq!(result.next(), None);
@@ -272,14 +277,14 @@ mod tests {
 
     #[test]
     fn test_instructions_with_hold_after_printed() {
-        let symbol = Symbol::new(81, 'ü').hold();
+        let symbol = Symbol::new('ü').petal(81).hold();
         let mut result = symbol.instructions(Default::default());
         assert_eq!(result.next(), Some(Instruction::bytes(81, 31 + 0)));
         assert_eq!(result.next(), None);
     }
     #[test]
     fn test_instructions_with_left_direction() {
-        let symbol = Symbol::new(81, 'ü').left();
+        let symbol = Symbol::new('ü').petal(81).left();
         let mut result = symbol.instructions(Default::default());
         assert_eq!(result.next(), Some(Instruction::bytes(81, 31 + 128 + 64)));
         assert_eq!(result.next(), None);
@@ -287,7 +292,7 @@ mod tests {
 
     #[test]
     fn test_instructions_with_acute_marker() {
-        let symbol = Symbol::new(94, 'à').grave();
+        let symbol = Symbol::new('à').petal(94).grave();
         let mut result = symbol.instructions(Default::default());
         // 31 for Impression normal + 0 for Direction (hold)
         assert_eq!(result.next(), Some(Instruction::bytes(94, 31)));

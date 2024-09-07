@@ -128,7 +128,7 @@ mod tests {
 
     #[test]
     fn test_print_symbol() {
-        let symbol = Symbol::new(81, 'ü');
+        let symbol = Symbol::new('ü').petal(81);
         let mut pos: Position = Default::default();
         let base_pos: Position = Default::default();
 
