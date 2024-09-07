@@ -4,7 +4,7 @@ use gabriele::hal::Hal;
 use gabriele::machine::Machine;
 use gabriele::printing::Instruction;
 use log::{debug, info};
-use std::fs;
+use std::{fs, io};
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedReceiver;
 
@@ -23,16 +23,21 @@ struct Args {
     text: Option<String>,
 }
 
-fn welcome(machine: &mut Machine, db: &Db) {
-    debug!("Printing text");
-    machine.print(
-        "\"Il Signore Gesù, Verbo Incarnato,\n\
-        ci doni la grazia della gioia nel servizio umile e generoso.\n\
-        E per favore, mi raccomando,\n\
-        non perdiamo il senso dell’umorismo, che è salute!\"\n\
-        (Papa Francesco)\n",
-        db,
-    );
+fn standard_in(machine: &mut Machine, db: &Db) {
+    debug!("Printing stdin");
+    let stdin = io::stdin();
+    for line in stdin.lines() {
+        if let Ok(mut input) = line {
+            if input != String::from("exit") {
+                input.push('\n');
+                machine.print(&input, db)
+            } else {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
 }
 
 fn print_file(machine: &mut Machine, db: &Db, file_path: &str) {
@@ -72,7 +77,7 @@ async fn main() {
 
     match args.text {
         Some(path) => print_file(&mut machine, &db, &path),
-        None => welcome(&mut machine, &db),
+        None => standard_in(&mut machine, &db),
     };
     machine.shutdown();
 }
