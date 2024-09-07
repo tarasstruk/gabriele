@@ -6,7 +6,7 @@ use gabriele::printing::Instruction;
 use log::{debug, info};
 use std::fs;
 use tokio::sync::mpsc;
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use tokio::sync::mpsc::UnboundedReceiver;
 
 use clap::Parser;
 
@@ -47,18 +47,6 @@ fn start_runner(rx: UnboundedReceiver<Instruction>, tty_path: String) {
     runner.run();
 }
 
-fn start_machine(tx: UnboundedSender<Instruction>, text_file: Option<String>) {
-    info!("Machine is starting up");
-    let mut machine = Machine::new(tx);
-    let db = Db::new();
-
-    match text_file {
-        Some(path) => print_file(&mut machine, &db, &path),
-        None => welcome(&mut machine, &db),
-    };
-    machine.shutdown();
-}
-
 #[tokio::main]
 async fn main() {
     let mut builder = Builder::from_default_env();
@@ -76,5 +64,15 @@ async fn main() {
         info!("the runner is finished");
     });
 
-    start_machine(tx, args.text);
+    info!("Machine is starting up");
+    let mut machine = Machine::new(tx);
+    let db = Db::new();
+
+    machine.offset(4 * 12);
+
+    match args.text {
+        Some(path) => print_file(&mut machine, &db, &path),
+        None => welcome(&mut machine, &db),
+    };
+    machine.shutdown();
 }

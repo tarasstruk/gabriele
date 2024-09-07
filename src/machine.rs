@@ -1,4 +1,5 @@
 use crate::database::Db;
+use crate::motion::move_carriage;
 use crate::position::Position;
 use crate::printing::{Action, Instruction};
 use log::info;
@@ -55,5 +56,9 @@ impl Machine {
             let instructions = action.instructions(&self.base_pos, &mut self.pos);
             self.transmit(instructions);
         }
+    }
+    pub fn offset(&mut self, value: i32) {
+        let instructions = move_carriage(value);
+        self.transmit(instructions);
     }
 }
