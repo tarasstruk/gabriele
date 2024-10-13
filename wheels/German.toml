@@ -1,0 +1,1216 @@
+[[symbols]]
+character = "."
+act = "Print"
+
+[[symbols.signs]]
+idx = 1
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = ","
+act = "Print"
+
+[[symbols.signs]]
+idx = 2
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "-"
+act = "Print"
+
+[[symbols.signs]]
+idx = 3
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "v"
+act = "Print"
+
+[[symbols.signs]]
+idx = 4
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "l"
+act = "Print"
+
+[[symbols.signs]]
+idx = 5
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "m"
+act = "Print"
+
+[[symbols.signs]]
+idx = 6
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "j"
+act = "Print"
+
+[[symbols.signs]]
+idx = 7
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "w"
+act = "Print"
+
+[[symbols.signs]]
+idx = 8
+imp = "Normal"
+after = "MoveRight"
+
+# U+00B2
+[[symbols]]
+character = "²"
+act = "Print"
+
+[[symbols.signs]]
+idx = 9
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "µ"
+act = "Print"
+
+[[symbols.signs]]
+idx = 10
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "f"
+act = "Print"
+
+[[symbols.signs]]
+idx = 11
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "^"
+act = "Print"
+
+[[symbols.signs]]
+idx = 12
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = ">"
+act = "Print"
+
+[[symbols.signs]]
+idx = 13
+imp = "Normal"
+after = "MoveRight"
+
+# acute accent
+[[symbols]]
+character = "´"
+act = "Print"
+
+[[symbols.signs]]
+idx = 14
+imp = "Normal"
+after = "MoveRight"
+
+# a replacement for the apostrophe
+[[symbols]]
+character = "’"
+act = "Print"
+
+[[symbols.signs]]
+idx = 14
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "+"
+act = "Print"
+
+[[symbols.signs]]
+idx = 15
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "1"
+act = "Print"
+
+[[symbols.signs]]
+idx = 16
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "2"
+act = "Print"
+
+[[symbols.signs]]
+idx = 17
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "3"
+act = "Print"
+
+[[symbols.signs]]
+idx = 18
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "4"
+act = "Print"
+
+[[symbols.signs]]
+idx = 19
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "5"
+act = "Print"
+
+[[symbols.signs]]
+idx = 20
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "6"
+act = "Print"
+
+[[symbols.signs]]
+idx = 21
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "7"
+act = "Print"
+
+[[symbols.signs]]
+idx = 22
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "8"
+act = "Print"
+
+[[symbols.signs]]
+idx = 23
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "9"
+act = "Print"
+
+[[symbols.signs]]
+idx = 24
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "0"
+act = "Print"
+
+[[symbols.signs]]
+idx = 25
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "E"
+act = "Print"
+
+[[symbols.signs]]
+idx = 26
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "|"
+act = "Print"
+
+[[symbols.signs]]
+idx = 27
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "B"
+act = "Print"
+
+[[symbols.signs]]
+idx = 28
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "F"
+act = "Print"
+
+[[symbols.signs]]
+idx = 29
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "P"
+act = "Print"
+
+[[symbols.signs]]
+idx = 30
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "S"
+act = "Print"
+
+[[symbols.signs]]
+idx = 31
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "Z"
+act = "Print"
+
+[[symbols.signs]]
+idx = 32
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "V"
+act = "Print"
+
+[[symbols.signs]]
+idx = 33
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "&"
+act = "Print"
+
+[[symbols.signs]]
+idx = 34
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "Y"
+act = "Print"
+
+[[symbols.signs]]
+idx = 35
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "A"
+act = "Print"
+
+[[symbols.signs]]
+idx = 36
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "T"
+act = "Print"
+
+[[symbols.signs]]
+idx = 37
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "L"
+act = "Print"
+
+[[symbols.signs]]
+idx = 38
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "$"
+act = "Print"
+
+[[symbols.signs]]
+idx = 39
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "R"
+act = "Print"
+
+[[symbols.signs]]
+idx = 40
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "*"
+act = "Print"
+
+[[symbols.signs]]
+idx = 41
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "C"
+act = "Print"
+
+[[symbols.signs]]
+idx = 42
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = '"'
+act = "Print"
+
+[[symbols.signs]]
+idx = 43
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "D"
+act = "Print"
+
+[[symbols.signs]]
+idx = 44
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "?"
+act = "Print"
+
+[[symbols.signs]]
+idx = 45
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "N"
+act = "Print"
+
+[[symbols.signs]]
+idx = 46
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "I"
+act = "Print"
+
+[[symbols.signs]]
+idx = 47
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "U"
+act = "Print"
+
+[[symbols.signs]]
+idx = 48
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = ")"
+act = "Print"
+
+[[symbols.signs]]
+idx = 49
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "W"
+act = "Print"
+
+[[symbols.signs]]
+idx = 50
+imp = "Strong"
+after = "MoveRight"
+
+[[symbols]]
+character = "_"
+act = "Print"
+
+[[symbols.signs]]
+idx = 51
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "="
+act = "Print"
+
+[[symbols.signs]]
+idx = 52
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = ";"
+act = "Print"
+
+[[symbols.signs]]
+idx = 53
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = ":"
+act = "Print"
+
+[[symbols.signs]]
+idx = 54
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "M"
+act = "Print"
+
+[[symbols.signs]]
+idx = 55
+imp = "Strong"
+after = "MoveRight"
+
+[[symbols]]
+character = "'"
+act = "Print"
+
+[[symbols.signs]]
+idx = 56
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "H"
+act = "Print"
+
+[[symbols.signs]]
+idx = 57
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "("
+act = "Print"
+
+[[symbols.signs]]
+idx = 58
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "K"
+act = "Print"
+
+[[symbols.signs]]
+idx = 59
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "/"
+act = "Print"
+
+[[symbols.signs]]
+idx = 60
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "O"
+act = "Print"
+
+[[symbols.signs]]
+idx = 61
+imp = "Strong"
+after = "MoveRight"
+
+[[symbols]]
+character = "!"
+act = "Print"
+
+[[symbols.signs]]
+idx = 62
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "X"
+act = "Print"
+
+[[symbols.signs]]
+idx = 63
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "§"
+act = "Print"
+
+[[symbols.signs]]
+idx = 64
+imp = "Strong"
+after = "MoveRight"
+
+[[symbols]]
+character = "Q"
+act = "Print"
+
+[[symbols.signs]]
+idx = 65
+imp = "Strong"
+after = "MoveRight"
+
+[[symbols]]
+character = "J"
+act = "Print"
+
+[[symbols.signs]]
+idx = 66
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "%"
+act = "Print"
+
+[[symbols.signs]]
+idx = 67
+imp = "Normal"
+after = "MoveRight"
+
+# U+00B3
+[[symbols]]
+character = "³"
+act = "Print"
+
+[[symbols.signs]]
+idx = 68
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "G"
+act = "Print"
+
+[[symbols.signs]]
+idx = 69
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "°"
+act = "Print"
+
+[[symbols.signs]]
+idx = 70
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "Ü"
+act = "Print"
+
+[[symbols.signs]]
+idx = 71
+imp = "Strong"
+after = "MoveRight"
+
+# grave accent
+[[symbols]]
+character = "`"
+act = "Print"
+
+[[symbols.signs]]
+idx = 72
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "Ö"
+act = "Print"
+
+[[symbols.signs]]
+idx = 73
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "<"
+act = "Print"
+
+[[symbols.signs]]
+idx = 74
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "Ä"
+act = "Print"
+
+[[symbols.signs]]
+idx = 75
+imp = "Strong"
+after = "MoveRight"
+
+[[symbols]]
+character = "#"
+act = "Print"
+
+[[symbols.signs]]
+idx = 76
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "t"
+act = "Print"
+
+[[symbols.signs]]
+idx = 77
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "x"
+act = "Print"
+
+[[symbols.signs]]
+idx = 78
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "q"
+act = "Print"
+
+[[symbols.signs]]
+idx = 79
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "ß"
+act = "Print"
+
+[[symbols.signs]]
+idx = 80
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "ü"
+act = "Print"
+
+[[symbols.signs]]
+idx = 81
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "ö"
+act = "Print"
+
+[[symbols.signs]]
+idx = 82
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "ä"
+act = "Print"
+
+[[symbols.signs]]
+idx = 83
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "y"
+act = "Print"
+
+[[symbols.signs]]
+idx = 84
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "k"
+act = "Print"
+
+[[symbols.signs]]
+idx = 85
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "p"
+act = "Print"
+
+[[symbols.signs]]
+idx = 86
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "h"
+act = "Print"
+
+[[symbols.signs]]
+idx = 87
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "c"
+act = "Print"
+
+[[symbols.signs]]
+idx = 88
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "g"
+act = "Print"
+
+[[symbols.signs]]
+idx = 89
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "n"
+act = "Print"
+
+[[symbols.signs]]
+idx = 90
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "r"
+act = "Print"
+
+[[symbols.signs]]
+idx = 91
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "s"
+act = "Print"
+
+[[symbols.signs]]
+idx = 92
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "e"
+act = "Print"
+
+[[symbols.signs]]
+idx = 93
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "a"
+act = "Print"
+
+[[symbols.signs]]
+idx = 94
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "i"
+act = "Print"
+
+[[symbols.signs]]
+idx = 95
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "d"
+act = "Print"
+
+[[symbols.signs]]
+idx = 96
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "u"
+act = "Print"
+
+[[symbols.signs]]
+idx = 97
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "b"
+act = "Print"
+
+[[symbols.signs]]
+idx = 98
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "o"
+act = "Print"
+
+[[symbols.signs]]
+idx = 99
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "z"
+act = "Print"
+
+[[symbols.signs]]
+idx = 100
+imp = "Normal"
+after = "MoveRight"
+
+[[symbols]]
+character = "ù"
+act = "Print"
+
+[[symbols.signs]]
+idx = 97
+imp = "Normal"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 72
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "Ù"
+act = "Print"
+
+[[symbols.signs]]
+idx = 48
+imp = "Normal"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 72
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "è"
+act = "Print"
+
+[[symbols.signs]]
+idx = 93
+imp = "Normal"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 72
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "È"
+act = "Print"
+
+[[symbols.signs]]
+idx = 26
+imp = "Normal"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 72
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "ì"
+act = "Print"
+
+[[symbols.signs]]
+idx = 95
+imp = "Normal"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 72
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "Ì"
+act = "Print"
+
+[[symbols.signs]]
+idx = 47
+imp = "Normal"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 72
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "à"
+act = "Print"
+
+[[symbols.signs]]
+idx = 94
+imp = "Normal"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 72
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "À"
+act = "Print"
+
+[[symbols.signs]]
+idx = 36
+imp = "Strong"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 72
+imp = "Strong"
+after = "MoveRight"
+
+[[symbols]]
+character = "ò"
+act = "Print"
+
+[[symbols.signs]]
+idx = 99
+imp = "Normal"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 72
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "Ò"
+act = "Print"
+
+[[symbols.signs]]
+idx = 61
+imp = "Strong"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 72
+imp = "Strong"
+after = "MoveRight"
+
+[[symbols]]
+character = "ú"
+act = "Print"
+
+[[symbols.signs]]
+idx = 97
+imp = "Normal"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 14
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "Ú"
+act = "Print"
+
+[[symbols.signs]]
+idx = 48
+imp = "Normal"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 14
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "é"
+act = "Print"
+
+[[symbols.signs]]
+idx = 93
+imp = "Normal"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 14
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "É"
+act = "Print"
+
+[[symbols.signs]]
+idx = 26
+imp = "Normal"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 14
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "í"
+act = "Print"
+
+[[symbols.signs]]
+idx = 95
+imp = "Normal"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 14
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "Í"
+act = "Print"
+
+[[symbols.signs]]
+idx = 47
+imp = "Normal"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 14
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "á"
+act = "Print"
+
+[[symbols.signs]]
+idx = 94
+imp = "Normal"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 14
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "Á"
+act = "Print"
+
+[[symbols.signs]]
+idx = 36
+imp = "Strong"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 14
+imp = "Strong"
+after = "MoveRight"
+
+[[symbols]]
+character = "ó"
+act = "Print"
+
+[[symbols.signs]]
+idx = 99
+imp = "Normal"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 14
+imp = "Mild"
+after = "MoveRight"
+
+[[symbols]]
+character = "Ó"
+act = "Print"
+
+[[symbols.signs]]
+idx = 61
+imp = "Strong"
+after = "HoldOn"
+
+[[symbols.signs]]
+idx = 14
+imp = "Strong"
+after = "MoveRight"
+
+[[symbols]]
+signs = []
+character = " "
+act = "Whitespace"
+
+# new line with carriage return
+[[symbols]]
+signs = []
+character = """
+
+"""
+act = "CarriageReturn"
+
+# unknown character
+[unknown]
+character = "*"
+act = "Print"
+
+[[unknown.signs]]
+idx = 41
+imp = "Normal"
+after = "MoveRight"

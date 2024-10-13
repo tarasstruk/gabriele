@@ -1,5 +1,6 @@
 use crate::machine::PrintingDirection;
 use crate::printing::Instruction;
+use serde::{Deserialize, Serialize};
 use std::default::Default;
 
 #[derive(Default)]
@@ -16,6 +17,7 @@ use std::default::Default;
 /// The User has 4 pre-defined options and
 /// the custom impression value can be specified
 /// as a ratio between the base (0) and maximum (63).
+#[derive(Serialize, Deserialize)]
 pub enum Impression {
     #[default]
     /// Normal impression, middle of the range
@@ -47,7 +49,7 @@ impl Impression {
     }
 }
 
-#[derive(PartialEq, Debug, Clone, Default)]
+#[derive(PartialEq, Debug, Clone, Default, Serialize, Deserialize)]
 pub enum ActionMapping {
     #[default]
     Print,
@@ -55,7 +57,7 @@ pub enum ActionMapping {
     CarriageReturn,
 }
 
-#[derive(PartialEq, Debug, Copy, Clone, Default)]
+#[derive(PartialEq, Debug, Copy, Clone, Default, Serialize, Deserialize)]
 pub enum AfterSymbolPrinted {
     // sets bits "7"=1 and "6"=0
     #[default]
@@ -103,7 +105,7 @@ impl AfterSymbolPrinted {
 /// 2. servo motor rotates the daisy wheel to a specific `idx` position;
 /// 3. solenoid-operated hammer hits the selected petal with a force represented by `imp`;
 /// 4. after the character is printed, `after` determines the behavior of carriage motor.
-#[derive(PartialEq, Debug, Clone, Default)]
+#[derive(PartialEq, Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Sign {
     pub idx: u8,
     pub imp: Impression,
@@ -120,7 +122,7 @@ impl Sign {
     }
 }
 
-#[derive(PartialEq, Debug, Clone, Default)]
+#[derive(PartialEq, Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Symbol {
     pub signs: Vec<Sign>,
     pub character: char,

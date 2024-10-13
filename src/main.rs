@@ -71,7 +71,9 @@ async fn main() {
 
     info!("Machine is starting up");
     let mut machine = Machine::new(tx);
-    let db = Db::new();
+
+    let wheel = fs::read_to_string("wheels/German.toml").expect("Cannot read the wheel file");
+    let db: Db = toml::from_str(&wheel).expect("Cannot deserialize the wheel file");
 
     machine.offset(4 * 12);
 

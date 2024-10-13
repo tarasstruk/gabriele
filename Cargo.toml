@@ -10,5 +10,7 @@ anyhow = "1.0.75"
 clap = { version = "4.5.16", features = ["derive"] }
 env_logger = "0.10.1"
 log = "0.4.20"
+serde = { version = "1.0.210", features = ["derive"] }
 serialport = "4.2.2"
 tokio = { version = "1.37.0", features = ["sync", "macros", "rt-multi-thread", "time"] }
+toml = "0.8.19"
