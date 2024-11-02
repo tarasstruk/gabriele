@@ -1,5 +1,5 @@
 pub mod connection;
-mod daisy;
+pub mod daisy;
 pub mod database;
 pub mod hal;
 pub mod machine;

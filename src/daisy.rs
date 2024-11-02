@@ -32,12 +32,10 @@ pub enum Impression {
 }
 
 impl Impression {
-    #[allow(unused)]
     fn convert_value(ratio: f32) -> u8 {
         (ratio * 63.0) as u8
     }
 
-    #[allow(unused)]
     pub fn value(&self) -> u8 {
         match self {
             Self::Custom(ratio) => Self::convert_value(*ratio),

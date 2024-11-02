@@ -6,7 +6,6 @@ use log::info;
 use std::default::Default;
 use tokio::sync::mpsc::UnboundedSender;
 
-#[allow(unused)]
 pub struct Machine {
     sender: UnboundedSender<Instruction>,
     base_pos: Position,
@@ -60,5 +59,9 @@ impl Machine {
     pub fn offset(&mut self, value: i32) {
         let instructions = move_carriage(value);
         self.transmit(instructions);
+    }
+
+    pub fn send_empty_instruction(&mut self) {
+        self.transmit([Instruction::Empty].into_iter());
     }
 }
