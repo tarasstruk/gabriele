@@ -1,6 +1,5 @@
 use crate::printing::Instruction;
 use crate::times::*;
-use crate::{connection, times};
 use log::{debug, info};
 use serialport::SerialPort;
 use tokio::sync::mpsc::error::TryRecvError;
@@ -26,14 +25,7 @@ pub struct Hal {
 }
 
 impl Hal {
-    pub fn new(path: &str, receiver: UnboundedReceiver<Instruction>) -> Self {
-        Hal {
-            conn: connection::uart(&path),
-            receiver,
-        }
-    }
-
-    pub fn test_new(receiver: UnboundedReceiver<Instruction>, conn: Box<dyn SerialPort>) -> Self {
+    pub fn new(conn: Box<dyn SerialPort>, receiver: UnboundedReceiver<Instruction>) -> Self {
         Hal { conn, receiver }
     }
 
@@ -55,7 +47,7 @@ impl Hal {
                         }
                     }
                 }
-                Err(TryRecvError::Empty) => times::wait_short(),
+                Err(TryRecvError::Empty) => wait_short(),
                 Err(TryRecvError::Disconnected) => return,
             }
         }

@@ -9,7 +9,7 @@ pub fn start_test_hal() -> (UnboundedSender<Instruction>, JoinHandle<()>, Virtua
     let (tx, rx) = mpsc::unbounded_channel::<Instruction>();
     let (port_use, port) = VirtualPort::pair(9600, 256).unwrap();
 
-    let mut hal = Hal::test_new(rx, port_use.into_boxed());
+    let mut hal = Hal::new(port_use.into_boxed(), rx);
     let handle = tokio::task::spawn_blocking(move || hal.run());
 
     (tx, handle, port)

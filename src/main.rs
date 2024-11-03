@@ -9,6 +9,7 @@ use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedReceiver;
 
 use clap::Parser;
+use gabriele::connection;
 
 /// Gabriele
 #[derive(Parser, Debug)]
@@ -47,7 +48,8 @@ fn print_file(machine: &mut Machine, db: &Db, file_path: &str) {
 
 fn start_runner(rx: UnboundedReceiver<Instruction>, tty_path: String) {
     info!("Started worker");
-    let mut runner = Hal::new(&tty_path, rx);
+    let uart = connection::uart(&tty_path);
+    let mut runner = Hal::new(uart, rx);
     runner.prepare();
     runner.run();
 }
