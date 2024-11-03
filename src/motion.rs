@@ -83,15 +83,17 @@ mod tests {
     use crate::times::*;
 
     #[test]
-    fn it_jumps_right() {
+    fn it_modes_the_carriage_one_space_rightwards() {
         let mut cmd = space_jump_right();
         assert_eq!(cmd.next(), Some(SendBytes([0x83, 0])));
+        assert_eq!(cmd.next(), None);
     }
 
     #[test]
-    fn it_jumps_left() {
+    fn it_modes_the_carriage_one_space_leftwards() {
         let mut cmd = space_jump_left();
         assert_eq!(cmd.next(), Some(SendBytes([0x84, 0])));
+        assert_eq!(cmd.next(), None);
     }
 
     #[test]
@@ -100,6 +102,7 @@ mod tests {
         assert_eq!(cmd.next(), Some(Idle(SHORT_MS)));
         assert_eq!(cmd.next(), Some(SendBytes([0xc0, 120])));
         assert_eq!(cmd.next(), Some(Idle(LONG_MS)));
+
         assert_eq!(cmd.next(), Some(Idle(SHORT_MS)));
         assert_eq!(cmd.next(), Some(SendBytes([0xd0, 32])));
         assert_eq!(cmd.next(), Some(Idle(LONG_MS)));
@@ -107,34 +110,38 @@ mod tests {
     }
 
     #[test]
-    fn it_moves_the_carriage_one_step_rightwards() {
+    fn it_moves_the_carriage_one_character_place_rightwards() {
         let mut cmd = move_carriage(1 * X_RES);
         assert_eq!(cmd.next(), Some(Idle(SHORT_MS)));
         assert_eq!(cmd.next(), Some(SendBytes([0xc0, 12])));
         assert_eq!(cmd.next(), Some(Idle(LONG_MS)));
+        assert_eq!(cmd.next(), None);
     }
 
     #[test]
-    fn it_moves_the_carriage_one_step_leftwards() {
+    fn it_moves_the_carriage_one_character_place_leftwards() {
         let mut cmd = move_carriage(-1 * X_RES);
         assert_eq!(cmd.next(), Some(Idle(SHORT_MS)));
         assert_eq!(cmd.next(), Some(SendBytes([0xe0, 12])));
         assert_eq!(cmd.next(), Some(Idle(LONG_MS)));
+        assert_eq!(cmd.next(), None);
     }
 
     #[test]
-    fn it_rolls_the_paper_one_step_downwards() {
+    fn it_rolls_the_paper_one_line_downwards() {
         let mut cmd = move_paper(1 * Y_RES);
         assert_eq!(cmd.next(), Some(Idle(SHORT_MS)));
         assert_eq!(cmd.next(), Some(SendBytes([0xd0, 16])));
         assert_eq!(cmd.next(), Some(Idle(LONG_MS)));
+        assert_eq!(cmd.next(), None);
     }
 
     #[test]
-    fn it_rolls_the_paper_one_step_upwards() {
+    fn it_rolls_the_paper_one_line_upwards() {
         let mut cmd = move_paper(-1 * Y_RES);
         assert_eq!(cmd.next(), Some(Idle(SHORT_MS)));
         assert_eq!(cmd.next(), Some(SendBytes([0xf0, 16])));
         assert_eq!(cmd.next(), Some(Idle(LONG_MS)));
+        assert_eq!(cmd.next(), None);
     }
 }
