@@ -33,6 +33,10 @@ impl Hal {
         }
     }
 
+    pub fn test_new(receiver: UnboundedReceiver<Instruction>, conn: Box<dyn SerialPort>) -> Self {
+        Hal { conn, receiver }
+    }
+
     pub fn run(&mut self) {
         debug!("running the loop...");
         loop {

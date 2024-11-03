@@ -14,3 +14,6 @@ serde = { version = "1.0.210", features = ["derive"] }
 serialport = "4.2.2"
 tokio = { version = "1.37.0", features = ["sync", "macros", "rt-multi-thread", "time"] }
 toml = "0.8.19"
+
+[dev-dependencies]
+virtual-serialport = "0.1.3"
