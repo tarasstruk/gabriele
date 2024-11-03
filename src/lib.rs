@@ -6,4 +6,5 @@ pub mod machine;
 pub mod motion;
 pub mod position;
 pub mod printing;
+pub mod resolution;
 pub mod times;

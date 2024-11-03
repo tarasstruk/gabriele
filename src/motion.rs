@@ -78,8 +78,8 @@ pub fn space_jump_right() -> Box<dyn Iterator<Item = Instruction>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::position::{DEFAULT_X_RESOLUTION as X_RES, DEFAULT_Y_RESOLUTION as Y_RES};
     use crate::printing::Instruction::*;
+    use crate::resolution::{DEFAULT_X_RESOLUTION as X_RES, DEFAULT_Y_RESOLUTION as Y_RES};
     use crate::times::*;
 
     #[test]

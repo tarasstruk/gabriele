@@ -3,8 +3,9 @@ use crate::helpers::{load_test_db, start_test_app};
 use gabriele::{
     daisy::{AfterSymbolPrinted, Impression},
     motion::{move_carriage, move_paper},
-    position::{Position, DEFAULT_X_RESOLUTION, DEFAULT_Y_RESOLUTION},
+    position::Position,
     printing::Instruction,
+    resolution::{DEFAULT_X_RESOLUTION as X_RES, DEFAULT_Y_RESOLUTION as Y_RES},
 };
 
 #[tokio::test]
@@ -24,7 +25,7 @@ async fn prints_two_characters() {
     assert_eq!(latch.get(1).unwrap(), &Instruction::bytes(37, hit));
 
     let expected_position = Position {
-        x: DEFAULT_X_RESOLUTION * 2,
+        x: X_RES * 2,
         y: 0,
         ..Default::default()
     };
@@ -49,7 +50,7 @@ async fn prints_special_character() {
     assert_eq!(latch.get(1).unwrap(), &Instruction::bytes(72, second_hit));
 
     let expected_position = Position {
-        x: DEFAULT_X_RESOLUTION * 1,
+        x: X_RES * 1,
         y: 0,
         ..Default::default()
     };
@@ -69,8 +70,8 @@ async fn prints_character_with_a_newline() {
 
     assert_eq!(latch.len(), 7);
     let hit = Impression::default().value() | AfterSymbolPrinted::MoveRight.value();
-    let carriage_motion: Vec<Instruction> = move_carriage(-1 * DEFAULT_X_RESOLUTION).collect();
-    let roll_motion: Vec<Instruction> = move_paper(1 * DEFAULT_Y_RESOLUTION).collect();
+    let carriage_motion: Vec<Instruction> = move_carriage(-1 * X_RES).collect();
+    let roll_motion: Vec<Instruction> = move_paper(1 * Y_RES).collect();
 
     assert_eq!(latch.get(0).unwrap(), &Instruction::bytes(36, hit));
 

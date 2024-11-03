@@ -1,29 +1,28 @@
-#![allow(unused)]
-#![allow(dead_code)]
-
-use anyhow::Result;
+use crate::resolution::Resolution;
 use std::default::Default;
 
-pub const DEFAULT_X_RESOLUTION: i32 = 12;
-pub const DEFAULT_Y_RESOLUTION: i32 = 16;
-
-#[derive(Debug, Clone, Copy, PartialEq)]
+/// Represents current coordinates of the printing element
+/// against the Paper coordinate system.
+///
+/// The upper left corner of the Paper sheet is the pivot point
+/// with coordinates `x == 0` and `y == 0`.
+///
+/// The pivot point is the default position when the Machine starts:
+/// ```
+/// use gabriele::position::Position;
+/// let current_position = Position::default();
+/// ```
+/// The `x` increases in direction from the left to the right.
+/// The `y` increases in direction from the top to the bottom.
+///
+/// `res` represents `Resolution` which is a part of `Position`.
+/// Two positions are never equal to each other when their resolutions differ.
+///
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Position {
     pub x: i32,
     pub y: i32,
-    pub x_res: i32,
-    pub y_res: i32,
-}
-
-impl Default for Position {
-    fn default() -> Self {
-        Position {
-            x: 0,
-            y: 0,
-            x_res: 12,
-            y_res: 16,
-        }
-    }
+    pub res: Resolution,
 }
 
 impl Position {
@@ -37,53 +36,53 @@ impl Position {
     }
 
     pub fn x_offset(&self, base: &Position) -> i32 {
-        (self.x - base.x) / self.x_res
+        (self.x - base.x) / self.res.x
     }
 
     pub fn align_to_string_length(&self, len: i32) -> Self {
         let mut pos = self.clone();
-        pos.x = pos.x_res * (len - 1);
+        pos.x = pos.res.x * (len - 1);
         pos
     }
 
     pub fn align_right(&self) -> Position {
         let mut pos = self.clone();
-        pos.x += pos.x_res * 60;
+        pos.x += pos.res.x * 60;
         pos
     }
     pub fn step_right(&self) -> Position {
         let mut pos = self.clone();
-        pos.x += pos.x_res;
+        pos.x += pos.res.x;
         pos
     }
 
     pub fn step_left(&self) -> Position {
         let mut pos = self.clone();
-        pos.x -= pos.x_res;
+        pos.x -= pos.res.x;
         pos
     }
 
     pub fn cr(&self, base: &Position) -> Position {
         let mut pos = base.clone();
-        pos.y = self.y + self.y_res;
+        pos.y = self.y + self.res.y;
         pos
     }
 
     pub fn newline(&self) -> Position {
         let mut pos = self.clone();
-        pos.y = self.y + self.y_res;
+        pos.y = self.y + self.res.y;
         pos
     }
 
     pub fn increment_x(&self, ratio: i32) -> Position {
         let mut pos = self.clone();
-        pos.x = self.x + (self.x_res * ratio);
+        pos.x = self.x + (self.res.x * ratio);
         pos
     }
 
     pub fn decrement_x(&self, ratio: i32) -> Position {
         let mut pos = self.clone();
-        pos.x = self.x - (self.x_res * ratio);
+        pos.x = self.x - (self.res.x * ratio);
         pos
     }
 }
