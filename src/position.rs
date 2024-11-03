@@ -3,12 +3,16 @@
 
 use anyhow::Result;
 use std::default::Default;
-#[derive(Debug, Clone)]
+
+pub const DEFAULT_X_RESOLUTION: i32 = 12;
+pub const DEFAULT_Y_RESOLUTION: i32 = 16;
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Position {
-    x: i32,
-    y: i32,
-    x_res: i32,
-    y_res: i32,
+    pub x: i32,
+    pub y: i32,
+    pub x_res: i32,
+    pub y_res: i32,
 }
 
 impl Default for Position {

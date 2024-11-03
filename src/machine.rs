@@ -36,6 +36,10 @@ impl Machine {
         }
     }
 
+    pub fn current_position(&self) -> Position {
+        self.pos
+    }
+
     pub fn shutdown(&mut self) {
         info!("stopping the machine");
         self.transmit([Instruction::Shutdown].into_iter());
