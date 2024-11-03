@@ -1,6 +1,6 @@
 mod helpers;
-use crate::helpers::{load_test_db, start_test_app};
 use gabriele::printing::Instruction;
+use helpers::{load_test_db, start_test_app};
 
 #[tokio::test]
 async fn starts_test_application() {

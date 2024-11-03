@@ -1,5 +1,4 @@
 mod helpers;
-use crate::helpers::{load_test_db, start_test_app};
 use gabriele::{
     daisy::{AfterSymbolPrinted, Impression},
     motion::{move_carriage, move_paper},
@@ -7,6 +6,7 @@ use gabriele::{
     printing::Instruction,
     resolution::{DEFAULT_X_RESOLUTION as X_RES, DEFAULT_Y_RESOLUTION as Y_RES},
 };
+use helpers::{load_test_db, start_test_app};
 
 #[tokio::test]
 async fn prints_two_characters() {

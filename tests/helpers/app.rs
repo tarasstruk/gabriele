@@ -8,6 +8,7 @@ use tokio::task::JoinHandle;
 
 pub struct TestApp {
     pub latch: Arc<Mutex<Vec<Instruction>>>,
+    #[allow(dead_code)]
     pub machine: Machine,
 }
 
