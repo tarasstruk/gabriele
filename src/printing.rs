@@ -14,10 +14,12 @@ use log::debug;
 #[derive(PartialEq, Debug)]
 pub enum Instruction {
     #[allow(unused)]
+    Prepare,
     Idle(u64),
     SendBytes([u8; 2]),
     Empty,
     Shutdown,
+    Halt,
 }
 
 impl Instruction {

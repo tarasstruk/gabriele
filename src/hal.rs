@@ -44,6 +44,8 @@ impl Hal {
                 Ok(item) => {
                     debug!("Recv: {:?}", &item);
                     match item {
+                        Instruction::Halt => break,
+                        Instruction::Prepare => self.prepare(),
                         Instruction::SendBytes(bytes) => self.command(&bytes),
                         Instruction::Idle(millis) => wait(millis),
                         Instruction::Empty => continue,
