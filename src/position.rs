@@ -22,7 +22,6 @@ use std::default::Default;
 pub struct Position {
     pub x: i32,
     pub y: i32,
-    pub res: Resolution,
 }
 
 impl Position {
@@ -35,54 +34,39 @@ impl Position {
         (self.x - base.x, self.y - base.y)
     }
 
-    pub fn x_offset(&self, base: &Position) -> i32 {
-        (self.x - base.x) / self.res.x
-    }
-
-    pub fn align_to_string_length(&self, len: i32) -> Self {
+    pub fn step_right(&self, res: Resolution) -> Position {
         let mut pos = self.clone();
-        pos.x = pos.res.x * (len - 1);
+        pos.x += res.x;
         pos
     }
 
-    pub fn align_right(&self) -> Position {
+    pub fn step_left(&self, res: Resolution) -> Position {
         let mut pos = self.clone();
-        pos.x += pos.res.x * 60;
-        pos
-    }
-    pub fn step_right(&self) -> Position {
-        let mut pos = self.clone();
-        pos.x += pos.res.x;
+        pos.x -= res.x;
         pos
     }
 
-    pub fn step_left(&self) -> Position {
-        let mut pos = self.clone();
-        pos.x -= pos.res.x;
-        pos
-    }
-
-    pub fn cr(&self, base: &Position) -> Position {
+    pub fn cr(&self, base: &Position, res: Resolution) -> Position {
         let mut pos = base.clone();
-        pos.y = self.y + self.res.y;
+        pos.y = self.y + res.y;
         pos
     }
 
-    pub fn newline(&self) -> Position {
+    pub fn newline(&self, res: Resolution) -> Position {
         let mut pos = self.clone();
-        pos.y = self.y + self.res.y;
+        pos.y = self.y + res.y;
         pos
     }
 
-    pub fn increment_x(&self, ratio: i32) -> Position {
+    pub fn increment_x(&self, ratio: i32, res: Resolution) -> Position {
         let mut pos = self.clone();
-        pos.x = self.x + (self.res.x * ratio);
+        pos.x = self.x + (res.x * ratio);
         pos
     }
 
-    pub fn decrement_x(&self, ratio: i32) -> Position {
+    pub fn decrement_x(&self, ratio: i32, res: Resolution) -> Position {
         let mut pos = self.clone();
-        pos.x = self.x - (self.res.x * ratio);
+        pos.x = self.x - (res.x * ratio);
         pos
     }
 }

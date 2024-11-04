@@ -5,6 +5,7 @@ use crate::daisy::{ActionMapping, AfterSymbolPrinted, Symbol};
 use crate::machine::{PrintingDirection, Settings};
 use crate::motion;
 use crate::position::Position;
+use crate::resolution::Resolution;
 use crate::times::*;
 use log::debug;
 
@@ -99,21 +100,22 @@ impl Action {
     /// where the machine is expected to be
     /// after the generated Instructions have been executed.
     pub fn update_position(&self, base_position: &Position, position: &mut Position) {
+        let resolution = Resolution::default();
         let pos = match self.symbol.act {
             ActionMapping::Print => match self.settings.direction {
                 PrintingDirection::Right => {
-                    &position.increment_x(self.symbol.x_positions_increment())
+                    &position.increment_x(self.symbol.x_positions_increment(), resolution)
                 }
                 PrintingDirection::Left => {
-                    &position.decrement_x(self.symbol.x_positions_increment())
+                    &position.decrement_x(self.symbol.x_positions_increment(), resolution)
                 }
             },
 
             ActionMapping::Whitespace => match self.settings.direction {
-                PrintingDirection::Right => &position.step_right(),
-                PrintingDirection::Left => &position.step_left(),
+                PrintingDirection::Right => &position.step_right(resolution),
+                PrintingDirection::Left => &position.step_left(resolution),
             },
-            ActionMapping::CarriageReturn => &position.cr(base_position),
+            ActionMapping::CarriageReturn => &position.cr(base_position, resolution),
         };
         position.jump(&pos)
     }
@@ -126,6 +128,7 @@ mod tests {
     use crate::daisy::Symbol;
     use crate::position::Position;
     use crate::printing::Instruction;
+    use crate::resolution::Resolution;
     use crate::times::{LONG_MS, SHORT_MS};
 
     #[test]
@@ -145,13 +148,14 @@ mod tests {
 
     #[test]
     fn test_carriage_return_coordinates() {
+        let resolution = Resolution::default();
         let symbol = Symbol::cr();
         let base_pos: Position = Default::default();
         let mut pos = base_pos.clone();
         // emulate the motion result caused by printing of 10 characters
         // causing the carriage to move by X=+120 units, when Y=0
         for _ in 0..10 {
-            pos.jump(&pos.step_right());
+            pos.jump(&pos.step_right(resolution));
         }
         assert_eq!(pos.diff(&base_pos), (120, 0));
 
@@ -167,11 +171,12 @@ mod tests {
 
     #[test]
     fn test_carriage_return_instructions() {
+        let resolution = Resolution::default();
         let symbol = Symbol::cr();
         let base_pos: Position = Default::default();
         let mut pos = base_pos.clone();
         for _ in 0..10 {
-            pos.jump(&pos.step_right());
+            pos.jump(&pos.step_right(resolution));
         }
 
         let action = Action::new(symbol, Default::default());

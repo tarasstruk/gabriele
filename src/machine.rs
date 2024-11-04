@@ -2,6 +2,7 @@ use crate::database::Db;
 use crate::motion::move_carriage;
 use crate::position::Position;
 use crate::printing::{Action, Instruction};
+use crate::resolution::Resolution;
 use log::info;
 use std::default::Default;
 use tokio::sync::mpsc::UnboundedSender;
@@ -11,6 +12,8 @@ pub struct Machine {
     base_pos: Position,
     pos: Position,
     settings: Settings,
+    #[allow(unused)]
+    res: Resolution,
 }
 
 #[derive(Default, Copy, Clone)]
@@ -26,13 +29,16 @@ pub enum PrintingDirection {
 
 impl Machine {
     pub fn new(sender: UnboundedSender<Instruction>) -> Self {
-        let pos: Position = Default::default();
+        let pos = Position::default();
         let base_pos = pos.clone();
+        let res = Resolution::default();
+        let settings = Settings::default();
         Self {
             sender,
-            pos,
             base_pos,
-            settings: Default::default(),
+            pos,
+            res,
+            settings,
         }
     }
 
