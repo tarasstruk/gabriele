@@ -66,11 +66,16 @@ impl From<u16> for Instruction {
 pub struct Action {
     pub symbol: Symbol,
     pub settings: Settings,
+    pub resolution: Resolution,
 }
 
 impl Action {
-    pub fn new(symbol: Symbol, settings: Settings) -> Self {
-        Self { symbol, settings }
+    pub fn new(symbol: Symbol, settings: Settings, resolution: Resolution) -> Self {
+        Self {
+            symbol,
+            settings,
+            resolution,
+        }
     }
 
     /// Generates a sequence of the Instructions,
@@ -100,22 +105,21 @@ impl Action {
     /// where the machine is expected to be
     /// after the generated Instructions have been executed.
     pub fn update_position(&self, base_position: &Position, position: &mut Position) {
-        let resolution = Resolution::default();
         let pos = match self.symbol.act {
             ActionMapping::Print => match self.settings.direction {
                 PrintingDirection::Right => {
-                    &position.increment_x(self.symbol.x_positions_increment(), resolution)
+                    &position.increment_x(self.symbol.x_positions_increment(), self.resolution)
                 }
                 PrintingDirection::Left => {
-                    &position.decrement_x(self.symbol.x_positions_increment(), resolution)
+                    &position.decrement_x(self.symbol.x_positions_increment(), self.resolution)
                 }
             },
 
             ActionMapping::Whitespace => match self.settings.direction {
-                PrintingDirection::Right => &position.step_right(resolution),
-                PrintingDirection::Left => &position.step_left(resolution),
+                PrintingDirection::Right => &position.step_right(self.resolution),
+                PrintingDirection::Left => &position.step_left(self.resolution),
             },
-            ActionMapping::CarriageReturn => &position.cr(base_position, resolution),
+            ActionMapping::CarriageReturn => &position.cr(base_position, self.resolution),
         };
         position.jump(&pos)
     }
@@ -137,7 +141,7 @@ mod tests {
         let mut pos: Position = Default::default();
         let base_pos: Position = Default::default();
 
-        let action = Action::new(symbol, Default::default());
+        let action = Action::new(symbol, Default::default(), Default::default());
         let mut commands = action.instructions(&base_pos, &mut pos);
         let pos_diff = pos.diff(&base_pos);
 
@@ -161,7 +165,7 @@ mod tests {
 
         let mut pos: Position = Default::default();
         let base_pos: Position = Default::default();
-        let action: Action = Action::new(symbol, Default::default());
+        let action: Action = Action::new(symbol, Default::default(), Default::default());
         let _ = action.instructions(&base_pos, &mut pos);
 
         // The distance between the base point should be only
@@ -179,7 +183,7 @@ mod tests {
             pos.jump(&pos.step_right(resolution));
         }
 
-        let action = Action::new(symbol, Default::default());
+        let action = Action::new(symbol, Default::default(), Default::default());
         let mut cmd = action.instructions(&base_pos, &mut pos);
 
         assert_eq!(cmd.next(), Some(Instruction::Idle(SHORT_MS)));

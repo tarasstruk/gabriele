@@ -13,7 +13,7 @@ pub struct Machine {
     pos: Position,
     settings: Settings,
     #[allow(unused)]
-    res: Resolution,
+    resolution: Resolution,
 }
 
 #[derive(Default, Copy, Clone)]
@@ -31,13 +31,13 @@ impl Machine {
     pub fn new(sender: UnboundedSender<Instruction>) -> Self {
         let pos = Position::default();
         let base_pos = pos.clone();
-        let res = Resolution::default();
+        let resolution = Resolution::default();
         let settings = Settings::default();
         Self {
             sender,
             base_pos,
             pos,
-            res,
+            resolution,
             settings,
         }
     }
@@ -61,7 +61,7 @@ impl Machine {
 
     pub fn print(&mut self, input: &str, db: &Db) {
         for symbol in db.printables(input) {
-            let action = Action::new(symbol.clone(), self.settings);
+            let action = Action::new(symbol.clone(), self.settings, self.resolution);
             let instructions = action.instructions(&self.base_pos, &mut self.pos);
             self.transmit(instructions);
         }
