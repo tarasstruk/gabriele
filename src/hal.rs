@@ -1,5 +1,6 @@
 use crate::printing::Instruction;
 use crate::times::*;
+use anyhow::anyhow;
 use log::{debug, info};
 use serialport::SerialPort;
 use tokio::sync::mpsc::error::TryRecvError;
@@ -53,11 +54,47 @@ impl Hal {
         }
     }
 
+    pub fn set_dtr_high(&mut self) -> anyhow::Result<()> {
+        self.conn
+            .write_data_terminal_ready(false)
+            .map_err(|e| anyhow!("set_dtr_high failed: {:?}", e))
+    }
+
+    pub fn set_dtr_low(&mut self) -> anyhow::Result<()> {
+        self.conn
+            .write_data_terminal_ready(true)
+            .map_err(|e| anyhow!("set_dtr_low failed: {:?}", e))
+    }
+
     pub fn write_byte(&mut self, input: u8) {
-        wait_tiny();
+        self.reset_latch().unwrap();
+        wait(2);
+
         self.conn
             .write_all(&[input])
             .expect("byte cannot be sent to machine");
+
+        let mut counter = 10_u32;
+        loop {
+            let ri = self.conn.read_ring_indicator().unwrap();
+            println!("RI: {:?}", ri);
+            if ri {
+                self.reset_latch().unwrap();
+                break;
+            }
+            counter -= 1;
+            if counter == 0 {
+                panic!("no acknowledge signal received")
+            }
+            wait(2);
+        }
+    }
+
+    // reset the latch by pulling down the DTR output pin for 1 ms
+    pub fn reset_latch(&mut self) -> anyhow::Result<()> {
+        self.set_dtr_low()?;
+        wait(1);
+        self.set_dtr_high()
     }
 
     pub fn command(&mut self, bytes: &[u8]) {
