@@ -67,7 +67,7 @@ impl Hal {
             let ri = self.conn.read_ring_indicator().unwrap();
             println!("RI: {:?}", ri);
             if ri {
-                self.reset_latch().unwrap();
+                // self.reset_latch().unwrap();
                 break;
             }
             counter -= 1;
