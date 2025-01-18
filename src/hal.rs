@@ -6,20 +6,6 @@ use serialport::SerialPort;
 use tokio::sync::mpsc::error::TryRecvError;
 use tokio::sync::mpsc::UnboundedReceiver;
 
-const PREPARE_SEQUENCE_STAGE_ONE: [[u8; 2]; 3] = [
-    // stopping accepting printing commands
-    [0xA3, 0x00],
-    // going off-line
-    [0xA0, 0x00],
-    // going first on-line
-    [0xA1, 0x00],
-];
-
-const PREPARE_SEQUENCE_STAGE_TWO: [[u8; 2]; 1] = [
-    // preparing the machine for accepting the printing commands
-    [0xA2, 0x00],
-];
-
 pub struct Hal {
     conn: Box<dyn SerialPort>,
     receiver: UnboundedReceiver<Instruction>,
@@ -65,9 +51,8 @@ impl Hal {
         let mut counter = 10_u32;
         loop {
             let ri = self.conn.read_ring_indicator().unwrap();
-            println!("RI: {:?}", ri);
+            debug!("Ring Indicator state: {:?}", ri);
             if ri {
-                // self.reset_latch().unwrap();
                 break;
             }
             counter -= 1;
@@ -105,39 +90,43 @@ impl Hal {
     }
 
     pub fn prepare(&mut self) {
-        debug!("preparing...");
-        for cmd in PREPARE_SEQUENCE_STAGE_ONE {
-            self.command(&cmd);
-            debug!("waiting...");
-            wait_long();
-        }
-        debug!("acknowledge...");
+        self.go_online();
         self.await_acknowledge();
+        self.start_accepting_commands();
+    }
 
-        debug!("last steps...");
-        for cmd in PREPARE_SEQUENCE_STAGE_TWO {
-            self.command(&cmd);
-            wait_long();
-        }
+    fn go_offline(&mut self) {
+        info!("go off-line");
+        self.command(&[0xA0, 0x00]);
+    }
 
-        info!("machine is now accepting the printing commands");
+    fn go_online(&mut self) {
+        info!("go on-line");
+        self.command(&[0xA1, 0x00]);
+    }
+
+    fn start_accepting_commands(&mut self) {
+        info!("start accepting printing commands");
+        self.command(&[0xA2, 0x00]);
+        info!("machine is now accepting the commands");
+    }
+
+    fn stop_accepting_commands(&mut self) {
+        info!("stop accepting printing commands");
+        self.command(&[0xA3, 0x00]);
     }
 
     pub fn shutdown(&mut self) {
         wait_long();
-        info!("stopping accepting printing commands");
-        self.command(&[0xA3, 0x00]);
-        wait_long();
-        info!("going off-line");
-        self.command(&[0xA0, 0x00]);
-        wait_long();
+        self.stop_accepting_commands();
+        self.go_offline();
     }
 
     pub fn await_acknowledge(&mut self) {
-        // reading the status from machine
+        debug!("wait for the acknowledge");
         self.command(&[0xA4, 0x00]);
         for _ in 0..10 {
-            wait_short();
+            wait_tiny();
             let mut buf = [0_u8];
             if let Ok(n) = self.conn.read(&mut buf) {
                 debug!("received byte {:?}", &buf[0]);
