@@ -2,20 +2,9 @@
 
 100% 🦀 Rust command-line interface for TA Gabriele 9009 Typewriter.
 
-## Description of this project
-
-This package provides a command-line tool for some electronic typewriters 
-manufactured by Triumph-Adler in 1980-1990.
-It is developed initially for Gabriele 9009 model of typewriter, but may work with other models
-which have a similar serial data interface.
-
-
-These articles were published in one German magazine in July 1988 and served as motivation to research and create this software.
-- [Article part 1](https://www.stcarchiv.de/stc1988/07/gabriele-9009-1)
-- [Article part 2](https://www.stcarchiv.de/stc1988/08/gabriele-9009-2)
-
-Second the authors of these articles, the machines like IBM Action Writer 6715 would also have similar features,
-which opens a way to use them as daisy-wheel printer.
+This package provides a command-line tool for electronic typewriters with UART interface
+manufactured by Triumph-Adler in 1980-1990. Tested with Gabriele 9009.
+It may work also with similar Triumph-Adler devices and IBM Action Writer 6715.
 
 ## Features
 - [x] abstraction layer for TA Gabriele 9009 serial port connection and the mission-critical low level commands;
@@ -27,18 +16,19 @@ which opens a way to use them as daisy-wheel printer.
 - [ ] proportional characters;
 - [ ] bold characters;
 - [ ] command-line "native" typewriter mode;
+
+
+## Connecting the typewriter to a computer
+
+The typewriters data interface is based on UART specification. It was designed to communicate with a host computer
+through vendor-specific interface box "IFD 1". 
  
-## How to use
+The idea of the project is to to connect our computer "directly" and drive the typewriter with its native 2-bytes 
+commands. 
 
-### Connecting the typewriter to a computer.
+However, there are still two hardware obstacles to overcome.
 
-The typewriters data interface is based on UART specification. It was designed to communicate with a computer
-using a vendor-specific interface box, called "IFD 1" which
-is [mentioned in this article](https://www.stcarchiv.de/stc1986/07/schreibmaschine).
-
-This project does not require this super rare interface box. 
-The idea of the current project is to implement some of "IFD 1" built-in functions on "our" side, letting the 
-application on a host-computer control the typewriters low-level routines via sending commands through the serial port.
+### 1. Host machine provides only the USB interface
 
 To connect the typewriter to your computer a general-purpose USB-UART adapter with TTL level (5 Volts) is needed.
 For example, one based on FT232RL chip, which is also used to develop this project.
@@ -46,23 +36,45 @@ For example, one based on FT232RL chip, which is also used to develop this proje
 If the one is available which can be powered from the external source, the Ppp +5 pin from the typewriter can be 
 supplying power to the chip's circuits.
 
-The typewriter provides a 8-pin DIN connector. ⚠️ Please be aware of +35 Volts and +10 Volt pins presence! 
-A high voltage can destroy the USB-UART adapter or damage the typewriters electronic components if these pins connected. 
+The typewriter provides a 8-pin DIN connector. Be aware of +35 Volts and +10 Volt pins presence:
+a high voltage can damage the electronic components if these pins are connected. 
  
-The wiring diagram is very simple:
+The wiring diagram:
 
-| USB-UART adapter pin | typewriter I/O pin |
-|----------------------|--------------------|
-| GND, signal ground   | GND, central one   |
-| RXD                  | TXD                |
-| RTS                  | DSR                |
-| TXD                  | RXD                |
-| CTS                  | DTR                |
-| +5V                  | +5V                |
+| USB-UART adapter pins | purpose, direction | typewriter I/O pins  |
+|-----------------------|--------------------|----------------------|
+| `GND`                 | ground             | `GND`                |
+| `VCCIO`               | `+` power          | `+5V`                |
+| `RXD`                 | `<-`               | `TXD`                |
+| `TXD`                 | `->`               | `RXD`                |
+| `CTS#`                | `<-`               | `DTR`                |
+| `RTS#`                | `->`               | `DSR`                |
+| not connected         | not connected      | `+10V`  ⚠️           |
+| not connected         | not connected      | `+35V`  ⚠️           |
 
-For the farther information please refer to [this guide](https://www.stcarchiv.de/stc1988/07/gabriele-9009-1)
 
-### Running the app in console
+### 2. Typewriter sends a feedback after accepted command in a non-standard way
+
+The data flow is controlled via CTS# and RTS#  signals on the host side. 
+Once a single byte is sent, the host computer waits for a confirmation signal. After each successfully received byte 
+the typewriter pulls up the DTR pin up for a short time, about `2..8` milliseconds:
+
+![image](/docs/tx_cts.jpg)
+
+However, in non-realtime operating system environment this short high-level signal on CTS# line is likely to be missed.
+To give our host computer a chance to capture the event we have to latch the confirmation signal.
+
+This latch can be built with an `RS#` flip-flop and one logical inverter:
+- `CTS#` pin is inverted and then routed to `R#` pin;
+- `TXD` pin is routed directly to `S#` pin;
+- `Q` output is routed to Ring Indicator `RI#` pin on the UART adapter.
+
+This latch helps to capture the event programmatically, awaiting low-level signal on the `RI#` pin:
+
+![image](/docs/tx_ri.jpg)
+
+
+### Running the app
 
 When the wires are connected correctly and the USB-UART adapter is recognised by the operating system,
 it is found as `/dev/tty.usbserial-`. At this point switch on the typewriter and run the command.
@@ -78,27 +90,13 @@ cargo run -- --tty /dev/tty.usbserial-A10OFCFV --text welcome.txt
 RUST_LOG=DEBUG cargo run -- --tty /dev/tty.usbserial-A10OFCFV
 ```
 
-## Known issues
 
-### Timeouts
+## External links to learn more
 
-The timeouts are applied after or before the sending bytes through the serial tty-interface.
-Why this? The data flow is controlled via DTR and DSR signals. The host computer must wait for an acknowledge signal
-on DTR line from the typewriter. However, this job appears to be hard for the modern non-realtime operating systems:
-we can likely miss the mentioned acknowledge signal, as its timespan is just around 1 millisecond.
-
-In [tweetwronger project](https://github.com/binraker/tweetwronger) this problem is described in more details and
-a workaround is proposed: using an extra microcontroller would solve the data transmission flow-control issues.
-
-However, the current project proves that the "open loop" ensures a stable communication between the typewriter and
-computer, when a timeout is used after each single byte is transmitted. 
-
-Then "open loop" approach (with timeouts as workaround) has these consequences:
-- extra delays are applied to ensure the bytes are accepted and no typewriters internal buffer overflow can happen;
-- the delays after the execution of each command should be adjustable: for example, the printing of a single symbol
-  duration differs from the carriage-return duration;
-- we can focus more on the implementing the logic and interesting features instead of spending time on
-  the low-level communication interfaces.
+- [ST Computer article part 1](https://www.stcarchiv.de/stc1988/07/gabriele-9009-1)
+- [ST Computer article part 2](https://www.stcarchiv.de/stc1988/08/gabriele-9009-2)
+- [tweetwronger project](https://github.com/binraker/tweetwronger)
+- [ST Computer article about IFD-1 interface box](https://www.stcarchiv.de/stc1986/07/schreibmaschine)
 
 
 ## License
