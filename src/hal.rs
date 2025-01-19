@@ -48,7 +48,7 @@ impl Hal {
 
     pub fn write_byte(&mut self, input: u8) {
         debug!("Writing byte: {}", input);
-        wait(2);
+        wait(10);
 
         self.conn
             .write_all(&[input])
@@ -121,10 +121,8 @@ impl Hal {
     fn go_offline(&mut self) {
         info!("go off-line");
         self.write_byte(0xA0);
-        wait_short();
         self.cts_control = false;
         self.write_byte(0x00);
-        // self.command(&[0xA0, 0x00]);
     }
 
     fn go_online(&mut self) {
