@@ -63,7 +63,6 @@ impl Hal {
                     debug!("cts control is disabled");
                     return;
                 }
-                // wait(10);
                 let mut cts_counter = 10_u32;
                 loop {
                     wait(2);
@@ -110,7 +109,7 @@ impl Hal {
         for byte in bytes {
             self.write_byte(*byte);
         }
-        wait_short();
+        wait(50);
     }
 
     pub fn prepare(&mut self) {
