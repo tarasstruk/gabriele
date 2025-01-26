@@ -62,16 +62,27 @@ the typewriter pulls up the DTR pin up for a short time, about `2..8` millisecon
 ![image](/docs/tx_cts.jpg)
 
 However, in non-realtime operating system environment this short high-level signal on CTS# line is likely to be missed.
-To give our host computer a chance to capture the event we have to latch the confirmation signal.
+To give the host computer a chance to read the feedback signal from typewriter we have to latch the state of `CTS` 
+line for longer time.
+The idea is to pull this line high when the data transmission begins and release it when the confirmation signal comes.
 
-This latch can be built with an `RS#` flip-flop and one logical inverter:
-- `CTS#` pin is inverted and then routed to `R#` pin;
-- `TXD` pin is routed directly to `S#` pin;
-- `Q` output is routed to Ring Indicator `RI#` pin on the UART adapter.
+Let's change the signal shape between `DTR` pin of the typewriter and `CTS` pin on the host-computer side:
 
-This latch helps to capture the event programmatically, awaiting low-level signal on the `RI#` pin:
+1. when a start-bit pulls down the `TX` line, the `CTS` pin is pulled up and latched in high state;
+2. typewriter confirms the data reception pulling its `DTR` line up for about 5 ms. and then down;
+3. on the falling edge on `DTR` line we pull down the `CTS` pin (possibly with hysteresis effect).
 
-![image](/docs/tx_ri.jpg)
+The middleware (latch) design considerations:
+- the latch can be built with one `RS#` flip-flop and two logical inverters;
+- it's recommended to use the inverters with hysteresis, for example SNx4HC14 with Schmitt-trigger inputs;
+- `RS#` trigger can be built on a single IC, for example SNx4HC00 by connecting two 2-input NAND gates together;
+- `RTS` pin (on typewriter side) is inverted and then routed to `R#` input;
+- `TXD` pin is routed directly to `S#` input;
+- `Q` output is inverted and routed to NAND gate;
+- the second input of NAND gate is connected to `R#`;
+- the output of NAND gate is connected to `CTS#` pin of the host computers UART interface (usually UART-to-USB adapter).
+
+![image](/docs/cts_latch.jpg)
 
 
 ### Running the app
