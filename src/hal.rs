@@ -53,35 +53,21 @@ impl Hal {
             .write_all(&[input])
             .expect("byte cannot be sent to the machine");
 
-        let mut counter = 10_u32;
+        if !self.cts_control {
+            debug!("cts control is disabled");
+            return;
+        }
+        let mut cts_counter = 1000_u32;
         loop {
-            let ri = self.conn.read_ring_indicator().unwrap();
-            debug!("Ring Indicator state: {:?}", ri);
-            if ri {
-                if !self.cts_control {
-                    debug!("cts control is disabled");
-                    return;
-                }
-                let mut cts_counter = 10_u32;
-                loop {
-                    wait(2);
-                    if let Ok(true) = self.conn.read_clear_to_send() {
-                        wait(2);
-                        break;
-                    }
-                    cts_counter -= 1;
-                    debug!("cts_counter: {}", cts_counter);
-                    if cts_counter == 0 {
-                        panic!("no cts signal")
-                    }
-                }
+            debug!("cts_counter: {}", cts_counter);
+            if let Ok(true) = self.conn.read_clear_to_send() {
+                wait(5);
                 break;
             }
-            counter -= 1;
-            if counter == 0 {
-                panic!("no acknowledge signal received")
+            cts_counter -= 1;
+            if cts_counter == 0 {
+                panic!("CTS signal is not pulled down for 5 seconds")
             }
-            wait(2);
         }
     }
 
