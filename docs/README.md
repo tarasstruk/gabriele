@@ -53,7 +53,7 @@ on the host-computer side.
 - the latch can be built with one `RS#` flip-flop and two logical inverters;
 - it's recommended to use the inverters with hysteresis, for example `SNx4HC14` with Schmitt-trigger inputs;
 - `RS#` trigger can be built on a single IC, for example `SNx4HC00` by connecting two 2-input NAND gates together;
-- `RTS` pin (on typewriter side) is inverted and then routed to `R#` input;
+- `DTR` pin (on typewriter side) is inverted and then routed to `R#` input;
 - `TXD` pin is routed directly to `S#` input;
 - `Q` output is inverted and routed to NAND gate;
 - the second input of NAND gate is connected to `R#`;
@@ -63,6 +63,6 @@ on the host-computer side.
 
 - use `SNx4HC00` or similar IC;
 - connect first and second NAND gates together to obtain `RS#` trigger;
-- invert the `RTS` pin (third NAND gate use as inverter) and then route it to `R#` input;
+- invert the `DTR` pin (using the third NAND as inverter) and then route it to `R#` input;
 - route `TXD` pin to `S#` input;
 - fourth NAND gate: 2 inputs connect to `RS#` and `Q#` when the output connect to `CTS#` pin on host computer.
