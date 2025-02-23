@@ -1,5 +1,4 @@
 use gabriele::printing::Instruction;
-use serialport::{ClearBuffer, SerialPort};
 use std::io::{Read, Write};
 
 mod helpers;
@@ -19,29 +18,43 @@ async fn pushes_bytes_into_serial_port() {
 }
 
 #[tokio::test]
-async fn awaits_prepare_response_from_typewriter() {
+async fn sends_correct_start_sequence_on_successful_feedback_response() {
     let (tx, handle, mut port) = start_test_hal();
     tx.send(Instruction::Prepare).unwrap();
     tx.send(Instruction::Halt).unwrap();
-
-    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-
-    // expect the start handshake sequence of 8 bytes to be written by HAL
-    let mut read_buffer = [0u8; 8];
-    port.read_exact(&mut read_buffer).unwrap();
-    assert_eq!(
-        &read_buffer,
-        &[0xA3, 0x00, 0xA0, 0x00, 0xA1, 0x00, 0xA4, 0x00]
-    );
-
-    port.clear(ClearBuffer::All).unwrap();
-    // write the typewriters feedback response to be read by HAL
+    // mock the feedback response
     port.write_all(&[161_u8]).unwrap();
 
     _ = tokio::join!(handle);
 
-    // expect the end handshake 2 bytes to be written by HAL
-    let mut read_buffer = [0u8; 2];
-    port.read_exact(&mut read_buffer).unwrap();
-    assert_eq!(&read_buffer, &[0xA2, 0x00]);
+    let mut read_buf: Vec<u8> = vec![];
+    port.read_to_end(&mut read_buf).unwrap();
+    assert_eq!(&read_buf, &[0xA1, 0x00, 0xA4, 0x00, 0xA2, 0x00]);
+}
+
+#[tokio::test]
+async fn breaks_start_sequence_on_absence_of_the_feedback_response() {
+    let (tx, handle, mut port) = start_test_hal();
+    tx.send(Instruction::Prepare).unwrap();
+    tx.send(Instruction::Halt).unwrap();
+
+    _ = tokio::join!(handle);
+
+    let mut read_buf: Vec<u8> = vec![];
+    port.read_to_end(&mut read_buf).unwrap();
+    assert_eq!(&read_buf, &[0xA1, 0x00, 0xA4, 0x00]);
+}
+
+#[tokio::test]
+async fn sends_correct_shutdown_sequence() {
+    let (tx, handle, mut port) = start_test_hal();
+    tx.send(Instruction::Shutdown).unwrap();
+    // mock the feedback response
+    port.write_all(&[161_u8]).unwrap();
+
+    _ = tokio::join!(handle);
+
+    let mut read_buf: Vec<u8> = vec![];
+    port.read_to_end(&mut read_buf).unwrap();
+    assert_eq!(&read_buf, &[0xA3, 0x00, 0xA0, 0x00]);
 }
