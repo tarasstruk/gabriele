@@ -7,14 +7,14 @@ use helpers::start_test_hal;
 #[tokio::test]
 async fn pushes_bytes_into_serial_port() {
     let (tx, handle, mut port) = start_test_hal();
-    tx.send(Instruction::SendBytes([0x10, 0xa1])).unwrap();
-    tx.send(Instruction::Shutdown).unwrap();
+    tx.send(Instruction::SendBytes([0x10, 0xA1])).unwrap();
+    tx.send(Instruction::Halt).unwrap();
     _ = tokio::join!(handle);
 
-    let mut read_buffer = [0u8; 6];
-    port.read_exact(&mut read_buffer).unwrap();
+    let mut read_buf: Vec<u8> = vec![];
+    port.read_to_end(&mut read_buf).unwrap();
 
-    assert_eq!(&read_buffer, &[0x10, 0xa1, 0xA3, 0x00, 0xA0, 0x00]);
+    assert_eq!(&read_buf, &[0x10, 0xA1]);
 }
 
 #[tokio::test]
