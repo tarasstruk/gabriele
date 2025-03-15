@@ -5,6 +5,10 @@ use serialport::SerialPort;
 use tokio::sync::mpsc::error::TryRecvError;
 use tokio::sync::mpsc::UnboundedReceiver;
 
+const DELAY_MS_AFTER_COMMAND_SENT: u64 = 50;
+const DELAY_MS_AFTER_BYTE_SENT: u64 = 10;
+const DELAY_MS_FOR_CTS_NEXT_READ: u64 = 5;
+
 pub struct Hal {
     conn: Box<dyn SerialPort>,
     receiver: UnboundedReceiver<Instruction>,
@@ -47,7 +51,7 @@ impl Hal {
 
     pub fn write_byte(&mut self, input: u8) {
         debug!("Writing byte: {}", input);
-        wait(10);
+        wait(DELAY_MS_AFTER_BYTE_SENT);
 
         self.conn
             .write_all(&[input])
@@ -61,7 +65,7 @@ impl Hal {
         loop {
             debug!("cts_counter: {}", cts_counter);
             if let Ok(true) = self.conn.read_clear_to_send() {
-                wait(5);
+                wait(DELAY_MS_FOR_CTS_NEXT_READ);
                 break;
             }
             cts_counter -= 1;
@@ -75,7 +79,7 @@ impl Hal {
         for byte in bytes {
             self.write_byte(*byte);
         }
-        wait(50);
+        wait(DELAY_MS_AFTER_COMMAND_SENT);
     }
 
     pub fn prepare(&mut self) {
