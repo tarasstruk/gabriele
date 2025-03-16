@@ -1,4 +1,5 @@
 use crate::daisy::Symbol;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 #[allow(unused)]
@@ -19,23 +20,30 @@ impl Default for Db {
 
 impl Db {
     #[allow(unused)]
-    pub fn get(&self, character: char) -> &Symbol {
-        if let Some(result) = self
+    pub fn get(&self, character: char, count: usize) -> Symbol {
+        if let Some(sym) = self
             .symbols
             .iter()
             .find(|symbol| symbol.character == character)
         {
-            return result;
+            let mut sym = sym.clone();
+            if count > 1 {
+                sym.repeat_times.replace(count);
+            }
+            return sym;
         }
-        &(self.unknown)
+        self.unknown.clone()
     }
 
     pub fn new() -> Self {
         Default::default()
     }
 
-    pub fn printables<'a>(&'a self, input: &'a str) -> impl Iterator<Item = &'a Symbol> {
-        input.chars().enumerate().map(move |(_, chr)| self.get(chr))
+    pub fn printables<'a>(&'a self, input: &'a str) -> impl Iterator<Item = Symbol> + use<'a> {
+        input
+            .chars()
+            .dedup_with_count()
+            .map(move |(count, chr)| self.get(chr, count))
     }
 }
 
@@ -62,15 +70,15 @@ mod tests {
         let sym_m = Symbol::new('m').petal(6);
 
         let value = first_iterator.next();
-        assert_eq!(value, Some(&sym_w_upper));
+        assert_eq!(value, Some(sym_w_upper.clone()));
 
         let value = first_iterator.next();
-        assert_eq!(value, Some(&sym_o));
+        assert_eq!(value, Some(sym_o));
 
         let value = second_iterator.next();
-        assert_eq!(value, Some(&sym_w_upper));
+        assert_eq!(value, Some(sym_w_upper));
 
         let value = first_iterator.next();
-        assert_eq!(value, Some(&sym_m));
+        assert_eq!(value, Some(sym_m));
     }
 }

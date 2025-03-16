@@ -125,6 +125,7 @@ pub struct Symbol {
     pub signs: Vec<Sign>,
     pub character: char,
     pub act: ActionMapping,
+    pub repeat_times: Option<usize>,
 }
 
 impl Symbol {
@@ -194,7 +195,7 @@ impl Symbol {
 
     pub fn after_printed(mut self, after: AfterSymbolPrinted) -> Self {
         for sign in self.signs.iter_mut() {
-            sign.after = after.clone()
+            sign.after = after
         }
         self
     }
