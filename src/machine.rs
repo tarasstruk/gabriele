@@ -30,7 +30,7 @@ pub enum PrintingDirection {
 impl Machine {
     pub fn new(sender: UnboundedSender<Instruction>) -> Self {
         let pos = Position::default();
-        let base_pos = pos.clone();
+        let base_pos = pos;
         let resolution = Resolution::default();
         let settings = Settings::default();
         Self {

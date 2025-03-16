@@ -35,43 +35,43 @@ impl Position {
     }
 
     pub fn step_right(&self, res: Resolution) -> Position {
-        let mut pos = self.clone();
+        let mut pos = *self;
         pos.x += res.x;
         pos
     }
 
     pub fn step_left(&self, res: Resolution) -> Position {
-        let mut pos = self.clone();
+        let mut pos = *self;
         pos.x -= res.x;
         pos
     }
 
     pub fn cr(&self, base: &Position, res: Resolution) -> Position {
-        let mut pos = base.clone();
+        let mut pos = *base;
         pos.y = self.y + res.y;
         pos
     }
 
     pub fn cr_multiple(&self, base: &Position, ratio: i32, res: Resolution) -> Position {
-        let mut pos = base.clone();
+        let mut pos = *base;
         pos.y = self.y + (res.y * ratio);
         pos
     }
 
     pub fn newline(&self, res: Resolution) -> Position {
-        let mut pos = self.clone();
+        let mut pos = *self;
         pos.y = self.y + res.y;
         pos
     }
 
     pub fn increment_x(&self, ratio: i32, res: Resolution) -> Position {
-        let mut pos = self.clone();
+        let mut pos = *self;
         pos.x = self.x + (res.x * ratio);
         pos
     }
 
     pub fn decrement_x(&self, ratio: i32, res: Resolution) -> Position {
-        let mut pos = self.clone();
+        let mut pos = *self;
         pos.x = self.x - (res.x * ratio);
         pos
     }

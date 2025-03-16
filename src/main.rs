@@ -29,7 +29,7 @@ fn standard_in(machine: &mut Machine, db: &Db) {
     let stdin = io::stdin();
     for line in stdin.lines() {
         if let Ok(mut input) = line {
-            if input != String::from("exit") {
+            if input != *"exit" {
                 input.push('\n');
                 machine.print(&input, db)
             } else {
@@ -65,7 +65,7 @@ async fn main() {
 
     let args = Args::parse();
 
-    let _ = tokio::task::spawn_blocking(move || {
+    let handle = tokio::task::spawn_blocking(move || {
         info!("the runner is starting");
         start_runner(rx, args.tty);
         info!("the runner is finished");
@@ -84,4 +84,5 @@ async fn main() {
         None => standard_in(&mut machine, &db),
     };
     machine.shutdown();
+    _ = tokio::join!(handle);
 }

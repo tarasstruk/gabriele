@@ -1,4 +1,4 @@
-use crate::daisy::Symbol;
+use crate::symbol::Symbol;
 use itertools::Itertools;
 use log::info;
 use serde::{Deserialize, Serialize};
@@ -55,7 +55,7 @@ impl Db {
 #[cfg(test)]
 mod tests {
     use super::Db;
-    use crate::daisy::Symbol;
+    use crate::symbol::Symbol;
 
     #[test]
     fn test_string_to_iterator_over_symbols() {

@@ -1,11 +1,11 @@
 #![allow(unused)]
 #![allow(dead_code)]
 
-use crate::daisy::{ActionMapping, AfterSymbolPrinted, Symbol};
 use crate::machine::{PrintingDirection, Settings};
 use crate::motion;
 use crate::position::Position;
 use crate::resolution::Resolution;
+use crate::symbol::{ActionMapping, Symbol};
 use crate::times::*;
 use log::debug;
 
@@ -90,7 +90,7 @@ impl Action {
         base_position: &Position,
         current_position: &mut Position,
     ) -> impl Iterator<Item = Instruction> {
-        let old_position = current_position.clone();
+        let old_position = *current_position;
         self.update_position(base_position, current_position);
         debug!("action {:?}", self.symbol.act);
         match self.symbol.act {
@@ -111,9 +111,7 @@ impl Action {
                     }
                 }
             },
-            ActionMapping::CarriageReturn => {
-                motion::move_absolute(&old_position, &current_position)
-            }
+            ActionMapping::CarriageReturn => motion::move_absolute(&old_position, current_position),
         }
     }
 
@@ -143,7 +141,7 @@ impl Action {
                 &position.cr_multiple(base_position, self.multi_factor() as i32, self.resolution)
             }
         };
-        position.jump(&pos)
+        position.jump(pos)
     }
 }
 
@@ -151,10 +149,10 @@ impl Action {
 use crate::times::*;
 mod tests {
     use super::Action;
-    use crate::daisy::Symbol;
     use crate::position::Position;
     use crate::printing::Instruction;
     use crate::resolution::Resolution;
+    use crate::symbol::Symbol;
     use crate::times::{LONG_MS, SHORT_MS};
 
     #[test]

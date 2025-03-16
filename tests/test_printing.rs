@@ -1,6 +1,7 @@
 mod helpers;
+use gabriele::impression::Impression;
+use gabriele::symbol::AfterSymbolPrinted;
 use gabriele::{
-    daisy::{AfterSymbolPrinted, Impression},
     motion::{move_carriage, move_paper},
     position::Position,
     printing::Instruction,

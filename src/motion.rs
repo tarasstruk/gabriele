@@ -63,7 +63,7 @@ pub fn move_absolute(
     actual: &Position,
     target: &Position,
 ) -> Box<dyn Iterator<Item = Instruction>> {
-    let (x, y) = target.diff(&actual);
+    let (x, y) = target.diff(actual);
     move_relative(x, y)
 }
 

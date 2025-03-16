@@ -1,10 +1,12 @@
 pub mod connection;
-pub mod daisy;
 pub mod database;
 pub mod hal;
+pub mod impression;
 pub mod machine;
 pub mod motion;
 pub mod position;
 pub mod printing;
 pub mod resolution;
+pub mod sign;
+pub mod symbol;
 pub mod times;
