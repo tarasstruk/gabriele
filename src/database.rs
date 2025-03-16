@@ -1,5 +1,4 @@
 use crate::symbol::Symbol;
-use itertools::Itertools;
 use log::info;
 use serde::{Deserialize, Serialize};
 
@@ -43,19 +42,13 @@ impl Db {
     pub fn new() -> Self {
         Default::default()
     }
-
-    pub fn printables<'a>(&'a self, input: &'a str) -> impl Iterator<Item = Symbol> + use<'a> {
-        input
-            .chars()
-            .dedup_with_count()
-            .map(move |(count, chr)| self.get(chr, count))
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::Db;
     use crate::symbol::Symbol;
+    use crate::to_symbols::ToSymbols;
 
     #[test]
     fn test_string_to_iterator_over_symbols() {
@@ -64,9 +57,9 @@ mod tests {
         let db: Db = toml::from_str(&wheel).expect("Cannot deserialize the wheel file");
 
         let input = "Wombat";
-        let mut first_iterator = db.printables(input);
+        let mut first_iterator = input.to_symbols(&db);
 
-        let mut second_iterator = db.printables(input);
+        let mut second_iterator = input.to_symbols(&db);
 
         let sym_w_upper = Symbol::new('W').petal(50).strong();
 
