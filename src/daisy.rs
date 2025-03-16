@@ -1,5 +1,7 @@
 use crate::machine::PrintingDirection;
 use crate::printing::Instruction;
+use itertools::repeat_n;
+use log::info;
 use serde::{Deserialize, Serialize};
 use std::default::Default;
 
@@ -227,7 +229,13 @@ impl Symbol {
             .iter()
             .map(|sign| sign.build_instruction(direction))
             .collect();
-        Box::new(items.into_iter())
+        let times = self.repeat_times.unwrap_or(1);
+        info!(
+            "printing {} times the character {:?}",
+            times, self.character
+        );
+        let rep: Vec<Instruction> = repeat_n(items, times).flatten().collect();
+        Box::new(rep.into_iter())
     }
 
     pub fn x_positions_increment(&self) -> i32 {
@@ -239,7 +247,7 @@ impl Symbol {
                 AfterSymbolPrinted::MoveRight => x += 1,
             }
         }
-        x
+        x * (self.repeat_times.unwrap_or(1) as i32)
     }
 }
 

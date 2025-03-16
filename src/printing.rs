@@ -12,7 +12,7 @@ use log::debug;
 /// The basic directive for the machine
 /// Idle specifies milliseconds
 /// SendBytes specifies a sequence of 2 bytes to be send over a serial port
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Instruction {
     #[allow(unused)]
     Prepare,
@@ -78,6 +78,10 @@ impl Action {
         }
     }
 
+    pub fn multi_factor(&self) -> usize {
+        self.symbol.repeat_times.unwrap_or(1)
+    }
+
     /// Generates a sequence of the Instructions,
     /// taking the current Position as a reference point.
     /// The result of these instructions is the printed Symbol or/and the associated motion.
@@ -92,8 +96,20 @@ impl Action {
         match self.symbol.act {
             ActionMapping::Print => self.symbol.instructions(self.settings.direction),
             ActionMapping::Whitespace => match self.settings.direction {
-                PrintingDirection::Right => motion::space_jump_right(),
-                PrintingDirection::Left => motion::space_jump_left(),
+                PrintingDirection::Right => {
+                    if self.multi_factor() > 1 {
+                        motion::move_carriage(self.multi_factor() as i32 * self.resolution.x)
+                    } else {
+                        motion::space_jump_right()
+                    }
+                }
+                PrintingDirection::Left => {
+                    if self.multi_factor() > 1 {
+                        motion::move_carriage(self.multi_factor() as i32 * (-self.resolution.x))
+                    } else {
+                        motion::space_jump_left()
+                    }
+                }
             },
             ActionMapping::CarriageReturn => {
                 motion::move_absolute(&old_position, &current_position)
@@ -116,10 +132,16 @@ impl Action {
             },
 
             ActionMapping::Whitespace => match self.settings.direction {
-                PrintingDirection::Right => &position.step_right(self.resolution),
-                PrintingDirection::Left => &position.step_left(self.resolution),
+                PrintingDirection::Right => {
+                    &position.increment_x(self.multi_factor() as i32, self.resolution)
+                }
+                PrintingDirection::Left => {
+                    &position.decrement_x(self.multi_factor() as i32, self.resolution)
+                }
             },
-            ActionMapping::CarriageReturn => &position.cr(base_position, self.resolution),
+            ActionMapping::CarriageReturn => {
+                &position.cr_multiple(base_position, self.multi_factor() as i32, self.resolution)
+            }
         };
         position.jump(&pos)
     }

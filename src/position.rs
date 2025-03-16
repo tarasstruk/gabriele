@@ -52,6 +52,12 @@ impl Position {
         pos
     }
 
+    pub fn cr_multiple(&self, base: &Position, ratio: i32, res: Resolution) -> Position {
+        let mut pos = base.clone();
+        pos.y = self.y + (res.y * ratio);
+        pos
+    }
+
     pub fn newline(&self, res: Resolution) -> Position {
         let mut pos = self.clone();
         pos.y = self.y + res.y;

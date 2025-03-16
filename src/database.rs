@@ -1,5 +1,6 @@
 use crate::daisy::Symbol;
 use itertools::Itertools;
+use log::info;
 use serde::{Deserialize, Serialize};
 
 #[allow(unused)]
@@ -26,6 +27,10 @@ impl Db {
             .iter()
             .find(|symbol| symbol.character == character)
         {
+            info!(
+                "found character {:?} to be printed {} times",
+                character, count
+            );
             let mut sym = sym.clone();
             if count > 1 {
                 sym.repeat_times.replace(count);
