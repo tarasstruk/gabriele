@@ -82,6 +82,22 @@ impl Action {
         self.symbol.repeat_times.unwrap_or(1)
     }
 
+    pub fn is_single(&self) -> bool {
+        self.multi_factor() == 1
+    }
+
+    pub fn whitespace_instructions(
+        &self,
+        old_position: &Position,
+        new_position: &Position,
+    ) -> Box<dyn Iterator<Item = Instruction>> {
+        match self.settings.direction {
+            PrintingDirection::Right if self.is_single() => motion::space_jump_right(),
+            PrintingDirection::Left if self.is_single() => motion::space_jump_left(),
+            _ => motion::move_absolute(old_position, new_position),
+        }
+    }
+
     /// Generates a sequence of the Instructions,
     /// taking the current Position as a reference point.
     /// The result of these instructions is the printed Symbol or/and the associated motion.
@@ -95,22 +111,9 @@ impl Action {
         debug!("action {:?}", self.symbol.act);
         match self.symbol.act {
             ActionMapping::Print => self.symbol.instructions(self.settings.direction),
-            ActionMapping::Whitespace => match self.settings.direction {
-                PrintingDirection::Right => {
-                    if self.multi_factor() > 1 {
-                        motion::move_carriage(self.multi_factor() as i32 * self.resolution.x)
-                    } else {
-                        motion::space_jump_right()
-                    }
-                }
-                PrintingDirection::Left => {
-                    if self.multi_factor() > 1 {
-                        motion::move_carriage(self.multi_factor() as i32 * (-self.resolution.x))
-                    } else {
-                        motion::space_jump_left()
-                    }
-                }
-            },
+            ActionMapping::Whitespace => {
+                self.whitespace_instructions(&old_position, current_position)
+            }
             ActionMapping::CarriageReturn => motion::move_absolute(&old_position, current_position),
         }
     }
@@ -129,14 +132,10 @@ impl Action {
                 }
             },
 
-            ActionMapping::Whitespace => match self.settings.direction {
-                PrintingDirection::Right => {
-                    &position.increment_x(self.multi_factor() as i32, self.resolution)
-                }
-                PrintingDirection::Left => {
-                    &position.decrement_x(self.multi_factor() as i32, self.resolution)
-                }
-            },
+            ActionMapping::Whitespace => &position.increment_x(
+                (self.multi_factor() as i32) * i32::from(self.settings.direction),
+                self.resolution,
+            ),
             ActionMapping::CarriageReturn => {
                 &position.cr_multiple(base_position, self.multi_factor() as i32, self.resolution)
             }

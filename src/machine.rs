@@ -28,6 +28,15 @@ pub enum PrintingDirection {
     Left,
 }
 
+impl From<PrintingDirection> for i32 {
+    fn from(direction: PrintingDirection) -> Self {
+        match direction {
+            PrintingDirection::Right => 1,
+            PrintingDirection::Left => -1,
+        }
+    }
+}
+
 impl Machine {
     pub fn new(sender: UnboundedSender<Instruction>) -> Self {
         let pos = Position::default();
