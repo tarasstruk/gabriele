@@ -17,16 +17,28 @@ pub enum Instruction {
     #[allow(unused)]
     Prepare,
     Idle(u64),
-    SendBytes([u8; 2]),
+    SendBytes(SendBytesDetails),
     Empty,
     Shutdown,
     Halt,
 }
 
+#[derive(PartialEq, Debug, Clone, Copy)]
+pub struct SendBytesDetails {
+    pub idle_before: Option<u64>,
+    pub cmd: [u8; 2],
+    pub idle_after: Option<u64>,
+}
+
 impl Instruction {
     pub fn bytes(b1: u8, b2: u8) -> Self {
-        Self::SendBytes([b1, b2])
+        Self::SendBytes(SendBytesDetails {
+            idle_before: None,
+            cmd: [b1, b2],
+            idle_after: None,
+        })
     }
+
     pub fn wait_short() -> Self {
         Self::Idle(SHORT_MS)
     }
@@ -40,9 +52,13 @@ impl Instruction {
     }
 }
 
-impl From<u16> for Instruction {
+impl From<u16> for SendBytesDetails {
     fn from(value: u16) -> Self {
-        Self::SendBytes(value.to_be_bytes())
+        SendBytesDetails {
+            idle_before: None,
+            cmd: value.to_be_bytes(),
+            idle_after: None,
+        }
     }
 }
 
@@ -147,9 +163,10 @@ impl Action {
 #[cfg(test)]
 use crate::times::*;
 mod tests {
-    use super::Action;
+    use super::{Action, SendBytesDetails};
     use crate::position::Position;
     use crate::printing::Instruction;
+    use crate::printing::Instruction::SendBytes;
     use crate::resolution::Resolution;
     use crate::symbol::Symbol;
     use crate::times::{LONG_MS, SHORT_MS};
@@ -205,12 +222,18 @@ mod tests {
         let action = Action::new(symbol, Default::default(), Default::default());
         let mut cmd = action.instructions(&base_pos, &mut pos);
 
-        assert_eq!(cmd.next(), Some(Instruction::Idle(SHORT_MS)));
-        assert_eq!(cmd.next(), Some(Instruction::bytes(0b1110_0000, 120)));
-        assert_eq!(cmd.next(), Some(Instruction::Idle(LONG_MS)));
-        assert_eq!(cmd.next(), Some(Instruction::Idle(SHORT_MS)));
-        assert_eq!(cmd.next(), Some(Instruction::bytes(0b1101_0000, 16)));
-        assert_eq!(cmd.next(), Some(Instruction::Idle(LONG_MS)));
+        let details = SendBytesDetails {
+            idle_before: Some(200),
+            cmd: [0b1110_0000, 120],
+            idle_after: Some(1000),
+        };
+        assert_eq!(cmd.next(), Some(Instruction::SendBytes(details)));
+        let details = SendBytesDetails {
+            idle_before: Some(200),
+            cmd: [0b1101_0000, 16],
+            idle_after: Some(1000),
+        };
+        assert_eq!(cmd.next(), Some(Instruction::SendBytes(details)));
         assert_eq!(cmd.next(), None);
     }
 }

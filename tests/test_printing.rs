@@ -69,21 +69,13 @@ async fn prints_character_with_a_newline() {
     _ = tokio::join!(runner);
     let latch = app.latch.lock().unwrap();
 
-    assert_eq!(latch.len(), 7);
+    // 1 printing instruction plus 2 motion instructions
+    assert_eq!(latch.len(), 3);
     let hit = Impression::default().value() | AfterSymbolPrinted::MoveRight.value();
     let carriage_motion: Vec<Instruction> = move_carriage(-1 * X_RES).collect();
     let roll_motion: Vec<Instruction> = move_paper(1 * Y_RES).collect();
 
     assert_eq!(latch.get(0).unwrap(), &Instruction::bytes(36, hit));
-
-    // move the carriage to the `x = 0` position
-    for (idx, inst) in (latch[1..=3]).iter().enumerate() {
-        assert_eq!(inst, carriage_motion.get(idx).unwrap());
-    }
-
-    // roll the paper to `y = 1` position
-    // `[Idle(200), SendBytes([208, 16]), Idle(1000)]`
-    for (idx, inst) in (latch[4..=6]).iter().enumerate() {
-        assert_eq!(inst, roll_motion.get(idx).unwrap());
-    }
+    assert_eq!(latch.get(1).unwrap(), carriage_motion.get(0).unwrap());
+    assert_eq!(latch.get(2).unwrap(), roll_motion.get(0).unwrap());
 }

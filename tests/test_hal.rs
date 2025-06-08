@@ -1,4 +1,4 @@
-use gabriele::printing::Instruction;
+use gabriele::printing::{Instruction, SendBytesDetails};
 use std::io::{Read, Write};
 
 mod helpers;
@@ -7,7 +7,12 @@ use helpers::start_test_hal;
 #[tokio::test]
 async fn pushes_bytes_into_serial_port() {
     let (tx, handle, mut port) = start_test_hal();
-    tx.send(Instruction::SendBytes([0x10, 0xA1])).unwrap();
+    tx.send(Instruction::SendBytes(SendBytesDetails {
+        idle_before: None,
+        cmd: [0x10, 0xA1],
+        idle_after: None,
+    }))
+    .unwrap();
     tx.send(Instruction::Halt).unwrap();
     _ = tokio::join!(handle);
 

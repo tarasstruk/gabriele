@@ -1,4 +1,4 @@
-use crate::printing::Instruction;
+use crate::printing::{Instruction, SendBytesDetails};
 use crate::times::*;
 use log::{debug, info};
 use serialport::SerialPort;
@@ -34,7 +34,7 @@ impl Hal {
                     match item {
                         Instruction::Halt => break,
                         Instruction::Prepare => self.prepare(),
-                        Instruction::SendBytes(bytes) => self.command(&bytes),
+                        Instruction::SendBytes(details) => self.send_bytes_with_idle(details),
                         Instruction::Idle(millis) => wait(millis),
                         Instruction::Empty => continue,
                         Instruction::Shutdown => {
@@ -78,6 +78,19 @@ impl Hal {
     pub fn command(&mut self, bytes: &[u8]) {
         for byte in bytes {
             self.write_byte(*byte);
+        }
+        wait(DELAY_MS_AFTER_COMMAND_SENT);
+    }
+
+    pub fn send_bytes_with_idle(&mut self, details: SendBytesDetails) {
+        if let Some(time) = details.idle_before {
+            wait(time);
+        }
+        for byte in details.cmd {
+            self.write_byte(byte);
+        }
+        if let Some(time) = details.idle_after {
+            wait(time);
         }
         wait(DELAY_MS_AFTER_COMMAND_SENT);
     }
