@@ -1,6 +1,13 @@
 use crate::symbol::Symbol;
+use anyhow::bail;
 use log::info;
 use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::Path;
+
+pub trait DaisyDatabase {
+    fn get(&self, character: char, count: usize) -> Symbol;
+}
 
 #[allow(unused)]
 #[derive(Serialize, Deserialize)]
@@ -18,9 +25,8 @@ impl Default for Db {
     }
 }
 
-impl Db {
-    #[allow(unused)]
-    pub fn get(&self, character: char, count: usize) -> Symbol {
+impl DaisyDatabase for &Db {
+    fn get(&self, character: char, count: usize) -> Symbol {
         if let Some(sym) = self
             .symbols
             .iter()
@@ -38,6 +44,19 @@ impl Db {
         }
         self.unknown.clone()
     }
+}
+
+impl Db {
+    pub fn load_from_file(filename: &str) -> anyhow::Result<Db> {
+        let path = Path::new(&filename);
+        if path.exists() {
+            let content = fs::read_to_string(filename)?;
+            return toml::from_str(&content).map_err(|_e| {
+                anyhow::anyhow!("the daisy wheel data is not valid in {}", filename)
+            });
+        }
+        bail!("requested daisy wheel file is not found: {}", filename)
+    }
 
     pub fn new() -> Self {
         Default::default()
@@ -49,6 +68,12 @@ mod tests {
     use super::Db;
     use crate::symbol::Symbol;
     use crate::to_symbols::ToSymbols;
+
+    #[test]
+    fn test_load_database_from_file() {
+        let res = Db::load_from_file("wheels/German.toml");
+        assert!(res.is_ok());
+    }
 
     #[test]
     fn test_string_to_iterator_over_symbols() {

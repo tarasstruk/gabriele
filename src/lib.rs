@@ -1,5 +1,6 @@
 pub mod connection;
 pub mod database;
+pub mod directive;
 pub mod hal;
 pub mod impression;
 pub mod machine;

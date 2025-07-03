@@ -211,6 +211,7 @@ dependencies = [
  "env_logger",
  "itertools",
  "log",
+ "regex",
  "serde",
  "serialport",
  "tokio",

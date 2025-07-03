@@ -1,15 +1,18 @@
 use env_logger::{Builder, Target};
-use gabriele::database::Db;
+use gabriele::database::{DaisyDatabase, Db};
 use gabriele::hal::Hal;
 use gabriele::machine::Machine;
 use gabriele::printing::Instruction;
 use log::{debug, info};
+use std::cell::RefCell;
+use std::ops::Deref;
 use std::{fs, io};
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedReceiver;
 
 use clap::Parser;
 use gabriele::connection;
+use gabriele::directive::process_directive;
 
 /// Gabriele
 #[derive(Parser, Debug)]
@@ -24,14 +27,16 @@ struct Args {
     text: Option<String>,
 }
 
-fn standard_in(machine: &mut Machine, db: &Db) {
+fn standard_in(machine: &mut Machine, db: RefCell<Db>) {
     debug!("Printing stdin");
     let stdin = io::stdin();
     for line in stdin.lines() {
         if let Ok(mut input) = line {
-            if input != *"exit" {
+            if input.starts_with("@>") {
+                process_directive(&input, db.borrow_mut());
+            } else if input != *"exit" {
                 input.push('\n');
-                machine.print(&input, db)
+                machine.print(&input, db.borrow().deref());
             } else {
                 break;
             }
@@ -41,7 +46,7 @@ fn standard_in(machine: &mut Machine, db: &Db) {
     }
 }
 
-fn print_file(machine: &mut Machine, db: &Db, file_path: &str) {
+fn print_file(machine: &mut Machine, db: impl DaisyDatabase, file_path: &str) {
     let content = fs::read_to_string(file_path).unwrap();
     machine.print(&content, db);
 }
@@ -81,7 +86,7 @@ async fn main() {
 
     match args.text {
         Some(path) => print_file(&mut machine, &db, &path),
-        None => standard_in(&mut machine, &db),
+        None => standard_in(&mut machine, RefCell::new(db)),
     };
     machine.shutdown();
     _ = tokio::join!(handle);
