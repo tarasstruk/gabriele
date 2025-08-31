@@ -6,7 +6,7 @@ use std::time::Duration;
 pub fn uart(tty_serial_unix_path: &str) -> Box<dyn SerialPort> {
     thread::sleep(Duration::from_millis(1000));
     debug!("connecting...");
-    serialport::new(tty_serial_unix_path, 4800)
+    serialport::new(tty_serial_unix_path, 115200)
         .timeout(Duration::from_millis(1000))
         .flow_control(FlowControl::None)
         .parity(Parity::None)
