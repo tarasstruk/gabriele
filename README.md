@@ -27,6 +27,10 @@ through vendor-specific interface box "IFD 1".
 The idea of the project is to connect our computer "directly" and drive the typewriter with its native 2-bytes 
 commands. However, there are still some [hardware obstacles to overcome](/docs/README.md).
 
+A new way of communication to the machine is https://github.com/tarasstruk/gabriele-embassy
+It provides an abstraction layer and facilitates the physical connection to Gabriele.
+The feedback is based on the echo principle: a byte transmitted, the same is received.
+
 ## Running the app
 
 When the wires are connected correctly and the USB-UART adapter is recognised by the operating system,
