@@ -1,84 +1,99 @@
+use crate::oport::{ActorMessage, UartActor};
 use crate::printing::{Instruction, SendBytesDetails};
 use crate::times::*;
 use log::{debug, info};
-use serialport::SerialPort;
-use tokio::sync::mpsc::error::TryRecvError;
 use tokio::sync::mpsc::UnboundedReceiver;
+use tokio_serial::SerialPort;
+
+use ractor::{Actor, ActorRef};
 
 const DELAY_MS_AFTER_COMMAND_SENT: u64 = 50;
-const DELAY_MS_AFTER_BYTE_SENT: u64 = 10;
 
 pub struct Hal {
-    conn: Box<dyn SerialPort>,
     receiver: UnboundedReceiver<Instruction>,
-    cts_control: bool,
+    actor: Option<ActorRef<ActorMessage>>,
 }
 
 impl Hal {
-    pub fn new(conn: Box<dyn SerialPort>, receiver: UnboundedReceiver<Instruction>) -> Self {
-        let cts_control = true;
+    pub fn new(receiver: UnboundedReceiver<Instruction>) -> Self {
         Hal {
-            conn,
             receiver,
-            cts_control,
+            actor: None,
         }
     }
 
-    pub fn run(&mut self) {
+    pub async fn run(&mut self, conn: Box<dyn SerialPort>) {
+        let (actor, _actor_handle) = Actor::spawn(None, UartActor, conn)
+            .await
+            .expect("Actor failed to start");
+
+        self.actor = Some(actor);
+        // self.actor_handle = Some(actor_handle);
+
+        self.prepare().await;
+
         debug!("running the loop...");
+
         loop {
-            match self.receiver.try_recv() {
-                Ok(item) => {
+            match self.receiver.recv().await {
+                Some(item) => {
                     debug!("Recv: {:?}", &item);
                     match item {
                         Instruction::Halt => break,
-                        Instruction::Prepare => self.prepare(),
-                        Instruction::SendBytes(details) => self.send_bytes_with_idle(details),
+                        Instruction::Prepare => self.prepare().await,
+                        Instruction::SendBytes(details) => self.send_bytes_with_idle(details).await,
                         Instruction::Idle(millis) => wait(millis),
                         Instruction::Empty => continue,
                         Instruction::Shutdown => {
-                            self.shutdown();
+                            self.shutdown().await;
                             return;
                         }
                     }
                 }
-                Err(TryRecvError::Empty) => wait_short(),
-                Err(TryRecvError::Disconnected) => return,
+                _ => break,
             }
         }
     }
 
-    pub fn write_byte(&mut self, input: u8) {
-        wait(DELAY_MS_AFTER_BYTE_SENT);
-        debug!("Writing byte: {}", input);
-        self.conn
-            .write(&[input])
-            .expect("Error writing to serial port");
-
-        let mut buf = [0_u8];
-        if let Ok(n) = self.conn.read(&mut buf) {
-            if n != 1 {
-                panic!("More bytes are received: {:?}", &buf[..n]);
-            }
-            if buf[0] != input {
-                panic!("Unexpected byte returned: {:?}", &buf[0]);
+    pub async fn write_byte(&mut self, input: u8) {
+        if let Some(actor) = &self.actor {
+            let outcome =
+                ractor::call_t!(actor, ActorMessage::WriteByte, 100, input).expect("RPC failed");
+            if !outcome {
+                panic!("port is not ready to transmit data");
             }
         }
+
+        // wait(DELAY_MS_AFTER_BYTE_SENT);
+        // debug!("Writing byte: {}", input);
+        // self.conn
+        //     .write(&[input])
+        //     .expect("Error writing to serial port");
+        //
+        // let mut buf = [0_u8];
+        // if let Ok(n) = self.conn.read(&mut buf) {
+        //     if n != 1 {
+        //         panic!("More bytes are received: {:?}", &buf[..n]);
+        //     }
+        //     if buf[0] != input {
+        //         panic!("Unexpected byte returned: {:?}", &buf[0]);
+        //     }
+        // }
     }
 
-    pub fn command(&mut self, bytes: &[u8]) {
+    pub async fn command(&mut self, bytes: &[u8]) {
         for byte in bytes {
-            self.write_byte(*byte);
+            self.write_byte(*byte).await;
         }
         wait(DELAY_MS_AFTER_COMMAND_SENT);
     }
 
-    pub fn send_bytes_with_idle(&mut self, details: SendBytesDetails) {
+    pub async fn send_bytes_with_idle(&mut self, details: SendBytesDetails) {
         if let Some(time) = details.idle_before {
             wait(time);
         }
         for byte in details.cmd {
-            self.write_byte(byte);
+            self.write_byte(byte).await;
         }
         if let Some(time) = details.idle_after {
             wait(time);
@@ -86,43 +101,36 @@ impl Hal {
         wait(DELAY_MS_AFTER_COMMAND_SENT);
     }
 
-    pub fn prepare(&mut self) {
-        self.go_online();
-        self.await_acknowledge();
-        self.start_accepting_commands();
+    pub async fn prepare(&mut self) {
+        self.go_online().await;
+        self.start_accepting_commands().await;
     }
 
-    fn go_offline(&mut self) {
+    async fn go_offline(&mut self) {
         info!("go off-line");
-        self.write_byte(0xA0);
-        self.cts_control = false;
-        self.write_byte(0x00);
+        self.write_byte(0xA0).await;
+        self.write_byte(0x00).await;
     }
 
-    fn go_online(&mut self) {
+    async fn go_online(&mut self) {
         info!("go on-line");
-        self.command(&[0xA1, 0x00]);
+        self.command(&[0xA1, 0x00]).await;
     }
 
-    fn start_accepting_commands(&mut self) {
+    async fn start_accepting_commands(&mut self) {
         info!("start accepting printing commands");
-        self.command(&[0xA2, 0x00]);
+        self.command(&[0xA2, 0x00]).await;
         info!("machine is now accepting the commands");
     }
 
-    fn stop_accepting_commands(&mut self) {
+    async fn stop_accepting_commands(&mut self) {
         info!("stop accepting printing commands");
-        self.command(&[0xA3, 0x00]);
+        self.command(&[0xA3, 0x00]).await;
     }
 
-    pub fn shutdown(&mut self) {
+    pub async fn shutdown(&mut self) {
         wait_long();
-        self.stop_accepting_commands();
-        self.go_offline();
-    }
-
-    pub fn await_acknowledge(&mut self) {
-        debug!("wait for the acknowledge");
-        self.command(&[0xA4, 0x00]);
+        self.stop_accepting_commands().await;
+        self.go_offline().await;
     }
 }
