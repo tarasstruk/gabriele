@@ -53,9 +53,9 @@ fn print_file(machine: &mut Machine, db: impl DaisyDatabase, file_path: &str) {
 
 async fn start_runner(rx: UnboundedReceiver<Instruction>, tty_path: String) {
     info!("Started worker");
-    let uart = connection::uart(&tty_path);
+    let stream = connection::uart(&tty_path);
     let mut runner = Hal::new(rx);
-    runner.run(uart).await;
+    runner.run(stream).await;
 }
 
 #[tokio::main]

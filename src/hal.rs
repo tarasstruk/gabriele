@@ -3,7 +3,7 @@ use crate::printing::{Instruction, SendBytesDetails};
 use crate::times::*;
 use log::{debug, info};
 use tokio::sync::mpsc::UnboundedReceiver;
-use tokio_serial::SerialPort;
+use tokio_serial::SerialStream;
 
 use ractor::{Actor, ActorRef};
 
@@ -22,8 +22,8 @@ impl Hal {
         }
     }
 
-    pub async fn run(&mut self, conn: Box<dyn SerialPort>) {
-        let (actor, _actor_handle) = Actor::spawn(None, UartActor, conn)
+    pub async fn run(&mut self, stream: SerialStream) {
+        let (actor, _actor_handle) = Actor::spawn(None, UartActor, stream)
             .await
             .expect("Actor failed to start");
 

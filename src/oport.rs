@@ -1,14 +1,15 @@
 use anyhow::Result;
+use log::debug;
 use ractor::{Actor, ActorProcessingErr, ActorRef, RpcReplyPort};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio_serial::SerialPort;
+use tokio_serial::SerialStream;
 
 pub enum ActorMessage {
     WriteByte(u8, RpcReplyPort<bool>),
 }
 
 pub struct ActorState {
-    port: Box<dyn SerialPort>,
+    port: SerialStream,
 }
 
 pub struct UartActor;
@@ -16,7 +17,7 @@ pub struct UartActor;
 impl Actor for UartActor {
     type State = ActorState;
     type Msg = ActorMessage;
-    type Arguments = Box<dyn SerialPort>;
+    type Arguments = SerialStream;
 
     async fn pre_start(
         &self,
@@ -34,19 +35,19 @@ impl Actor for UartActor {
     ) -> Result<(), ActorProcessingErr> {
         match message {
             ActorMessage::WriteByte(byte, reply) => {
-                if state.port.write(&[byte]).is_err() {
+                if state.port.write(&[byte]).await.is_err() {
                     reply.send(false)?;
                     return Ok(());
                 }
-                println!("transmitted: {:?}", byte);
+                debug!("transmitted: {:?}", byte);
 
                 let mut echo = [0_u8];
-                if let Ok(n) = state.port.read(&mut echo) {
+                if let Ok(n) = state.port.read(&mut echo).await {
                     if n != 1 || echo[0] != byte {
-                        println!("bytes do not match");
+                        debug!("bytes do not match");
                         reply.send(false)?;
                     } else {
-                        println!("received: {:?}", byte);
+                        debug!("received: {:?}", byte);
                         reply.send(true)?;
                     }
                 } else {
@@ -67,7 +68,7 @@ mod test {
         let mut stash: Vec<u8> = Vec::with_capacity(num_cycles);
         loop {
             if num_cycles == 0 {
-                println!("finish watching");
+                debug!("finish watching");
                 break;
             }
 
@@ -76,7 +77,7 @@ mod test {
             // echo the received byte from rx bac into tx
             if slave.read(&mut buf).await.is_ok() && slave.write(&buf).await.is_ok() {
                 num_cycles -= 1;
-                println!("Received {:?}", buf);
+                debug!("Received {:?}", buf);
                 let mut piece: Vec<u8> = buf.into();
                 stash.append(&mut piece);
             }
@@ -88,8 +89,6 @@ mod test {
     async fn writes_to_serial_port() {
         let (master, slave) = SerialStream::pair().unwrap();
         let handle = tokio::task::spawn(async move { spin(slave, 8).await });
-
-        let master = Box::new(master);
 
         let (actor, actor_handle) = Actor::spawn(None, UartActor, master)
             .await
