@@ -2,16 +2,17 @@ use crate::oport::{ActorMessage, UartActor};
 use crate::printing::{Instruction, SendBytesDetails};
 use crate::times::*;
 use log::{debug, info};
+use ractor::concurrency::tokio_primitives::JoinHandle;
+use ractor::{Actor, ActorRef};
 use tokio::sync::mpsc::UnboundedReceiver;
 use tokio_serial::SerialStream;
-
-use ractor::{Actor, ActorRef};
 
 const DELAY_MS_AFTER_COMMAND_SENT: u64 = 50;
 
 pub struct Hal {
     receiver: UnboundedReceiver<Instruction>,
     actor: Option<ActorRef<ActorMessage>>,
+    actor_handle: Option<JoinHandle<()>>,
 }
 
 impl Hal {
@@ -19,40 +20,49 @@ impl Hal {
         Hal {
             receiver,
             actor: None,
+            actor_handle: None,
         }
     }
 
     pub async fn run(&mut self, stream: SerialStream) {
-        let (actor, _actor_handle) = Actor::spawn(None, UartActor, stream)
+        let (actor, actor_handle) = Actor::spawn(None, UartActor, stream)
             .await
             .expect("Actor failed to start");
 
         self.actor = Some(actor);
-        // self.actor_handle = Some(actor_handle);
+        self.actor_handle = Some(actor_handle);
 
         self.prepare().await;
 
-        debug!("running the loop...");
+        debug!("runner started");
 
-        loop {
-            match self.receiver.recv().await {
-                Some(item) => {
-                    debug!("Recv: {:?}", &item);
-                    match item {
-                        Instruction::Halt => break,
-                        Instruction::Prepare => self.prepare().await,
-                        Instruction::SendBytes(details) => self.send_bytes_with_idle(details).await,
-                        Instruction::Idle(millis) => wait(millis),
-                        Instruction::Empty => continue,
-                        Instruction::Shutdown => {
-                            self.shutdown().await;
-                            return;
-                        }
-                    }
+        while let Some(item) = self.receiver.recv().await {
+            debug!("received message: {:?}", &item);
+            match item {
+                Instruction::Halt => break,
+                Instruction::Prepare => self.prepare().await,
+                Instruction::SendBytes(details) => self.send_bytes_with_idle(details).await,
+                Instruction::Idle(millis) => wait(millis),
+                Instruction::Empty => continue,
+                Instruction::Shutdown => {
+                    self.shutdown().await;
+                    break;
                 }
-                _ => break,
             }
         }
+        self.graceful_shutdown_actor().await;
+    }
+
+    async fn graceful_shutdown_actor(&mut self) {
+        if let Some(actor) = self.actor.take() {
+            actor.stop(Some(String::from("graceful shutdown")));
+        }
+
+        if let Some(handle) = self.actor_handle.take() {
+            handle.await.unwrap();
+        }
+
+        println!("Gabriele says good bye")
     }
 
     pub async fn write_byte(&mut self, input: u8) {
@@ -63,22 +73,6 @@ impl Hal {
                 panic!("port is not ready to transmit data");
             }
         }
-
-        // wait(DELAY_MS_AFTER_BYTE_SENT);
-        // debug!("Writing byte: {}", input);
-        // self.conn
-        //     .write(&[input])
-        //     .expect("Error writing to serial port");
-        //
-        // let mut buf = [0_u8];
-        // if let Ok(n) = self.conn.read(&mut buf) {
-        //     if n != 1 {
-        //         panic!("More bytes are received: {:?}", &buf[..n]);
-        //     }
-        //     if buf[0] != input {
-        //         panic!("Unexpected byte returned: {:?}", &buf[0]);
-        //     }
-        // }
     }
 
     pub async fn command(&mut self, bytes: &[u8]) {
