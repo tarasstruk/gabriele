@@ -14,10 +14,6 @@ log = "0.4.20"
 ractor = "0.15.8"
 regex = "1.11.1"
 serde = { version = "1.0.210", features = ["derive"] }
-serialport = "4.2.2"
 tokio = { version = "1.37.0", features = ["sync", "macros", "rt-multi-thread", "time", "io-util"] }
 tokio-serial = "5.4.5"
 toml = "0.8.19"
-
-[dev-dependencies]
-virtual-serialport = "0.1.3"
