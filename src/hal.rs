@@ -37,15 +37,11 @@ impl Hal {
             debug!("received message: {:?}", &item);
             match item {
                 Instruction::Halt => break,
-                // Instruction::Prepare => self.prepare().await,
                 Instruction::SendBytes(details) => self.transmit_bytes(&details.cmd).await,
-                // Instruction::Idle(millis) => wait(millis),
-                // Instruction::Empty => continue,
                 Instruction::Shutdown => {
                     self.shutdown().await;
                     break;
                 }
-                _ => continue,
             }
         }
         self.graceful_shutdown_actor().await;

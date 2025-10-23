@@ -1,5 +1,4 @@
 mod helpers;
-use gabriele::printing::Instruction;
 use helpers::{load_test_db, start_test_app};
 
 #[tokio::test]
@@ -13,6 +12,5 @@ async fn starts_test_application() {
     _ = tokio::join!(runner);
     let latch = app.latch.lock().unwrap();
 
-    assert_eq!(latch.len(), 1);
-    assert_eq!(latch.get(0).unwrap(), &Instruction::Empty);
+    assert_eq!(latch.len(), 0);
 }
