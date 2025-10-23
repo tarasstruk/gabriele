@@ -1,13 +1,10 @@
 use crate::oport::{ActorMessage, UartActor};
-use crate::printing::{Instruction, SendBytesDetails};
-use crate::times::*;
+use crate::printing::Instruction;
 use log::{debug, info};
 use ractor::concurrency::tokio_primitives::JoinHandle;
 use ractor::{Actor, ActorRef};
 use tokio::sync::mpsc::UnboundedReceiver;
 use tokio_serial::SerialStream;
-
-const DELAY_MS_AFTER_COMMAND_SENT: u64 = 50;
 
 pub struct Hal {
     receiver: UnboundedReceiver<Instruction>,
@@ -40,14 +37,15 @@ impl Hal {
             debug!("received message: {:?}", &item);
             match item {
                 Instruction::Halt => break,
-                Instruction::Prepare => self.prepare().await,
-                Instruction::SendBytes(details) => self.send_bytes_with_idle(details).await,
-                Instruction::Idle(millis) => wait(millis),
-                Instruction::Empty => continue,
+                // Instruction::Prepare => self.prepare().await,
+                Instruction::SendBytes(details) => self.transmit_bytes(&details.cmd).await,
+                // Instruction::Idle(millis) => wait(millis),
+                // Instruction::Empty => continue,
                 Instruction::Shutdown => {
                     self.shutdown().await;
                     break;
                 }
+                _ => continue,
             }
         }
         self.graceful_shutdown_actor().await;
@@ -65,34 +63,14 @@ impl Hal {
         println!("Gabriele says good bye")
     }
 
-    pub async fn write_byte(&mut self, input: u8) {
-        if let Some(actor) = &self.actor {
-            let outcome =
-                ractor::call_t!(actor, ActorMessage::WriteByte, 100, input).expect("RPC failed");
-            if !outcome {
-                panic!("port is not ready to transmit data");
+    pub async fn transmit_bytes(&mut self, bytes: &[u8]) {
+        if let Some(actor) = self.actor.take() {
+            for byte in bytes {
+                ractor::call_t!(actor, ActorMessage::WriteByte, 5000, *byte)
+                    .expect("TX timeout exceeded");
             }
+            self.actor = Some(actor)
         }
-    }
-
-    pub async fn command(&mut self, bytes: &[u8]) {
-        for byte in bytes {
-            self.write_byte(*byte).await;
-        }
-        wait(DELAY_MS_AFTER_COMMAND_SENT);
-    }
-
-    pub async fn send_bytes_with_idle(&mut self, details: SendBytesDetails) {
-        if let Some(time) = details.idle_before {
-            wait(time);
-        }
-        for byte in details.cmd {
-            self.write_byte(byte).await;
-        }
-        if let Some(time) = details.idle_after {
-            wait(time);
-        }
-        wait(DELAY_MS_AFTER_COMMAND_SENT);
     }
 
     pub async fn prepare(&mut self) {
@@ -102,28 +80,26 @@ impl Hal {
 
     async fn go_offline(&mut self) {
         info!("go off-line");
-        self.write_byte(0xA0).await;
-        self.write_byte(0x00).await;
+        self.transmit_bytes(&[0xA0, 0x00]).await;
     }
 
     async fn go_online(&mut self) {
         info!("go on-line");
-        self.command(&[0xA1, 0x00]).await;
+        self.transmit_bytes(&[0xA1, 0x00]).await;
     }
 
     async fn start_accepting_commands(&mut self) {
         info!("start accepting printing commands");
-        self.command(&[0xA2, 0x00]).await;
+        self.transmit_bytes(&[0xA2, 0x00]).await;
         info!("machine is now accepting the commands");
     }
 
     async fn stop_accepting_commands(&mut self) {
         info!("stop accepting printing commands");
-        self.command(&[0xA3, 0x00]).await;
+        self.transmit_bytes(&[0xA3, 0x00]).await;
     }
 
     pub async fn shutdown(&mut self) {
-        wait_long();
         self.stop_accepting_commands().await;
         self.go_offline().await;
     }
