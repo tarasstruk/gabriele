@@ -6,7 +6,6 @@ use crate::motion;
 use crate::position::Position;
 use crate::resolution::Resolution;
 use crate::symbol::{ActionMapping, Symbol};
-use crate::times::*;
 use log::debug;
 
 /// The basic directive for the machine
@@ -14,50 +13,26 @@ use log::debug;
 /// SendBytes specifies a sequence of 2 bytes to be send over a serial port
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Instruction {
-    #[allow(unused)]
-    Prepare,
-    Idle(u64),
     SendBytes(SendBytesDetails),
-    Empty,
     Shutdown,
     Halt,
 }
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub struct SendBytesDetails {
-    pub idle_before: Option<u64>,
     pub cmd: [u8; 2],
-    pub idle_after: Option<u64>,
 }
 
 impl Instruction {
     pub fn bytes(b1: u8, b2: u8) -> Self {
-        Self::SendBytes(SendBytesDetails {
-            idle_before: None,
-            cmd: [b1, b2],
-            idle_after: None,
-        })
-    }
-
-    pub fn wait_short() -> Self {
-        Self::Idle(SHORT_MS)
-    }
-
-    pub fn wait_tiny() -> Self {
-        Self::Idle(TINY_MS)
-    }
-
-    pub fn wait_long() -> Self {
-        Self::Idle(LONG_MS)
+        Self::SendBytes(SendBytesDetails { cmd: [b1, b2] })
     }
 }
 
 impl From<u16> for SendBytesDetails {
     fn from(value: u16) -> Self {
         SendBytesDetails {
-            idle_before: None,
             cmd: value.to_be_bytes(),
-            idle_after: None,
         }
     }
 }
@@ -161,7 +136,6 @@ impl Action {
 }
 
 #[cfg(test)]
-use crate::times::*;
 mod tests {
     use super::{Action, SendBytesDetails};
     use crate::position::Position;
@@ -169,7 +143,6 @@ mod tests {
     use crate::printing::Instruction::SendBytes;
     use crate::resolution::Resolution;
     use crate::symbol::Symbol;
-    use crate::times::{LONG_MS, SHORT_MS};
 
     #[test]
     fn test_print_symbol() {
@@ -223,15 +196,11 @@ mod tests {
         let mut cmd = action.instructions(&base_pos, &mut pos);
 
         let details = SendBytesDetails {
-            idle_before: Some(200),
             cmd: [0b1110_0000, 120],
-            idle_after: Some(1000),
         };
         assert_eq!(cmd.next(), Some(Instruction::SendBytes(details)));
         let details = SendBytesDetails {
-            idle_before: Some(200),
             cmd: [0b1101_0000, 16],
-            idle_after: Some(1000),
         };
         assert_eq!(cmd.next(), Some(Instruction::SendBytes(details)));
         assert_eq!(cmd.next(), None);

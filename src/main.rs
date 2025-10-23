@@ -51,12 +51,11 @@ fn print_file(machine: &mut Machine, db: impl DaisyDatabase, file_path: &str) {
     machine.print(&content, db);
 }
 
-fn start_runner(rx: UnboundedReceiver<Instruction>, tty_path: String) {
+async fn start_runner(rx: UnboundedReceiver<Instruction>, tty_path: String) {
     info!("Started worker");
-    let uart = connection::uart(&tty_path);
-    let mut runner = Hal::new(uart, rx);
-    runner.prepare();
-    runner.run();
+    let stream = connection::uart(&tty_path);
+    let mut runner = Hal::new(rx);
+    runner.run(stream).await;
 }
 
 #[tokio::main]
@@ -70,9 +69,9 @@ async fn main() {
 
     let args = Args::parse();
 
-    let handle = tokio::task::spawn_blocking(move || {
+    let handle = tokio::task::spawn(async move {
         info!("the runner is starting");
-        start_runner(rx, args.tty);
+        start_runner(rx, args.tty).await;
         info!("the runner is finished");
     });
 

@@ -1,17 +1,10 @@
+use core::time::Duration;
 use log::debug;
-use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
-use std::thread;
-use std::time::Duration;
+use tokio_serial::{new, SerialStream};
 
-pub fn uart(tty_serial_unix_path: &str) -> Box<dyn SerialPort> {
-    thread::sleep(Duration::from_millis(1000));
+pub fn uart(tty_serial_unix_path: &str) -> SerialStream {
     debug!("connecting...");
-    serialport::new(tty_serial_unix_path, 4800)
-        .timeout(Duration::from_millis(1000))
-        .flow_control(FlowControl::None)
-        .parity(Parity::None)
-        .stop_bits(StopBits::One)
-        .data_bits(DataBits::Eight)
-        .open()
-        .expect("failed to open the serial port")
+    let builder = new(tty_serial_unix_path, 115200).timeout(Duration::from_millis(1000));
+
+    SerialStream::open(&builder).unwrap()
 }

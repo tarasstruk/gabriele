@@ -82,6 +82,6 @@ impl Machine {
     }
 
     pub fn send_empty_instruction(&mut self) {
-        self.transmit([Instruction::Empty].into_iter());
+        self.transmit([].into_iter());
     }
 }
