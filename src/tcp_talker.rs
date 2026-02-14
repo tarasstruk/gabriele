@@ -67,15 +67,21 @@ async fn process_stream(
 
                     Ok(chunk) => {
                         debug!("Client received bytes {chunk:?}");
-                        for b in chunk {
-                            if let Err(e) = tx.write_u8(b).await {
+                        for byte in chunk {
+                            if let Err(e) = tx.write_u8(byte).await {
                                error!("Socket write error {e:?}");
                                break 'outer;
                             } else {
-                                let reply = rx.read_u8().await.unwrap();
-                                if reply != b {
-                                    error!("Expected reply is {:02x?} but received {:02x?}", b, reply);
-                                    break 'outer;
+                                match rx.read_u8().await {
+                                    Ok(reply) if (reply != byte) => {
+                                        error!("Expected reply is {:02x?} but received {:02x?}", byte, reply);
+                                        break 'outer;
+                                    }
+                                    Err(e) => {
+                                        error!("Socket read error {e:?}");
+                                        break 'outer;
+                                    }
+                                    _ => {}
                                 }
                             }
                         }
