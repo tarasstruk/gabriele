@@ -74,7 +74,7 @@ async fn process_stream(
                             } else {
                                 let reply = rx.read_u8().await.unwrap();
                                 if reply != b {
-                                    error!("Expected reply is {:02x?} but received {:02x?}", reply, b);
+                                    error!("Expected reply is {:02x?} but received {:02x?}", b, reply);
                                     break 'outer;
                                 }
                             }

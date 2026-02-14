@@ -11,7 +11,6 @@ use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedReceiver;
 
 use clap::Parser;
-use gabriele::connection;
 use gabriele::directive::process_directive;
 
 /// Gabriele
@@ -51,10 +50,10 @@ fn print_file(machine: &mut Machine, db: impl DaisyDatabase, file_path: &str) {
     machine.print(&content, db);
 }
 
-async fn start_runner(rx: UnboundedReceiver<Instruction>, tty_path: String) {
+async fn start_runner(rx: UnboundedReceiver<Instruction>, _tty_path: String) {
     info!("Started worker");
     let mut runner = Hal::new(rx);
-    runner.run().await;
+    let _ = runner.run().await;
 }
 
 #[tokio::main]
