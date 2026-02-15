@@ -67,10 +67,6 @@ async fn process_stream(
     let (mut rx, mut tx) = stream.into_split();
 
     'outer: loop {
-        if token.is_cancelled() {
-            break;
-        }
-
         tokio::select! {
             result = receiver.recv() => {
                 match result {
@@ -108,8 +104,13 @@ async fn process_stream(
             }
 
             _ = token.cancelled() => {
-               warn!("Cancelled TCP client");
-                break;
+                if receiver.is_empty() {
+                    warn!("Cancelled TCP stream processor");
+                    break;
+                } else {
+                    warn!("Still have {} messages", receiver.len());
+                    continue;
+                }
             }
 
             _ = tokio::signal::ctrl_c() => {
