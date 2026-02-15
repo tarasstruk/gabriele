@@ -14,9 +14,10 @@ pub(crate) fn run_tcp_client(
     addr: SocketAddr,
     tx: Sender<Bytes>,
     notifier: Arc<Notify>,
+    token: CancellationToken,
 ) -> JoinHandle<()> {
     debug!("+++TCP Client is starting");
-    let token = CancellationToken::new();
+    // let token = CancellationToken::new();
 
     tokio::spawn(async move {
         loop {
@@ -34,10 +35,19 @@ pub(crate) fn run_tcp_client(
                         }
                         Err(_e) => {
                             error!("Error establishing TCP connection");
+                            if token.is_cancelled() {
+                                warn!("token is cancelled");
+                                break;
+                            }
+                            // wait 5s before connecting a new client
+                            tokio::time::sleep(tokio::time::Duration::from_millis(5000)).await;
                         }
                     }
-                    // wait 5s before connecting a new client
-                    tokio::time::sleep(tokio::time::Duration::from_millis(5000)).await;
+                }
+
+                _ = token.cancelled() => {
+                   warn!("Cancelled loop");
+                    break;
                 }
 
                 _ = tokio::signal::ctrl_c() => {
