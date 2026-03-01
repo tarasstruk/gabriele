@@ -58,7 +58,7 @@ impl Machine {
 
     pub fn shutdown(&mut self) {
         info!("stopping the machine");
-        self.transmit([Instruction::Shutdown].into_iter());
+        self.transmit([Instruction::Halt].into_iter());
     }
 
     pub fn transmit(&mut self, instructions: impl Iterator<Item = Instruction>) {

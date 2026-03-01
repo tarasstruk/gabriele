@@ -38,12 +38,14 @@ impl Hal {
         let handle = run_tcp_client(addr, self.tx.clone(), self.notifier.clone(), token);
 
         self.notifier.notified().await;
-        self.prepare()?;
+        // self.prepare()?;
         debug!("runner is started successfully");
         self.elaborate_messages().await?;
-        self.shutdown()?;
-        tokio::time::sleep(Duration::from_secs(10)).await;
+        debug!("sender channel is disconnected");
         self.c_token.cancel();
+        // self.shutdown()?;
+        tokio::time::sleep(Duration::from_secs(1)).await;
+
         let _ = tokio::join!(handle);
         Ok(())
     }
@@ -52,11 +54,8 @@ impl Hal {
         while let Some(item) = self.receiver.recv().await {
             debug!("received message: {:?}", &item);
             match item {
-                Instruction::Halt => break,
                 Instruction::SendBytes(details) => self.transmit_bytes(&details.cmd)?,
-                Instruction::Shutdown => {
-                    break;
-                }
+                Instruction::Halt => break,
             }
         }
         Ok(())
@@ -69,29 +68,29 @@ impl Hal {
             .context("cannot transmit bytes")
     }
 
-    pub fn prepare(&self) -> anyhow::Result<()> {
-        self.go_online()?;
-        self.start_accepting_commands()
-    }
+    // pub fn prepare(&self) -> anyhow::Result<()> {
+    //     self.go_online()?;
+    //     self.start_accepting_commands()
+    // }
 
-    fn go_offline(&self) -> anyhow::Result<()> {
-        self.transmit_bytes(&[0xA0, 0x00])
-    }
+    // fn go_offline(&self) -> anyhow::Result<()> {
+    //     self.transmit_bytes(&[0xA0, 0x00])
+    // }
 
-    fn go_online(&self) -> anyhow::Result<()> {
-        self.transmit_bytes(&[0xA1, 0x00])
-    }
-
-    fn start_accepting_commands(&self) -> anyhow::Result<()> {
-        self.transmit_bytes(&[0xA2, 0x00])
-    }
-
-    fn stop_accepting_commands(&self) -> anyhow::Result<()> {
-        self.transmit_bytes(&[0xA3, 0x00])
-    }
-
-    pub fn shutdown(&self) -> anyhow::Result<()> {
-        self.stop_accepting_commands()?;
-        self.go_offline()
-    }
+    // fn go_online(&self) -> anyhow::Result<()> {
+    //     self.transmit_bytes(&[0xA1, 0x00])
+    // }
+    //
+    // fn start_accepting_commands(&self) -> anyhow::Result<()> {
+    //     self.transmit_bytes(&[0xA2, 0x00])
+    // }
+    //
+    // fn stop_accepting_commands(&self) -> anyhow::Result<()> {
+    //     self.transmit_bytes(&[0xA3, 0x00])
+    // }
+    //
+    // pub fn shutdown(&self) -> anyhow::Result<()> {
+    //     self.stop_accepting_commands()?;
+    //     self.go_offline()
+    // }
 }

@@ -17,7 +17,6 @@ pub(crate) fn run_tcp_client(
     token: CancellationToken,
 ) -> JoinHandle<()> {
     debug!("+++TCP Client is starting");
-    // let token = CancellationToken::new();
 
     tokio::spawn(async move {
         loop {
@@ -29,7 +28,7 @@ pub(crate) fn run_tcp_client(
                             warn!("Gabriele Connection established");
                             let recv = tx.subscribe();
                             notifier.notify_waiters();
-                            let _r = process_stream(stream, token.clone(), recv).await;
+                            process_stream(stream, token.clone(), recv).await;
                             warn!("Connection closed");
                             break;
                         }
@@ -70,9 +69,9 @@ async fn process_stream(
         tokio::select! {
             result = receiver.recv() => {
                 match result {
-
                     Ok(chunk) => {
                         debug!("Client received bytes {chunk:?}");
+                        // this is regarded as inner loop
                         for byte in chunk {
                             if let Err(e) = tx.write_u8(byte).await {
                                error!("Socket write error {e:?}");

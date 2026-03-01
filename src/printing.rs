@@ -14,7 +14,6 @@ use log::debug;
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Instruction {
     SendBytes(SendBytesDetails),
-    Shutdown,
     Halt,
 }
 
