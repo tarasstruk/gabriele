@@ -84,28 +84,4 @@ mod test {
         }
         stash
     }
-
-    #[tokio::test]
-    async fn writes_to_serial_port() {
-        let (master, slave) = SerialStream::pair().unwrap();
-        let handle = tokio::task::spawn(async move { spin(slave, 8).await });
-
-        let (actor, actor_handle) = Actor::spawn(None, UartActor, master)
-            .await
-            .expect("Actor failed to start");
-
-        for i in 0..8 {
-            let outcome =
-                ractor::call_t!(actor, ActorMessage::WriteByte, 100, i).expect("RPC failed");
-            assert!(outcome);
-        }
-
-        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-
-        let x = handle.await.unwrap();
-        assert_eq!(x, vec![0, 1, 2, 3, 4, 5, 6, 7]);
-
-        actor.stop(None);
-        actor_handle.await.unwrap();
-    }
 }

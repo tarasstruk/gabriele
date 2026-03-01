@@ -1,58 +1,62 @@
-use gabriele::{machine::Machine, printing::Instruction};
-use std::sync::{Arc, Mutex};
-use std::thread::sleep;
-use std::time::Duration;
-use tokio::sync::mpsc;
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use anyhow::Result;
+use gabriele::hal::Hal;
+use gabriele::machine::Machine;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::TcpListener;
+use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver};
 use tokio::task::JoinHandle;
 
 pub struct TestApp {
-    pub latch: Arc<Mutex<Vec<Instruction>>>,
-    #[allow(dead_code)]
     pub machine: Machine,
+    machine_handle: JoinHandle<Result<()>>,
+    pub rx: UnboundedReceiver<u8>,
+    server_handle: JoinHandle<()>,
 }
-
 impl TestApp {
-    fn new(tx: UnboundedSender<Instruction>) -> Self {
-        let machine = Machine::new(tx);
-        let latch = Default::default();
-        TestApp { machine, latch }
+    pub async fn run(port: u16) -> TestApp {
+        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), port);
+        let (sender, receiver) = unbounded_channel();
+        let machine = Machine::new(sender);
+
+        let mut hal = Hal::new(receiver, addr.clone());
+        let machine_handle = tokio::spawn(async move { hal.run().await });
+        let (rx, server_handle) = start_test_server(addr);
+        Self {
+            machine,
+            machine_handle,
+            rx,
+            server_handle,
+        }
+    }
+
+    pub async fn stop(mut self) {
+        self.machine.shutdown();
+        let _ = self.machine_handle.await.unwrap();
+        self.server_handle.abort();
+        let _ = self.server_handle.await;
     }
 }
 
-struct TestRunner {
-    pub receiver: UnboundedReceiver<Instruction>,
-}
-
-impl TestRunner {
-    pub fn run(&mut self, latch: Arc<Mutex<Vec<Instruction>>>) {
+fn start_test_server(addr: SocketAddr) -> (UnboundedReceiver<u8>, JoinHandle<()>) {
+    let (sender, receiver) = unbounded_channel();
+    let handle = tokio::spawn(async move {
+        let listener = TcpListener::bind(addr).await.unwrap();
+        let (mut socket, _) = listener
+            .accept()
+            .await
+            .expect("accepting tcp connection failed");
+        let (mut reader, mut writer) = socket.split();
         loop {
-            match self.receiver.try_recv() {
-                Ok(Instruction::Shutdown) => break,
-                Ok(instruction) => {
-                    let mut items = latch.lock().unwrap();
-                    items.push(instruction);
+            if let Ok(byte) = reader.read_u8().await {
+                if writer.write_u8(byte).await.is_err() {
+                    break;
                 }
-                _ => {
-                    sleep(Duration::from_millis(2));
-                    continue;
+                if sender.send(byte).is_err() {
+                    break;
                 }
             }
         }
-    }
-}
-
-fn start_runner(rx: UnboundedReceiver<Instruction>, latch: Arc<Mutex<Vec<Instruction>>>) {
-    let mut runner = TestRunner { receiver: rx };
-    runner.run(latch)
-}
-
-pub fn start_test_app() -> (TestApp, JoinHandle<()>) {
-    let (tx, rx) = mpsc::unbounded_channel::<Instruction>();
-
-    let app = TestApp::new(tx);
-    let latch = app.latch.clone();
-
-    let runner_handle = tokio::task::spawn_blocking(move || start_runner(rx, latch));
-    (app, runner_handle)
+    });
+    (receiver, handle)
 }

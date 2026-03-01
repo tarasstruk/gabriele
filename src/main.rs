@@ -5,6 +5,7 @@ use gabriele::machine::Machine;
 use gabriele::printing::Instruction;
 use log::{debug, info};
 use std::cell::RefCell;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::ops::Deref;
 use std::{fs, io};
 use tokio::sync::mpsc;
@@ -52,7 +53,8 @@ fn print_file(machine: &mut Machine, db: impl DaisyDatabase, file_path: &str) {
 
 async fn start_runner(rx: UnboundedReceiver<Instruction>, _tty_path: String) {
     info!("Started worker");
-    let mut runner = Hal::new(rx);
+    let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192, 168, 0, 13)), 1234);
+    let mut runner = Hal::new(rx, addr);
     let _ = runner.run().await;
 }
 

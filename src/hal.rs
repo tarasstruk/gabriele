@@ -3,7 +3,7 @@ use crate::printing::Instruction;
 use anyhow::Context;
 use bytes::Bytes;
 use log::debug;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::broadcast::{self, Sender};
@@ -16,10 +16,11 @@ pub struct Hal {
     notifier: Arc<Notify>,
     tx: Sender<Bytes>,
     c_token: CancellationToken,
+    socket_addr: SocketAddr,
 }
 
 impl Hal {
-    pub fn new(receiver: UnboundedReceiver<Instruction>) -> Self {
+    pub fn new(receiver: UnboundedReceiver<Instruction>, socket_addr: SocketAddr) -> Self {
         let notifier = Arc::new(Notify::new());
         let (tx, _rx) = broadcast::channel(1024);
         let c_token = CancellationToken::new();
@@ -28,14 +29,18 @@ impl Hal {
             tx,
             notifier,
             c_token,
+            socket_addr,
         }
     }
 
     pub async fn run(&mut self) -> anyhow::Result<()> {
-        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192, 168, 0, 13)), 1234);
-
         let token = self.c_token.clone();
-        let handle = run_tcp_client(addr, self.tx.clone(), self.notifier.clone(), token);
+        let handle = run_tcp_client(
+            self.socket_addr,
+            self.tx.clone(),
+            self.notifier.clone(),
+            token,
+        );
 
         self.notifier.notified().await;
         // self.prepare()?;
