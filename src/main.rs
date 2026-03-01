@@ -18,11 +18,11 @@ use gabriele::directive::process_directive;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    /// path to serial port tty, example: `/dev/tty.usbserial-A10OFCFV`
+    /// IP address of the RP2040 controller, example: 192.168.0.11
     #[arg(long)]
-    tty: String,
+    ip: Ipv4Addr,
 
-    /// optional path to a text file
+    /// Optional path to a text file to be printed
     #[arg(long)]
     text: Option<String>,
 }
@@ -51,9 +51,9 @@ fn print_file(machine: &mut Machine, db: impl DaisyDatabase, file_path: &str) {
     machine.print(&content, db);
 }
 
-async fn start_runner(rx: UnboundedReceiver<Instruction>, _tty_path: String) {
+async fn start_runner(rx: UnboundedReceiver<Instruction>, addr: Ipv4Addr) {
     info!("Started worker");
-    let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192, 168, 0, 13)), 1234);
+    let addr = SocketAddr::new(IpAddr::V4(addr), 1234);
     let mut runner = Hal::new(rx, addr);
     let _ = runner.run().await;
 }
@@ -71,7 +71,7 @@ async fn main() {
 
     let handle = tokio::task::spawn(async move {
         info!("the runner is starting");
-        start_runner(rx, args.tty).await;
+        start_runner(rx, args.ip).await;
         info!("the runner is finished");
     });
 
