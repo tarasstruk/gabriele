@@ -40,18 +40,22 @@ async fn main() -> Result<()> {
     let (socket, _) = listener.accept().await?;
     let (mut rd, mut wr) = io::split(socket);
 
-    loop {
-        let byte = match rd.read_u8().await {
-            Ok(b) => b,
-            Err(_) => {
-                warn!("reader got EOF");
-                break;
-            }
-        };
+    'out: loop {
+        let mut buf = 0_u16;
+        for _ in 0..2 {
+            match rd.read_u8().await {
+                Ok(byte) => {
+                    buf = (buf << 8) | byte as u16;
+                    wr.write_u8(byte).await?;
+                }
+                Err(_) => {
+                    warn!("reader got EOF");
+                    break 'out;
+                }
+            };
+        }
 
-        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
-        wr.write_u8(byte).await?;
-        file.write_u8(byte).await?;
+        file.write_u16(buf).await?;
     }
 
     // Ensure data is pushed to the disk
