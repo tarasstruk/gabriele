@@ -3,6 +3,14 @@ name = "gabriele"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "gabriele"
+path = "src/main.rs"
+
+[[bin]]
+name = "sim"
+path = "src/sim.rs"
+
 [dependencies]
 anyhow = "1.0.75"
 clap = { version = "4.5.16", features = ["derive"] }
