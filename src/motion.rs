@@ -3,38 +3,53 @@ use crate::printing::{Instruction, SendBytesDetails};
 use deku::{DekuContainerWrite, DekuWrite};
 use log::debug;
 
+/// Top-level Command enum.
+/// The variant is identified by two most-significant bytes.
 #[derive(Debug, DekuWrite, PartialEq)]
 #[deku(id_type = "u8", bits = 2)]
 #[deku(endian = "big")]
-enum Cmd {
+pub enum Cmd {
     #[deku(id = 0b11)]
     Motion(CmdMotion),
     #[deku(id = 0b10)]
     Jump(CmdJump),
 }
 
+/// Make a "jump" with the caret
+/// in a `Plus` or `Minus` direction.
 #[derive(Debug, DekuWrite, PartialEq)]
 #[deku(id_type = "u16", bits = 14)]
 #[deku(endian = "big")]
 #[deku(ctx = "endian: deku::ctx::Endian")]
-enum CmdJump {
+pub enum CmdJump {
+    /// Caret motion from right to left, `<=`
     #[deku(id = 0b00_0100_0000_0000)]
     Minus,
+
+    /// Caret motion from left to right, `=>`
     #[deku(id = 0b00_0011_0000_0000)]
     Plus,
 }
 
+/// Caret or paper motion direction.
 #[derive(Debug, DekuWrite, PartialEq)]
 #[deku(id_type = "u8", bits = 2)]
 #[deku(endian = "big")]
 #[deku(ctx = "endian: deku::ctx::Endian")]
-enum CmdMotionDirection {
+pub enum CmdMotionDirection {
+    /// Vertical scroll to the paper bottom (roll forward)
     #[deku(id = 0b01)]
     PlusY,
+
+    /// Vertical scroll to the paper top (roll backward)
     #[deku(id = 0b11)]
     MinusY,
+
+    /// Caret motion from left to right, `=>`
     #[deku(id = 0b00)]
     PlusX,
+
+    /// Caret motion from right to left, `<=`
     #[deku(id = 0b10)]
     MinusX,
 }
@@ -48,6 +63,7 @@ pub struct CmdMotion {
     value: u16,
 }
 impl CmdMotion {
+    /// Vertical scroll to the paper bottom (roll forward)
     pub fn plus_y(value: u16) -> Self {
         Self {
             dir: CmdMotionDirection::PlusY,
@@ -55,6 +71,7 @@ impl CmdMotion {
         }
     }
 
+    /// Vertical scroll to the paper top (roll backward)
     pub fn minus_y(value: u16) -> Self {
         Self {
             dir: CmdMotionDirection::MinusY,
@@ -62,6 +79,7 @@ impl CmdMotion {
         }
     }
 
+    /// Caret motion from left to right, `=>`
     pub fn plus_x(value: u16) -> Self {
         Self {
             dir: CmdMotionDirection::PlusX,
@@ -69,6 +87,7 @@ impl CmdMotion {
         }
     }
 
+    /// Caret motion from right to left, `<=`
     pub fn minus_x(value: u16) -> Self {
         Self {
             dir: CmdMotionDirection::MinusX,
