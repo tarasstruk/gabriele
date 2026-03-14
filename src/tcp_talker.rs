@@ -5,14 +5,14 @@ use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::sync::broadcast::error::RecvError;
-use tokio::sync::broadcast::{Receiver, Sender};
+use tokio::sync::broadcast::Receiver;
 use tokio::sync::Notify;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
 pub(crate) fn run_tcp_client(
     addr: SocketAddr,
-    tx: Sender<Bytes>,
+    rx: Receiver<Bytes>,
     notifier: Arc<Notify>,
     token: CancellationToken,
 ) -> JoinHandle<()> {
@@ -26,9 +26,8 @@ pub(crate) fn run_tcp_client(
                     match result {
                         Ok(stream) => {
                             warn!("Gabriele Connection established");
-                            let recv = tx.subscribe();
                             notifier.notify_waiters();
-                            process_stream(stream, token.clone(), recv).await;
+                            process_stream(stream, rx).await;
                             warn!("TCP Connection closed");
                             break;
                         }
@@ -58,11 +57,7 @@ pub(crate) fn run_tcp_client(
     })
 }
 
-async fn process_stream(
-    stream: TcpStream,
-    token: CancellationToken,
-    mut receiver: Receiver<Bytes>,
-) {
+async fn process_stream(stream: TcpStream, mut receiver: Receiver<Bytes>) {
     let (mut rx, mut tx) = stream.into_split();
 
     'outer: loop {
@@ -102,16 +97,6 @@ async fn process_stream(
                         break
                     }
 
-                }
-            }
-
-            _ = token.cancelled() => {
-                if receiver.is_empty() {
-                    warn!("Cancelled TCP stream processor");
-                    break;
-                } else {
-                    warn!("Still have {} messages", receiver.len());
-                    continue;
                 }
             }
 

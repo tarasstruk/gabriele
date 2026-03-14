@@ -1,6 +1,6 @@
 use super::tcp_talker::run_tcp_client;
 use crate::printing::Instruction;
-use anyhow::Context;
+use anyhow::{bail, Context};
 use bytes::Bytes;
 use log::debug;
 use std::net::SocketAddr;
@@ -14,7 +14,7 @@ use tokio_util::sync::CancellationToken;
 pub struct Hal {
     receiver: UnboundedReceiver<Instruction>,
     notifier: Arc<Notify>,
-    tx: Sender<Bytes>,
+    tx: Option<Sender<Bytes>>,
     c_token: CancellationToken,
     socket_addr: SocketAddr,
 }
@@ -22,11 +22,11 @@ pub struct Hal {
 impl Hal {
     pub fn new(receiver: UnboundedReceiver<Instruction>, socket_addr: SocketAddr) -> Self {
         let notifier = Arc::new(Notify::new());
-        let (tx, _rx) = broadcast::channel(1024);
+
         let c_token = CancellationToken::new();
         Hal {
             receiver,
-            tx,
+            tx: None,
             notifier,
             c_token,
             socket_addr,
@@ -34,13 +34,11 @@ impl Hal {
     }
 
     pub async fn run(&mut self) -> anyhow::Result<()> {
+        let (tx, rx) = broadcast::channel::<Bytes>(1024);
+        self.tx.replace(tx);
+
         let token = self.c_token.clone();
-        let handle = run_tcp_client(
-            self.socket_addr,
-            self.tx.clone(),
-            self.notifier.clone(),
-            token,
-        );
+        let handle = run_tcp_client(self.socket_addr, rx, self.notifier.clone(), token);
 
         self.notifier.notified().await;
         // self.prepare()?;
@@ -63,14 +61,19 @@ impl Hal {
                 Instruction::Halt => break,
             }
         }
+        // drop Sender
+        let _ = self.tx.take();
         Ok(())
     }
 
     pub fn transmit_bytes(&self, bytes: &[u8]) -> anyhow::Result<()> {
-        self.tx
-            .send(Bytes::from(bytes.to_vec()))
-            .map(|_| ())
-            .context("cannot transmit bytes")
+        if let Some(ref tx) = self.tx {
+            tx.send(Bytes::from(bytes.to_vec()))
+                .map(|_| ())
+                .context("cannot transmit bytes")
+        } else {
+            bail!("cannot transmit bytes, channel is disconnected")
+        }
     }
 
     // pub fn prepare(&self) -> anyhow::Result<()> {
