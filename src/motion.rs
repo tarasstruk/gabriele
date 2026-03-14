@@ -175,4 +175,13 @@ mod tests {
         let data = PlusY::new(0x514);
         assert_eq!(data.to_bytes().unwrap(), [0xD5, 0x14]);
     }
+
+    #[test]
+    fn test_plus_y_overflow() {
+        let data = PlusY::new(0x1514);
+        let result = data.to_bytes();
+        assert!(result.is_err());
+        let msg = "bit size of input is larger than bit requested size";
+        assert!(result.err().unwrap().to_string().contains(msg));
+    }
 }
