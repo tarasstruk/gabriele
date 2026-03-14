@@ -4,21 +4,31 @@ use deku::{DekuContainerWrite, DekuWrite};
 use log::debug;
 
 #[derive(Debug, DekuWrite, PartialEq)]
-#[deku(id_type = "u8", bits = 4)]
+#[deku(id_type = "u8", bits = 2)]
+#[deku(endian = "big")]
+enum Cmd {
+    #[deku(id = 0b11)]
+    Motion(CmdMotion),
+}
+
+#[derive(Debug, DekuWrite, PartialEq)]
+#[deku(id_type = "u8", bits = 2)]
+#[deku(endian = "big")]
 #[deku(ctx = "endian: deku::ctx::Endian")]
 enum CmdMotionDirection {
-    #[deku(id = 0b1101)]
+    #[deku(id = 0b01)]
     PlusY,
-    #[deku(id = 0b1111)]
+    #[deku(id = 0b11)]
     MinusY,
-    #[deku(id = 0b1100)]
+    #[deku(id = 0b00)]
     PlusX,
-    #[deku(id = 0b1110)]
+    #[deku(id = 0b10)]
     MinusX,
 }
 
 #[derive(Debug, DekuWrite, PartialEq)]
 #[deku(endian = "big")]
+#[deku(ctx = "endian: deku::ctx::Endian")]
 pub struct CmdMotion {
     dir: CmdMotionDirection,
     #[deku(bits = 12)]
@@ -62,21 +72,21 @@ fn wrap_decu(value: impl DekuContainerWrite) -> Box<dyn Iterator<Item = Instruct
 
 fn roll_forward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
     debug!("roll the paper forward by {:?}", &steps);
-    wrap_decu(CmdMotion::plus_y(steps))
+    wrap_decu(Cmd::Motion(CmdMotion::plus_y(steps)))
 }
 
 fn roll_backward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
     debug!("roll the paper backward by {:?}", &steps);
-    wrap_decu(CmdMotion::minus_y(steps))
+    wrap_decu(Cmd::Motion(CmdMotion::minus_y(steps)))
 }
 
 fn carriage_forward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
     debug!("move the carriage forward by {:?}", &steps);
-    wrap_decu(CmdMotion::plus_x(steps))
+    wrap_decu(Cmd::Motion(CmdMotion::plus_x(steps)))
 }
 fn carriage_backward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
     debug!("move the carriage <-backward by {:?}", &steps);
-    wrap_decu(CmdMotion::minus_x(steps))
+    wrap_decu(Cmd::Motion(CmdMotion::minus_x(steps)))
 }
 
 pub fn move_carriage(increment: i32) -> Box<dyn Iterator<Item = Instruction>> {
@@ -200,13 +210,13 @@ mod tests {
 
     #[test]
     fn test_plus_y() {
-        let data = CmdMotion::plus_y(0x514);
+        let data = Cmd::Motion(CmdMotion::plus_y(0x514));
         assert_eq!(data.to_bytes().unwrap(), [0xD5, 0x14]);
     }
 
     #[test]
     fn test_plus_y_overflow() {
-        let data = CmdMotion::plus_y(0x1514);
+        let data = Cmd::Motion(CmdMotion::plus_y(0x1514));
         let result = data.to_bytes();
         assert!(result.is_err());
         let msg = "bit size of input is larger than bit requested size";
