@@ -5,16 +5,37 @@ use log::debug;
 
 #[derive(Debug, DekuWrite, PartialEq)]
 #[deku(endian = "big")]
-pub struct PlusY {
+pub struct CmdMotion {
     #[deku(bits = 4)]
     _magic: u8,
     #[deku(bits = 12)]
     value: u16,
 }
-impl PlusY {
-    pub fn new(value: u16) -> Self {
+impl CmdMotion {
+    pub fn y_plus(value: u16) -> Self {
         Self {
             _magic: 0b1101,
+            value,
+        }
+    }
+
+    pub fn y_minus(value: u16) -> Self {
+        Self {
+            _magic: 0b1111,
+            value,
+        }
+    }
+
+    pub fn x_plus(value: u16) -> Self {
+        Self {
+            _magic: 0b1100,
+            value,
+        }
+    }
+
+    pub fn x_minus(value: u16) -> Self {
+        Self {
+            _magic: 0b1110,
             value,
         }
     }
@@ -26,29 +47,23 @@ fn wrap_decu(value: impl DekuContainerWrite) -> Box<dyn Iterator<Item = Instruct
     Box::new([Instruction::SendBytes(cmd)].into_iter())
 }
 
-fn wrap_motion(value: u16) -> Box<dyn Iterator<Item = Instruction>> {
-    let cmd: SendBytesDetails = value.into();
-
-    Box::new([Instruction::SendBytes(cmd)].into_iter())
-}
-
 fn roll_forward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
     debug!("roll the paper forward by {:?}", &steps);
-    wrap_decu(PlusY::new(steps))
+    wrap_decu(CmdMotion::y_plus(steps))
 }
 
 fn roll_backward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
     debug!("roll the paper backward by {:?}", &steps);
-    wrap_motion(steps | 0b1111_0000_0000_0000)
+    wrap_decu(CmdMotion::y_minus(steps))
 }
 
 fn carriage_forward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
     debug!("move the carriage forward by {:?}", &steps);
-    wrap_motion(steps | 0b1100_0000_0000_0000)
+    wrap_decu(CmdMotion::x_plus(steps))
 }
 fn carriage_backward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
     debug!("move the carriage <-backward by {:?}", &steps);
-    wrap_motion(steps | 0b1110_0000_0000_0000)
+    wrap_decu(CmdMotion::x_minus(steps))
 }
 
 pub fn move_carriage(increment: i32) -> Box<dyn Iterator<Item = Instruction>> {
@@ -172,13 +187,13 @@ mod tests {
 
     #[test]
     fn test_plus_y() {
-        let data = PlusY::new(0x514);
+        let data = CmdMotion::y_plus(0x514);
         assert_eq!(data.to_bytes().unwrap(), [0xD5, 0x14]);
     }
 
     #[test]
     fn test_plus_y_overflow() {
-        let data = PlusY::new(0x1514);
+        let data = CmdMotion::y_plus(0x1514);
         let result = data.to_bytes();
         assert!(result.is_err());
         let msg = "bit size of input is larger than bit requested size";
