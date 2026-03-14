@@ -17,7 +17,7 @@ pub enum Instruction {
     Halt,
 }
 
-#[derive(PartialEq, Debug, Clone, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy, Default)]
 pub struct SendBytesDetails {
     pub cmd: [u8; 2],
 }

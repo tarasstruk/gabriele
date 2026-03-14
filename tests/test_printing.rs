@@ -11,7 +11,6 @@ use gabriele::{
     resolution::{DEFAULT_X_RESOLUTION as X_RES, DEFAULT_Y_RESOLUTION as Y_RES},
 };
 use helpers::load_test_db;
-use std::time::Duration;
 
 #[tokio::test]
 async fn prints_two_characters() {

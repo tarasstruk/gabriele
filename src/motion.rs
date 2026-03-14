@@ -1,6 +1,30 @@
 use crate::position::Position;
 use crate::printing::{Instruction, SendBytesDetails};
+use deku::{DekuContainerWrite, DekuWrite};
 use log::debug;
+
+#[derive(Debug, DekuWrite, PartialEq)]
+#[deku(endian = "big")]
+pub struct PlusY {
+    #[deku(bits = 4)]
+    _magic: u8,
+    #[deku(bits = 12)]
+    value: u16,
+}
+impl PlusY {
+    pub fn new(value: u16) -> Self {
+        Self {
+            _magic: 0b1101,
+            value,
+        }
+    }
+}
+
+fn wrap_decu(value: impl DekuContainerWrite) -> Box<dyn Iterator<Item = Instruction>> {
+    let mut cmd = SendBytesDetails::default();
+    value.to_slice(&mut cmd.cmd).unwrap();
+    Box::new([Instruction::SendBytes(cmd)].into_iter())
+}
 
 fn wrap_motion(value: u16) -> Box<dyn Iterator<Item = Instruction>> {
     let cmd: SendBytesDetails = value.into();
@@ -10,7 +34,7 @@ fn wrap_motion(value: u16) -> Box<dyn Iterator<Item = Instruction>> {
 
 fn roll_forward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
     debug!("roll the paper forward by {:?}", &steps);
-    wrap_motion(steps | 0b1101_0000_0000_0000)
+    wrap_decu(PlusY::new(steps))
 }
 
 fn roll_backward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
@@ -75,6 +99,7 @@ mod tests {
     use super::*;
     use crate::printing::Instruction::*;
     use crate::resolution::{DEFAULT_X_RESOLUTION as X_RES, DEFAULT_Y_RESOLUTION as Y_RES};
+    use deku::DekuContainerWrite;
 
     #[test]
     fn it_modes_the_carriage_one_space_rightwards() {
@@ -143,5 +168,11 @@ mod tests {
 
         assert_eq!(cmd.next(), Some(SendBytes(det)));
         assert_eq!(cmd.next(), None);
+    }
+
+    #[test]
+    fn test_plus_y() {
+        let data = PlusY::new(0x514);
+        assert_eq!(data.to_bytes().unwrap(), [0xD5, 0x14]);
     }
 }
