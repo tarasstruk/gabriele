@@ -9,6 +9,19 @@ use log::debug;
 enum Cmd {
     #[deku(id = 0b11)]
     Motion(CmdMotion),
+    #[deku(id = 0b10)]
+    Jump(CmdJump),
+}
+
+#[derive(Debug, DekuWrite, PartialEq)]
+#[deku(id_type = "u16", bits = 14)]
+#[deku(endian = "big")]
+#[deku(ctx = "endian: deku::ctx::Endian")]
+enum CmdJump {
+    #[deku(id = 0b00_0100_0000_0000)]
+    Minus,
+    #[deku(id = 0b00_0011_0000_0000)]
+    Plus,
 }
 
 #[derive(Debug, DekuWrite, PartialEq)]
@@ -126,11 +139,11 @@ pub fn move_absolute(
 
 #[allow(unused)]
 pub fn space_jump_left() -> Box<dyn Iterator<Item = Instruction>> {
-    Box::new([Instruction::bytes(0b1000_0100, 0b0000_0000)].into_iter())
+    wrap_decu(Cmd::Jump(CmdJump::Minus))
 }
 
 pub fn space_jump_right() -> Box<dyn Iterator<Item = Instruction>> {
-    Box::new([Instruction::bytes(0b1000_0011, 0b0000_0000)].into_iter())
+    wrap_decu(Cmd::Jump(CmdJump::Plus))
 }
 #[cfg(test)]
 mod tests {
