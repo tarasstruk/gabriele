@@ -4,38 +4,51 @@ use deku::{DekuContainerWrite, DekuWrite};
 use log::debug;
 
 #[derive(Debug, DekuWrite, PartialEq)]
+#[deku(id_type = "u8", bits = 4)]
+#[deku(ctx = "endian: deku::ctx::Endian")]
+enum CmdMotionDirection {
+    #[deku(id = 0b1101)]
+    PlusY,
+    #[deku(id = 0b1111)]
+    MinusY,
+    #[deku(id = 0b1100)]
+    PlusX,
+    #[deku(id = 0b1110)]
+    MinusX,
+}
+
+#[derive(Debug, DekuWrite, PartialEq)]
 #[deku(endian = "big")]
 pub struct CmdMotion {
-    #[deku(bits = 4)]
-    _magic: u8,
+    dir: CmdMotionDirection,
     #[deku(bits = 12)]
     value: u16,
 }
 impl CmdMotion {
-    pub fn y_plus(value: u16) -> Self {
+    pub fn plus_y(value: u16) -> Self {
         Self {
-            _magic: 0b1101,
+            dir: CmdMotionDirection::PlusY,
             value,
         }
     }
 
-    pub fn y_minus(value: u16) -> Self {
+    pub fn minus_y(value: u16) -> Self {
         Self {
-            _magic: 0b1111,
+            dir: CmdMotionDirection::MinusY,
             value,
         }
     }
 
-    pub fn x_plus(value: u16) -> Self {
+    pub fn plus_x(value: u16) -> Self {
         Self {
-            _magic: 0b1100,
+            dir: CmdMotionDirection::PlusX,
             value,
         }
     }
 
-    pub fn x_minus(value: u16) -> Self {
+    pub fn minus_x(value: u16) -> Self {
         Self {
-            _magic: 0b1110,
+            dir: CmdMotionDirection::MinusX,
             value,
         }
     }
@@ -49,21 +62,21 @@ fn wrap_decu(value: impl DekuContainerWrite) -> Box<dyn Iterator<Item = Instruct
 
 fn roll_forward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
     debug!("roll the paper forward by {:?}", &steps);
-    wrap_decu(CmdMotion::y_plus(steps))
+    wrap_decu(CmdMotion::plus_y(steps))
 }
 
 fn roll_backward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
     debug!("roll the paper backward by {:?}", &steps);
-    wrap_decu(CmdMotion::y_minus(steps))
+    wrap_decu(CmdMotion::minus_y(steps))
 }
 
 fn carriage_forward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
     debug!("move the carriage forward by {:?}", &steps);
-    wrap_decu(CmdMotion::x_plus(steps))
+    wrap_decu(CmdMotion::plus_x(steps))
 }
 fn carriage_backward(steps: u16) -> Box<dyn Iterator<Item = Instruction>> {
     debug!("move the carriage <-backward by {:?}", &steps);
-    wrap_decu(CmdMotion::x_minus(steps))
+    wrap_decu(CmdMotion::minus_x(steps))
 }
 
 pub fn move_carriage(increment: i32) -> Box<dyn Iterator<Item = Instruction>> {
@@ -187,13 +200,13 @@ mod tests {
 
     #[test]
     fn test_plus_y() {
-        let data = CmdMotion::y_plus(0x514);
+        let data = CmdMotion::plus_y(0x514);
         assert_eq!(data.to_bytes().unwrap(), [0xD5, 0x14]);
     }
 
     #[test]
     fn test_plus_y_overflow() {
-        let data = CmdMotion::y_plus(0x1514);
+        let data = CmdMotion::plus_y(0x1514);
         let result = data.to_bytes();
         assert!(result.is_err());
         let msg = "bit size of input is larger than bit requested size";
