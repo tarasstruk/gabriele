@@ -1,5 +1,7 @@
 mod helpers;
+
 use crate::helpers::app::TestApp;
+use bytes::{Bytes, BytesMut};
 use gabriele::impression::Impression;
 use gabriele::motion::{move_carriage, move_paper};
 use gabriele::printing::{Instruction, SendBytesDetails};
@@ -9,6 +11,7 @@ use gabriele::{
     resolution::{DEFAULT_X_RESOLUTION as X_RES, DEFAULT_Y_RESOLUTION as Y_RES},
 };
 use helpers::load_test_db;
+use std::time::Duration;
 
 #[tokio::test]
 async fn prints_two_characters() {
@@ -38,7 +41,7 @@ async fn prints_two_characters() {
     };
     assert_eq!(app.machine.current_position(), expected_position);
 
-    app.stop().await;
+    app.teardown().await;
 }
 
 #[tokio::test]
@@ -70,7 +73,7 @@ async fn prints_special_character() {
     };
     assert_eq!(app.machine.current_position(), expected_position);
 
-    app.stop().await;
+    app.teardown().await;
 }
 
 #[tokio::test]
@@ -108,5 +111,31 @@ async fn prints_character_with_a_newline() {
     // should be received 2 x 2 bytes
     assert_eq!(counter, 2);
 
-    app.stop().await;
+    app.teardown().await;
+}
+
+#[tokio::test]
+async fn prints_welcome_file() {
+    let _ = env_logger::builder().is_test(true).try_init();
+    log::info!("Це повідомлення з логу!");
+
+    let mut app = TestApp::run(1237).await;
+    let db = load_test_db();
+
+    let content = include_str!("../welcome.txt");
+    let expected = Bytes::from_static(include_bytes!("../ref_output.bin"));
+
+    app.machine.offset(4 * 12);
+    app.machine.print(content, &db);
+    app.halt();
+
+    let mut buf = BytesMut::with_capacity(1024);
+
+    while let Ok(Some(byte)) = tokio::time::timeout(Duration::from_millis(500), app.rx.recv()).await
+    {
+        buf.extend_from_slice(&[byte]);
+    }
+
+    assert_eq!(buf, expected);
+    app.teardown().await;
 }

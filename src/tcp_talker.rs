@@ -29,7 +29,7 @@ pub(crate) fn run_tcp_client(
                             let recv = tx.subscribe();
                             notifier.notify_waiters();
                             process_stream(stream, token.clone(), recv).await;
-                            warn!("Connection closed");
+                            warn!("TCP Connection closed");
                             break;
                         }
                         Err(_e) => {
@@ -70,7 +70,7 @@ async fn process_stream(
             result = receiver.recv() => {
                 match result {
                     Ok(chunk) => {
-                        debug!("Client received bytes {chunk:?}");
+                        debug!("Client received bytes {:02x}", chunk);
                         // this is regarded as inner loop
                         for byte in chunk {
                             if let Err(e) = tx.write_u8(byte).await {
@@ -79,7 +79,7 @@ async fn process_stream(
                             } else {
                                 match rx.read_u8().await {
                                     Ok(reply) if (reply != byte) => {
-                                        error!("Expected reply is {:02x?} but received {:02x?}", byte, reply);
+                                        error!("Expected reply is {:02x} but received {:02x}", byte, reply);
                                         break 'outer;
                                     }
                                     Err(e) => {
@@ -97,7 +97,10 @@ async fn process_stream(
                         break
                     }
 
-                    Err(_) => break, // Channel is closed
+                    Err(RecvError::Closed) => {
+                        warn!("Channel is closed");
+                        break
+                    }
 
                 }
             }
