@@ -131,8 +131,7 @@ async fn prints_welcome_file() {
 
     let mut buf = BytesMut::with_capacity(1024);
 
-    while let Ok(Some(byte)) = tokio::time::timeout(Duration::from_millis(500), app.rx.recv()).await
-    {
+    while let Some(byte) = app.rx.recv().await {
         buf.extend_from_slice(&[byte]);
     }
 
