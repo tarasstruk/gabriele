@@ -1,3 +1,4 @@
+use deku::{DekuContainerWrite, DekuWrite};
 use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Debug, Clone)]
@@ -12,33 +13,31 @@ use serde::{Deserialize, Serialize};
 /// The User has 4 pre-defined options and
 /// the custom impression value can be specified
 /// as a ratio between the base (0) and maximum (63).
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, DekuWrite)]
+#[deku(id_type = "u8", bits = 8)]
+#[deku(endian = "big")]
 pub enum Impression {
-    #[default]
-    /// Normal impression, middle of the range
-    Normal,
-    /// 75% of the strongest impression
-    Strong,
     /// 25% of the strongest impression
+    #[deku(id = 15)]
     Mild,
+
+    /// Normal impression, middle of the range
+    #[deku(id = 31)]
+    #[default]
+    Normal,
+
+    /// 75% of the strongest impression
+    #[deku(id = 47)]
+    Strong,
+
     /// The maximum possible impression
+    #[deku(id = 63)]
     Strongest,
-    Custom(f32),
 }
 
 impl Impression {
-    fn convert_value(ratio: f32) -> u8 {
-        (ratio * 63.0) as u8
-    }
-
     pub fn value(&self) -> u8 {
-        match self {
-            Self::Custom(ratio) => Self::convert_value(*ratio),
-            Self::Strongest => Self::convert_value(1.0),
-            Self::Strong => Self::convert_value(0.75),
-            Self::Normal => Self::convert_value(0.5),
-            Self::Mild => Self::convert_value(0.25),
-        }
+        self.to_bytes().unwrap()[0]
     }
 }
 
@@ -47,22 +46,22 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_strong_impression() {
-        assert_eq!(Impression::Strong.value(), 47)
+    fn test_mild() {
+        assert_eq!(Impression::Mild.value(), 15)
     }
 
     #[test]
-    fn test_normal_impression() {
+    fn test_normal() {
         assert_eq!(Impression::Normal.value(), 31)
     }
 
     #[test]
-    fn test_strongest_impression() {
-        assert_eq!(Impression::Strongest.value(), 63)
+    fn test_strong() {
+        assert_eq!(Impression::Strong.value(), 47)
     }
 
     #[test]
-    fn test_custom_impression() {
-        assert_eq!(Impression::Custom(0.8).value(), 50)
+    fn test_strongest() {
+        assert_eq!(Impression::Strongest.value(), 63)
     }
 }
