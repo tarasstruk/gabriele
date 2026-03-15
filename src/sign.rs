@@ -1,6 +1,5 @@
-use crate::impression::Impression;
+use crate::cmd::{Cmd, Impression};
 use crate::machine::PrintingDirection;
-use crate::motion::Cmd;
 use crate::printing::Instruction;
 use crate::symbol::{AfterSymbolPrinted, CmdSymbol, SymbolPrintingAttrs};
 use deku::DekuContainerWrite;

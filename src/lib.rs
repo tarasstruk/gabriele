@@ -1,7 +1,6 @@
 pub mod database;
 pub mod directive;
 pub mod hal;
-pub mod impression;
 pub mod machine;
 pub mod motion;
 pub mod position;
@@ -11,3 +10,5 @@ pub mod sign;
 pub mod symbol;
 pub mod tcp_talker;
 pub mod to_symbols;
+
+pub mod cmd;

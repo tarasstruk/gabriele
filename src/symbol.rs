@@ -1,4 +1,4 @@
-use crate::impression::Impression;
+use crate::cmd::Impression;
 use crate::machine::PrintingDirection;
 use crate::printing::Instruction;
 use crate::sign::Sign;

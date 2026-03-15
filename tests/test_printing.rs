@@ -3,8 +3,8 @@ mod helpers;
 use crate::helpers::app::TestApp;
 use bytes::{Bytes, BytesMut};
 use deku::DekuContainerWrite;
-use gabriele::impression::Impression;
-use gabriele::motion::{move_carriage, move_paper, Cmd};
+use gabriele::cmd::{Cmd, Impression};
+use gabriele::motion::{move_carriage, move_paper};
 use gabriele::printing::{Instruction, SendBytesDetails};
 use gabriele::symbol::{AfterSymbolPrinted, CmdSymbol, SymbolPrintingAttrs};
 use gabriele::{
