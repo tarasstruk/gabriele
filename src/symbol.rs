@@ -2,6 +2,7 @@ use crate::impression::Impression;
 use crate::machine::PrintingDirection;
 use crate::printing::Instruction;
 use crate::sign::Sign;
+use deku::{DekuContainerWrite, DekuWrite};
 use itertools::repeat_n;
 use log::info;
 use serde::{Deserialize, Serialize};
@@ -14,14 +15,21 @@ pub enum ActionMapping {
     CarriageReturn,
 }
 
-#[derive(PartialEq, Debug, Copy, Clone, Default, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Copy, Clone, Default, Serialize, Deserialize, DekuWrite)]
+#[deku(id_type = "u8", bits = 8)]
+#[deku(endian = "big")]
 pub enum AfterSymbolPrinted {
     // sets bits "7"=1 and "6"=0
     #[default]
+    #[deku(id = 0b_1000_0000)]
     MoveRight,
+
     // sets bits "7"=1 and "6"=1
+    #[deku(id = 0b_1100_0000)]
     MoveLeft,
+
     // sets bits "7"=0 and "6"=0
+    #[deku(id = 0b_0000_0000)]
     HoldOn,
 }
 
@@ -42,11 +50,7 @@ impl AfterSymbolPrinted {
     }
 
     pub fn value(&self) -> u8 {
-        match self {
-            Self::MoveRight => 0b1000_0000,
-            Self::MoveLeft => 0b1100_0000,
-            Self::HoldOn => 0b0000_0000,
-        }
+        self.to_bytes().unwrap()[0]
     }
 }
 
