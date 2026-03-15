@@ -2,7 +2,7 @@ use crate::impression::Impression;
 use crate::machine::PrintingDirection;
 use crate::printing::Instruction;
 use crate::sign::Sign;
-use deku::{DekuContainerWrite, DekuWrite};
+use deku::DekuWrite;
 use itertools::repeat_n;
 use log::info;
 use serde::{Deserialize, Serialize};
@@ -16,21 +16,29 @@ pub enum ActionMapping {
 }
 
 #[derive(PartialEq, Debug, Copy, Clone, Default, Serialize, Deserialize, DekuWrite)]
-#[deku(id_type = "u8", bits = 8)]
+#[deku(id_type = "u8", bits = 2)]
 #[deku(endian = "big")]
+#[deku(ctx = "endian: deku::ctx::Endian")]
 pub enum AfterSymbolPrinted {
     // sets bits "7"=1 and "6"=0
     #[default]
-    #[deku(id = 0b_1000_0000)]
+    #[deku(id = 0b_10)]
     MoveRight,
 
     // sets bits "7"=1 and "6"=1
-    #[deku(id = 0b_1100_0000)]
+    #[deku(id = 0b_11)]
     MoveLeft,
 
     // sets bits "7"=0 and "6"=0
-    #[deku(id = 0b_0000_0000)]
+    #[deku(id = 0b_00)]
     HoldOn,
+}
+
+#[derive(PartialEq, Debug, Clone, Default, Serialize, Deserialize, DekuWrite)]
+#[deku(endian = "big")]
+pub struct SymbolPrintingAttrs {
+    pub direction: AfterSymbolPrinted,
+    pub impression: Impression,
 }
 
 impl AfterSymbolPrinted {
@@ -47,10 +55,6 @@ impl AfterSymbolPrinted {
             PrintingDirection::Right => self,
             PrintingDirection::Left => self.invert(),
         }
-    }
-
-    pub fn value(&self) -> u8 {
-        self.to_bytes().unwrap()[0]
     }
 }
 
@@ -122,7 +126,7 @@ impl Symbol {
 
     pub fn imp(mut self, impression: Impression) -> Self {
         for sign in self.signs.iter_mut() {
-            sign.imp = impression.clone()
+            sign.imp = impression
         }
         self
     }

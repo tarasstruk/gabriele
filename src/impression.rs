@@ -1,4 +1,4 @@
-use deku::{DekuContainerWrite, DekuWrite};
+use deku::DekuWrite;
 use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Debug, Clone)]
@@ -13,9 +13,10 @@ use serde::{Deserialize, Serialize};
 /// The User has 4 pre-defined options and
 /// the custom impression value can be specified
 /// as a ratio between the base (0) and maximum (63).
-#[derive(Serialize, Deserialize, Default, DekuWrite)]
-#[deku(id_type = "u8", bits = 8)]
+#[derive(Serialize, Deserialize, Default, DekuWrite, Copy)]
+#[deku(id_type = "u8", bits = 6)]
 #[deku(endian = "big")]
+#[deku(ctx = "endian: deku::ctx::Endian")]
 pub enum Impression {
     /// 25% of the strongest impression
     #[deku(id = 15)]
@@ -35,33 +36,53 @@ pub enum Impression {
     Strongest,
 }
 
-impl Impression {
-    pub fn value(&self) -> u8 {
-        self.to_bytes().unwrap()[0]
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::symbol::{AfterSymbolPrinted, SymbolPrintingAttrs};
+    use deku::DekuContainerWrite;
 
     #[test]
-    fn test_mild() {
-        assert_eq!(Impression::Mild.value(), 15)
+    fn mild() {
+        let hit = SymbolPrintingAttrs {
+            direction: AfterSymbolPrinted::HoldOn,
+            impression: Impression::Mild,
+        }
+        .to_bytes()
+        .unwrap()[0];
+        assert_eq!(hit, 15)
     }
 
     #[test]
-    fn test_normal() {
-        assert_eq!(Impression::Normal.value(), 31)
+    fn normal() {
+        let hit = SymbolPrintingAttrs {
+            direction: AfterSymbolPrinted::HoldOn,
+            impression: Impression::default(),
+        }
+        .to_bytes()
+        .unwrap()[0];
+        assert_eq!(hit, 31)
     }
 
     #[test]
-    fn test_strong() {
-        assert_eq!(Impression::Strong.value(), 47)
+    fn strong() {
+        let hit = SymbolPrintingAttrs {
+            direction: AfterSymbolPrinted::HoldOn,
+            impression: Impression::Strong,
+        }
+        .to_bytes()
+        .unwrap()[0];
+        assert_eq!(hit, 47)
     }
 
     #[test]
-    fn test_strongest() {
-        assert_eq!(Impression::Strongest.value(), 63)
+    fn strongest() {
+        let hit = SymbolPrintingAttrs {
+            direction: AfterSymbolPrinted::HoldOn,
+            impression: Impression::Strongest,
+        }
+        .to_bytes()
+        .unwrap()[0];
+        assert_eq!(hit, 63)
     }
 }

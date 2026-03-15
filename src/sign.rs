@@ -1,7 +1,8 @@
 use crate::impression::Impression;
 use crate::machine::PrintingDirection;
 use crate::printing::Instruction;
-use crate::symbol::AfterSymbolPrinted;
+use crate::symbol::{AfterSymbolPrinted, SymbolPrintingAttrs};
+use deku::DekuContainerWrite;
 use serde::{Deserialize, Serialize};
 
 /// `Sign` represents a petal on a daisy wheel with a moulded character or punctuation mark
@@ -23,7 +24,12 @@ impl Sign {
     /// current `PrintingDirection`
     pub fn build_instruction(&self, dir: PrintingDirection) -> Instruction {
         let b1 = self.idx;
-        let b2 = self.imp.value() | self.after.with_direction(dir).value();
+        let attr = SymbolPrintingAttrs {
+            direction: self.after.with_direction(dir),
+            impression: self.imp,
+        };
+
+        let b2 = attr.to_bytes().unwrap()[0];
         Instruction::bytes(b1, b2)
     }
 }

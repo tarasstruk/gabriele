@@ -2,10 +2,11 @@ mod helpers;
 
 use crate::helpers::app::TestApp;
 use bytes::{Bytes, BytesMut};
+use deku::DekuContainerWrite;
 use gabriele::impression::Impression;
 use gabriele::motion::{move_carriage, move_paper};
 use gabriele::printing::{Instruction, SendBytesDetails};
-use gabriele::symbol::AfterSymbolPrinted;
+use gabriele::symbol::{AfterSymbolPrinted, SymbolPrintingAttrs};
 use gabriele::{
     position::Position,
     resolution::{DEFAULT_X_RESOLUTION as X_RES, DEFAULT_Y_RESOLUTION as Y_RES},
@@ -19,7 +20,7 @@ async fn prints_two_characters() {
 
     app.machine.print("AT", &db);
 
-    let hit = Impression::default().value() | AfterSymbolPrinted::default().value();
+    let hit = SymbolPrintingAttrs::default().to_bytes().unwrap()[0];
 
     let byte = app.rx.recv().await.unwrap();
     assert_eq!(byte, 36);
@@ -50,8 +51,19 @@ async fn prints_special_character() {
 
     app.machine.print("à", &db);
 
-    let first_hit = Impression::default().value() | AfterSymbolPrinted::HoldOn.value();
-    let second_hit = Impression::Mild.value() | AfterSymbolPrinted::MoveRight.value();
+    let first_hit = SymbolPrintingAttrs {
+        direction: AfterSymbolPrinted::HoldOn,
+        impression: Default::default(),
+    }
+    .to_bytes()
+    .unwrap()[0];
+
+    let second_hit = SymbolPrintingAttrs {
+        direction: AfterSymbolPrinted::MoveRight,
+        impression: Impression::Mild,
+    }
+    .to_bytes()
+    .unwrap()[0];
 
     let byte = app.rx.recv().await.unwrap();
     assert_eq!(byte, 94);
@@ -83,8 +95,13 @@ async fn prints_character_with_a_newline() {
     app.machine.print("A\n", &db);
     app.machine.shutdown();
 
-    // 1 printing instruction plus 2 motion instructions
-    let hit = Impression::default().value() | AfterSymbolPrinted::MoveRight.value();
+    let hit = SymbolPrintingAttrs {
+        direction: AfterSymbolPrinted::MoveRight,
+        impression: Default::default(),
+    }
+    .to_bytes()
+    .unwrap()[0];
+
     let carriage_motion: Vec<Instruction> = move_carriage(-1 * X_RES).collect();
     let roll_motion: Vec<Instruction> = move_paper(1 * Y_RES).collect();
 
