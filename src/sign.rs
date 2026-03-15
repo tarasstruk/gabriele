@@ -1,7 +1,8 @@
 use crate::impression::Impression;
 use crate::machine::PrintingDirection;
+use crate::motion::Cmd;
 use crate::printing::Instruction;
-use crate::symbol::{AfterSymbolPrinted, SymbolPrintingAttrs};
+use crate::symbol::{AfterSymbolPrinted, CmdSymbol, SymbolPrintingAttrs};
 use deku::DekuContainerWrite;
 use serde::{Deserialize, Serialize};
 
@@ -29,7 +30,20 @@ impl Sign {
             impression: self.imp,
         };
 
-        let b2 = attr.to_bytes().unwrap()[0];
-        Instruction::bytes(b1, b2)
+        if b1 > 100 {
+            panic!("not a valid petal index")
+        }
+
+        let cmd = if b1 > 0x3f {
+            Cmd::SymbolHigh(CmdSymbol {
+                code: b1 & 0x3f,
+                attr,
+            })
+        } else {
+            Cmd::SymbolLow(CmdSymbol { code: b1, attr })
+        };
+
+        let out = cmd.to_bytes().unwrap();
+        Instruction::bytes(out[0], out[1])
     }
 }

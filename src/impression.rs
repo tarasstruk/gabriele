@@ -39,50 +39,36 @@ pub enum Impression {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::symbol::{AfterSymbolPrinted, SymbolPrintingAttrs};
+    use crate::motion::Cmd;
+    use crate::symbol::{AfterSymbolPrinted, CmdSymbol, SymbolPrintingAttrs};
     use deku::DekuContainerWrite;
+
+    fn hit(impression: Impression) -> u8 {
+        let mut sym = CmdSymbol::default();
+        sym.attr = SymbolPrintingAttrs {
+            direction: AfterSymbolPrinted::HoldOn,
+            impression,
+        };
+        Cmd::SymbolLow(sym).to_bytes().unwrap()[1]
+    }
 
     #[test]
     fn mild() {
-        let hit = SymbolPrintingAttrs {
-            direction: AfterSymbolPrinted::HoldOn,
-            impression: Impression::Mild,
-        }
-        .to_bytes()
-        .unwrap()[0];
-        assert_eq!(hit, 15)
+        assert_eq!(hit(Impression::Mild), 15)
     }
 
     #[test]
     fn normal() {
-        let hit = SymbolPrintingAttrs {
-            direction: AfterSymbolPrinted::HoldOn,
-            impression: Impression::default(),
-        }
-        .to_bytes()
-        .unwrap()[0];
-        assert_eq!(hit, 31)
+        assert_eq!(hit(Impression::default()), 31)
     }
 
     #[test]
     fn strong() {
-        let hit = SymbolPrintingAttrs {
-            direction: AfterSymbolPrinted::HoldOn,
-            impression: Impression::Strong,
-        }
-        .to_bytes()
-        .unwrap()[0];
-        assert_eq!(hit, 47)
+        assert_eq!(hit(Impression::Strong), 47)
     }
 
     #[test]
     fn strongest() {
-        let hit = SymbolPrintingAttrs {
-            direction: AfterSymbolPrinted::HoldOn,
-            impression: Impression::Strongest,
-        }
-        .to_bytes()
-        .unwrap()[0];
-        assert_eq!(hit, 63)
+        assert_eq!(hit(Impression::Strongest), 63)
     }
 }

@@ -34,11 +34,21 @@ pub enum AfterSymbolPrinted {
     HoldOn,
 }
 
-#[derive(PartialEq, Debug, Clone, Default, Serialize, Deserialize, DekuWrite)]
+#[derive(PartialEq, Debug, Clone, Default, DekuWrite, Copy)]
 #[deku(endian = "big")]
+#[deku(ctx = "endian: deku::ctx::Endian")]
 pub struct SymbolPrintingAttrs {
     pub direction: AfterSymbolPrinted,
     pub impression: Impression,
+}
+
+#[derive(DekuWrite, PartialEq, Debug, Clone, Copy, Default)]
+#[deku(endian = "big")]
+#[deku(ctx = "endian: deku::ctx::Endian")]
+pub struct CmdSymbol {
+    #[deku(bits = 6)]
+    pub code: u8,
+    pub attr: SymbolPrintingAttrs,
 }
 
 impl AfterSymbolPrinted {

@@ -1,5 +1,6 @@
 use crate::position::Position;
 use crate::printing::{Instruction, SendBytesDetails};
+use crate::symbol::CmdSymbol;
 use deku::{DekuContainerWrite, DekuWrite};
 use log::debug;
 
@@ -13,6 +14,10 @@ pub enum Cmd {
     Motion(CmdMotion),
     #[deku(id = 0b10)]
     Jump(CmdJump),
+    #[deku(id = 0b00)]
+    SymbolLow(CmdSymbol),
+    #[deku(id = 0b01)]
+    SymbolHigh(CmdSymbol),
 }
 
 /// Make a "jump" with the caret

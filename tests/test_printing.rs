@@ -4,14 +4,23 @@ use crate::helpers::app::TestApp;
 use bytes::{Bytes, BytesMut};
 use deku::DekuContainerWrite;
 use gabriele::impression::Impression;
-use gabriele::motion::{move_carriage, move_paper};
+use gabriele::motion::{move_carriage, move_paper, Cmd};
 use gabriele::printing::{Instruction, SendBytesDetails};
-use gabriele::symbol::{AfterSymbolPrinted, SymbolPrintingAttrs};
+use gabriele::symbol::{AfterSymbolPrinted, CmdSymbol, SymbolPrintingAttrs};
 use gabriele::{
     position::Position,
     resolution::{DEFAULT_X_RESOLUTION as X_RES, DEFAULT_Y_RESOLUTION as Y_RES},
 };
 use helpers::load_test_db;
+
+fn hit(impression: Impression, direction: AfterSymbolPrinted) -> u8 {
+    let mut sym = CmdSymbol::default();
+    sym.attr = SymbolPrintingAttrs {
+        direction,
+        impression,
+    };
+    Cmd::SymbolLow(sym).to_bytes().unwrap()[1]
+}
 
 #[tokio::test]
 async fn prints_two_characters() {
@@ -20,7 +29,7 @@ async fn prints_two_characters() {
 
     app.machine.print("AT", &db);
 
-    let hit = SymbolPrintingAttrs::default().to_bytes().unwrap()[0];
+    let hit = hit(Default::default(), Default::default());
 
     let byte = app.rx.recv().await.unwrap();
     assert_eq!(byte, 36);
@@ -51,19 +60,9 @@ async fn prints_special_character() {
 
     app.machine.print("à", &db);
 
-    let first_hit = SymbolPrintingAttrs {
-        direction: AfterSymbolPrinted::HoldOn,
-        impression: Default::default(),
-    }
-    .to_bytes()
-    .unwrap()[0];
+    let first_hit = hit(Default::default(), AfterSymbolPrinted::HoldOn);
 
-    let second_hit = SymbolPrintingAttrs {
-        direction: AfterSymbolPrinted::MoveRight,
-        impression: Impression::Mild,
-    }
-    .to_bytes()
-    .unwrap()[0];
+    let second_hit = hit(Impression::Mild, AfterSymbolPrinted::MoveRight);
 
     let byte = app.rx.recv().await.unwrap();
     assert_eq!(byte, 94);
@@ -95,12 +94,7 @@ async fn prints_character_with_a_newline() {
     app.machine.print("A\n", &db);
     app.machine.shutdown();
 
-    let hit = SymbolPrintingAttrs {
-        direction: AfterSymbolPrinted::MoveRight,
-        impression: Default::default(),
-    }
-    .to_bytes()
-    .unwrap()[0];
+    let hit = crate::hit(Default::default(), AfterSymbolPrinted::MoveRight);
 
     let carriage_motion: Vec<Instruction> = move_carriage(-1 * X_RES).collect();
     let roll_motion: Vec<Instruction> = move_paper(1 * Y_RES).collect();
