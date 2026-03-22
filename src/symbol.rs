@@ -206,7 +206,10 @@ mod tests {
     fn test_instructions_with_strong_impression() {
         let symbol = Symbol::new('ü').petal(81).strong();
         let mut result = symbol.instructions(Default::default());
-        assert_eq!(result.next(), Some(Instruction::bytes(81, 47 + 128)));
+        assert_eq!(
+            result.next(),
+            Some(Instruction::SendBytes(u16::from_be_bytes([81, 47 + 128])))
+        );
         assert_eq!(result.next(), None);
     }
 
@@ -214,14 +217,23 @@ mod tests {
     fn test_instructions_with_hold_after_printed() {
         let symbol = Symbol::new('ü').petal(81).hold();
         let mut result = symbol.instructions(Default::default());
-        assert_eq!(result.next(), Some(Instruction::bytes(81, 31 + 0)));
+        assert_eq!(
+            result.next(),
+            Some(Instruction::SendBytes(u16::from_be_bytes([81, 31 + 0])))
+        );
         assert_eq!(result.next(), None);
     }
     #[test]
     fn test_instructions_with_left_direction() {
         let symbol = Symbol::new('ü').petal(81).left();
         let mut result = symbol.instructions(Default::default());
-        assert_eq!(result.next(), Some(Instruction::bytes(81, 31 + 128 + 64)));
+        assert_eq!(
+            result.next(),
+            Some(Instruction::SendBytes(u16::from_be_bytes([
+                81,
+                31 + 128 + 64
+            ])))
+        );
         assert_eq!(result.next(), None);
     }
 
@@ -230,9 +242,15 @@ mod tests {
         let symbol = Symbol::new('à').petal(94).grave();
         let mut result = symbol.instructions(Default::default());
         // 31 for Impression normal + 0 for Direction (hold)
-        assert_eq!(result.next(), Some(Instruction::bytes(94, 31)));
+        assert_eq!(
+            result.next(),
+            Some(Instruction::SendBytes(u16::from_be_bytes([94, 31])))
+        );
         // 15 for Impression Mild + 128 for Direction normal
-        assert_eq!(result.next(), Some(Instruction::bytes(72, 15 + 128)));
+        assert_eq!(
+            result.next(),
+            Some(Instruction::SendBytes(u16::from_be_bytes([72, 15 + 128])))
+        );
         assert_eq!(result.next(), None);
     }
 }

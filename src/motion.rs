@@ -1,6 +1,6 @@
 use crate::cmd::{Cmd, CmdJump, CmdMotion};
 use crate::position::Position;
-use crate::printing::{Instruction, SendBytesDetails};
+use crate::printing::Instruction;
 use deku::DekuContainerWrite;
 
 #[derive(Debug, PartialEq)]
@@ -47,9 +47,9 @@ impl From<Instruction> for SequenceMotion {
 }
 
 fn wrap_decu(value: impl DekuContainerWrite) -> Instruction {
-    let mut cmd = SendBytesDetails::default();
-    value.to_slice(&mut cmd.cmd).unwrap();
-    Instruction::SendBytes(cmd)
+    let mut cmd = [0_u8; 2];
+    value.to_slice(&mut cmd).unwrap();
+    Instruction::SendBytes(u16::from_be_bytes(cmd))
 }
 
 fn move_carriage(increment: i16) -> Option<Instruction> {
@@ -91,7 +91,7 @@ mod tests {
     fn it_modes_the_carriage_one_space_rightwards() {
         let cmd = space_jump_right();
 
-        let det = SendBytesDetails { cmd: [0x83, 0] };
+        let det = u16::from_be_bytes([0x83, 0]);
         assert_eq!(cmd, OneDim(SendBytes(det)));
     }
 
@@ -99,7 +99,7 @@ mod tests {
     fn it_modes_the_carriage_one_space_leftwards() {
         let cmd = space_jump_left();
 
-        let det = SendBytesDetails { cmd: [0x84, 0] };
+        let det = u16::from_be_bytes([0x84, 0]);
         assert_eq!(cmd, OneDim(SendBytes(det)));
     }
 
@@ -107,8 +107,8 @@ mod tests {
     fn it_moves_in_relative_increments() {
         let cmd = move_relative(120, 32);
 
-        let first = SendBytes(SendBytesDetails { cmd: [0xc0, 120] });
-        let second = SendBytes(SendBytesDetails { cmd: [0xd0, 32] });
+        let first = SendBytes(u16::from_be_bytes([0xc0, 120]));
+        let second = SendBytes(u16::from_be_bytes([0xd0, 32]));
         assert_eq!(cmd, TwoDim(first, second));
     }
 
@@ -116,7 +116,7 @@ mod tests {
     fn it_moves_the_carriage_one_character_place_rightwards() {
         let cmd = move_carriage(1 * X_RES as i16);
 
-        let det = SendBytesDetails { cmd: [0xc0, 12] };
+        let det = u16::from_be_bytes([0xc0, 12]);
 
         assert_eq!(cmd, Some(SendBytes(det)));
     }
@@ -125,7 +125,7 @@ mod tests {
     fn it_moves_the_carriage_one_character_place_leftwards() {
         let cmd = move_carriage(-1 * X_RES as i16);
 
-        let det = SendBytesDetails { cmd: [0xe0, 12] };
+        let det = u16::from_be_bytes([0xe0, 12]);
 
         assert_eq!(cmd, Some(SendBytes(det)));
     }
@@ -134,7 +134,7 @@ mod tests {
     fn it_rolls_the_paper_one_line_downwards() {
         let cmd = move_paper(1 * Y_RES as i16);
 
-        let det = SendBytesDetails { cmd: [0xd0, 16] };
+        let det = u16::from_be_bytes([0xd0, 16]);
 
         assert_eq!(cmd, Some(SendBytes(det)));
     }
@@ -143,7 +143,7 @@ mod tests {
     fn it_rolls_the_paper_one_line_upwards() {
         let cmd = move_paper(-1 * Y_RES as i16);
 
-        let det = SendBytesDetails { cmd: [0xf0, 16] };
+        let det = u16::from_be_bytes([0xf0, 16]);
 
         assert_eq!(cmd, Some(SendBytes(det)));
     }

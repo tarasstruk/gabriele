@@ -43,6 +43,6 @@ impl Sign {
         };
 
         let out = cmd.to_bytes().unwrap();
-        Instruction::bytes(out[0], out[1])
+        Instruction::SendBytes(u16::from_be_bytes([out[0], out[1]]))
     }
 }

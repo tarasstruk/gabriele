@@ -5,7 +5,7 @@ use bytes::{Bytes, BytesMut};
 use deku::DekuContainerWrite;
 use gabriele::cmd::{Cmd, Impression};
 use gabriele::motion::move_relative;
-use gabriele::printing::{Instruction, SendBytesDetails};
+use gabriele::printing::Instruction;
 use gabriele::symbol::{AfterSymbolPrinted, CmdSymbol, SymbolPrintingAttrs};
 use gabriele::{
     position::Position,
@@ -108,7 +108,9 @@ async fn prints_character_with_a_newline() {
     let mut iter = carriage_motion.into_iter().chain(roll_motion.into_iter());
 
     let mut counter = 0;
-    while let Some(Instruction::SendBytes(SendBytesDetails { cmd })) = iter.next() {
+    while let Some(Instruction::SendBytes(word)) = iter.next() {
+        let cmd = word.to_be_bytes();
+
         let byte = app.rx.recv().await.unwrap();
         assert_eq!(byte, cmd[0]);
 

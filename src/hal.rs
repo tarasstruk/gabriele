@@ -57,7 +57,7 @@ impl Hal {
         while let Some(item) = self.receiver.recv().await {
             debug!("received message: {:?}", &item);
             match item {
-                Instruction::SendBytes(details) => self.transmit_bytes(&details.cmd)?,
+                Instruction::SendBytes(details) => self.transmit_bytes(details)?,
                 Instruction::Halt => break,
             }
         }
@@ -66,9 +66,9 @@ impl Hal {
         Ok(())
     }
 
-    pub fn transmit_bytes(&self, bytes: &[u8]) -> anyhow::Result<()> {
+    pub fn transmit_bytes(&self, word: u16) -> anyhow::Result<()> {
         if let Some(ref tx) = self.tx {
-            tx.send(Bytes::from(bytes.to_vec()))
+            tx.send(Bytes::copy_from_slice(&word.to_be_bytes()))
                 .map(|_| ())
                 .context("cannot transmit bytes")
         } else {
