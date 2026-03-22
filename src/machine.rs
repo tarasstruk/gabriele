@@ -1,5 +1,5 @@
 use crate::database::DaisyDatabase;
-use crate::motion::move_carriage;
+use crate::motion::move_relative;
 use crate::position::Position;
 use crate::printing::{Action, Instruction};
 use crate::resolution::Resolution;
@@ -76,9 +76,9 @@ impl Machine {
             self.transmit(instructions);
         }
     }
-    pub fn offset(&mut self, value: i32) {
-        let instructions = move_carriage(value);
-        self.transmit(instructions);
+    pub fn offset(&mut self, value: i16) {
+        let instructions: Vec<Instruction> = move_relative(value, 0).into();
+        self.transmit(instructions.into_iter());
     }
 
     pub fn send_empty_instruction(&mut self) {

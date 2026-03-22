@@ -81,11 +81,13 @@ impl Action {
         old_position: &Position,
         new_position: &Position,
     ) -> Box<dyn Iterator<Item = Instruction>> {
-        match self.settings.direction {
+        let instr = match self.settings.direction {
             PrintingDirection::Right if self.is_single() => motion::space_jump_right(),
             PrintingDirection::Left if self.is_single() => motion::space_jump_left(),
             _ => motion::move_absolute(old_position, new_position),
-        }
+        };
+        let instr: Vec<Instruction> = instr.into();
+        Box::new(instr.into_iter())
     }
 
     /// Generates a sequence of the Instructions,
@@ -104,7 +106,11 @@ impl Action {
             ActionMapping::Whitespace => {
                 self.whitespace_instructions(&old_position, current_position)
             }
-            ActionMapping::CarriageReturn => motion::move_absolute(&old_position, current_position),
+            ActionMapping::CarriageReturn => {
+                let instr = motion::move_absolute(&old_position, current_position);
+                let instr: Vec<Instruction> = instr.into();
+                Box::new(instr.into_iter())
+            }
         }
     }
 

@@ -97,6 +97,36 @@ impl CmdMotion {
             value,
         }
     }
+
+    pub fn delta_x(value: i16) -> Option<Self> {
+        let dir = if value < 0 {
+            CmdMotionDirection::MinusX
+        } else if value > 0 {
+            CmdMotionDirection::PlusX
+        } else {
+            return None;
+        };
+
+        Some(Self {
+            dir,
+            value: value.unsigned_abs(),
+        })
+    }
+
+    pub fn delta_y(value: i16) -> Option<Self> {
+        let dir = if value < 0 {
+            CmdMotionDirection::MinusY
+        } else if value > 0 {
+            CmdMotionDirection::PlusY
+        } else {
+            return None;
+        };
+
+        Some(Self {
+            dir,
+            value: value.unsigned_abs(),
+        })
+    }
 }
 
 #[derive(PartialEq, Debug, Clone)]

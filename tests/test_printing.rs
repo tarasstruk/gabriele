@@ -4,7 +4,7 @@ use crate::helpers::app::TestApp;
 use bytes::{Bytes, BytesMut};
 use deku::DekuContainerWrite;
 use gabriele::cmd::{Cmd, Impression};
-use gabriele::motion::{move_carriage, move_paper};
+use gabriele::motion::move_relative;
 use gabriele::printing::{Instruction, SendBytesDetails};
 use gabriele::symbol::{AfterSymbolPrinted, CmdSymbol, SymbolPrintingAttrs};
 use gabriele::{
@@ -96,8 +96,8 @@ async fn prints_character_with_a_newline() {
 
     let hit = crate::hit(Default::default(), AfterSymbolPrinted::MoveRight);
 
-    let carriage_motion: Vec<Instruction> = move_carriage(-1 * X_RES).collect();
-    let roll_motion: Vec<Instruction> = move_paper(1 * Y_RES).collect();
+    let carriage_motion: Vec<Instruction> = move_relative(-1 * X_RES as i16, 0).into();
+    let roll_motion: Vec<Instruction> = move_relative(0, 1 * Y_RES as i16).into();
 
     let byte = app.rx.recv().await.unwrap();
     assert_eq!(byte, 36);
@@ -127,7 +127,6 @@ async fn prints_character_with_a_newline() {
 #[tokio::test]
 async fn prints_welcome_file() {
     let _ = env_logger::builder().is_test(true).try_init();
-    log::info!("Це повідомлення з логу!");
 
     let mut app = TestApp::run(1237).await;
     let db = load_test_db();
