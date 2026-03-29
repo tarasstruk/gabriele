@@ -1,3 +1,7 @@
+mod db_loader;
+mod directive;
+use directive::process_directive;
+
 use env_logger::{Builder, Target};
 use gabriele::database::{DaisyDatabase, Db};
 use gabriele::hal::Hal;
@@ -12,7 +16,6 @@ use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedReceiver;
 
 use clap::Parser;
-use gabriele::directive::process_directive;
 
 /// Gabriele
 #[derive(Parser, Debug)]
@@ -78,7 +81,7 @@ async fn main() {
     info!("Machine is starting up");
     let mut machine = Machine::new(tx);
 
-    let wheel = fs::read_to_string("wheels/German.toml").expect("Cannot read the wheel file");
+    let wheel = fs::read_to_string("gabi/wheels/German.toml").expect("Cannot read the wheel file");
     let db: Db = toml::from_str(&wheel).expect("Cannot deserialize the wheel file");
 
     machine.offset(4 * 12);

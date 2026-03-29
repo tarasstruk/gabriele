@@ -1,5 +1,6 @@
-use crate::database::Db;
+use crate::db_loader::load_db_from_file;
 use anyhow::bail;
+use gabriele::Db;
 use regex::Regex;
 use std::cell::RefMut;
 
@@ -10,7 +11,7 @@ pub enum Directive {
 
 pub fn process_directive(input: &str, mut db: RefMut<Db>) {
     match parse_directive(input) {
-        Ok(Directive::DaisyHotSwap(filename)) => match Db::load_from_file(&filename) {
+        Ok(Directive::DaisyHotSwap(filename)) => match load_db_from_file(&filename) {
             Ok(new_db) => {
                 *db = new_db;
                 println!(
