@@ -13,7 +13,9 @@ It may work also work fine with similar Triumph-Adler devices and IBM Action Wri
 - [x] printing of text files;
 - [x] printing of composite UTF-8 characters which don't exist on the physical daisy wheel (like "é");
 - [x] impression compensation;
-- [ ] hot-swap daisy wheels;
+- [x] hot-swap daisy wheels;
+- [x] communicate with target platform (Gabriele 9009 + RP2040) as TCP client;
+- [ ] handle multiple TCP client connections for simultaneously printing on many targets;
 - [ ] bidirectional printing;
 - [ ] proportional characters;
 - [ ] bold characters;
@@ -35,9 +37,9 @@ The feedback is based on the echo principle: a byte transmitted, the same is rec
 
 ```sh
 # print from the STDIN (interactive mode):
-cargo run -- --ip 192.168.0.11
+cargo run --bin gabi  -- --ip 192.168.0.5
 # print a text file:
-cargo run -- --ip 192.168.0.11 --text welcome.txt
+cargo run --bin gabi  -- --ip 192.168.0.5 --text gabi/welcome.txt
 # or with debug output:
 RUST_LOG=DEBUG cargo run -- --ip 192.168.0.11
 ```
@@ -51,7 +53,7 @@ It is very useful when the layouts of typefaces are different. The parameter
 specifies a relative or absolute path to the new wheel data file.
 
 ```text
-@>daisy wheels/German.toml
+@>daisy gabi/wheels/German.toml
 ```
 
 To quit the interactive mode just type `exit` and press return.
