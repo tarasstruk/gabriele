@@ -1,7 +1,8 @@
-use crate::impression::Impression;
+use crate::cmd::{Cmd, Impression};
 use crate::machine::PrintingDirection;
 use crate::printing::Instruction;
-use crate::symbol::AfterSymbolPrinted;
+use crate::symbol::{AfterSymbolPrinted, CmdSymbol, SymbolPrintingAttrs};
+use deku::DekuContainerWrite;
 use serde::{Deserialize, Serialize};
 
 /// `Sign` represents a petal on a daisy wheel with a moulded character or punctuation mark
@@ -23,7 +24,25 @@ impl Sign {
     /// current `PrintingDirection`
     pub fn build_instruction(&self, dir: PrintingDirection) -> Instruction {
         let b1 = self.idx;
-        let b2 = self.imp.value() | self.after.with_direction(dir).value();
-        Instruction::bytes(b1, b2)
+        let attr = SymbolPrintingAttrs {
+            direction: self.after.with_direction(dir),
+            impression: self.imp,
+        };
+
+        if b1 > 100 {
+            panic!("not a valid petal index")
+        }
+
+        let cmd = if b1 > 0x3f {
+            Cmd::SymbolHigh(CmdSymbol {
+                code: b1 & 0x3f,
+                attr,
+            })
+        } else {
+            Cmd::SymbolLow(CmdSymbol { code: b1, attr })
+        };
+
+        let out = cmd.to_bytes().unwrap();
+        Instruction::SendBytes(u16::from_be_bytes([out[0], out[1]]))
     }
 }

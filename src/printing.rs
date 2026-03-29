@@ -13,28 +13,8 @@ use log::debug;
 /// SendBytes specifies a sequence of 2 bytes to be send over a serial port
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Instruction {
-    SendBytes(SendBytesDetails),
-    Shutdown,
+    SendBytes(u16),
     Halt,
-}
-
-#[derive(PartialEq, Debug, Clone, Copy)]
-pub struct SendBytesDetails {
-    pub cmd: [u8; 2],
-}
-
-impl Instruction {
-    pub fn bytes(b1: u8, b2: u8) -> Self {
-        Self::SendBytes(SendBytesDetails { cmd: [b1, b2] })
-    }
-}
-
-impl From<u16> for SendBytesDetails {
-    fn from(value: u16) -> Self {
-        SendBytesDetails {
-            cmd: value.to_be_bytes(),
-        }
-    }
 }
 
 // Action defines what we do with a Symbol
@@ -82,11 +62,13 @@ impl Action {
         old_position: &Position,
         new_position: &Position,
     ) -> Box<dyn Iterator<Item = Instruction>> {
-        match self.settings.direction {
+        let instr = match self.settings.direction {
             PrintingDirection::Right if self.is_single() => motion::space_jump_right(),
             PrintingDirection::Left if self.is_single() => motion::space_jump_left(),
             _ => motion::move_absolute(old_position, new_position),
-        }
+        };
+        let instr: Vec<Instruction> = instr.into();
+        Box::new(instr.into_iter())
     }
 
     /// Generates a sequence of the Instructions,
@@ -105,7 +87,11 @@ impl Action {
             ActionMapping::Whitespace => {
                 self.whitespace_instructions(&old_position, current_position)
             }
-            ActionMapping::CarriageReturn => motion::move_absolute(&old_position, current_position),
+            ActionMapping::CarriageReturn => {
+                let instr = motion::move_absolute(&old_position, current_position);
+                let instr: Vec<Instruction> = instr.into();
+                Box::new(instr.into_iter())
+            }
         }
     }
 
@@ -137,7 +123,7 @@ impl Action {
 
 #[cfg(test)]
 mod tests {
-    use super::{Action, SendBytesDetails};
+    use super::Action;
     use crate::position::Position;
     use crate::printing::Instruction;
     use crate::printing::Instruction::SendBytes;
@@ -155,7 +141,11 @@ mod tests {
         let pos_diff = pos.diff(&base_pos);
 
         assert_eq!(pos_diff, (12, 0));
-        assert_eq!(commands.next(), Some(Instruction::bytes(81, 31 + 128)));
+        assert_eq!(
+            commands.next(),
+            Some(SendBytes(u16::from_be_bytes([81, 31 + 128])))
+        );
+
         assert_eq!(commands.next(), None);
     }
 
@@ -195,13 +185,10 @@ mod tests {
         let action = Action::new(symbol, Default::default(), Default::default());
         let mut cmd = action.instructions(&base_pos, &mut pos);
 
-        let details = SendBytesDetails {
-            cmd: [0b1110_0000, 120],
-        };
+        let details = u16::from_be_bytes([0b1110_0000, 120]);
         assert_eq!(cmd.next(), Some(Instruction::SendBytes(details)));
-        let details = SendBytesDetails {
-            cmd: [0b1101_0000, 16],
-        };
+
+        let details = u16::from_be_bytes([0b1101_0000, 16]);
         assert_eq!(cmd.next(), Some(Instruction::SendBytes(details)));
         assert_eq!(cmd.next(), None);
     }

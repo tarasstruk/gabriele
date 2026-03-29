@@ -1,102 +1,104 @@
-use crate::oport::{ActorMessage, UartActor};
+use super::tcp_talker::run_tcp_client;
 use crate::printing::Instruction;
-use log::{debug, info};
-use ractor::concurrency::tokio_primitives::JoinHandle;
-use ractor::{Actor, ActorRef};
+use anyhow::{bail, Context};
+use bytes::Bytes;
+use log::debug;
+use std::net::SocketAddr;
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::broadcast::{self, Sender};
 use tokio::sync::mpsc::UnboundedReceiver;
-use tokio_serial::SerialStream;
+use tokio::sync::Notify;
+use tokio_util::sync::CancellationToken;
 
 pub struct Hal {
     receiver: UnboundedReceiver<Instruction>,
-    actor: Option<ActorRef<ActorMessage>>,
-    actor_handle: Option<JoinHandle<()>>,
+    notifier: Arc<Notify>,
+    tx: Option<Sender<Bytes>>,
+    c_token: CancellationToken,
+    socket_addr: SocketAddr,
 }
 
 impl Hal {
-    pub fn new(receiver: UnboundedReceiver<Instruction>) -> Self {
+    pub fn new(receiver: UnboundedReceiver<Instruction>, socket_addr: SocketAddr) -> Self {
+        let notifier = Arc::new(Notify::new());
+
+        let c_token = CancellationToken::new();
         Hal {
             receiver,
-            actor: None,
-            actor_handle: None,
+            tx: None,
+            notifier,
+            c_token,
+            socket_addr,
         }
     }
 
-    pub async fn run(&mut self, stream: SerialStream) {
-        let (actor, actor_handle) = Actor::spawn(None, UartActor, stream)
-            .await
-            .expect("Actor failed to start");
+    pub async fn run(&mut self) -> anyhow::Result<()> {
+        let (tx, rx) = broadcast::channel::<Bytes>(1024);
+        self.tx.replace(tx);
 
-        self.actor = Some(actor);
-        self.actor_handle = Some(actor_handle);
+        let token = self.c_token.clone();
+        let handle = run_tcp_client(self.socket_addr, rx, self.notifier.clone(), token);
 
-        self.prepare().await;
+        self.notifier.notified().await;
+        // self.prepare()?;
+        debug!("runner is started successfully");
+        self.elaborate_messages().await?;
+        debug!("sender channel is disconnected");
+        self.c_token.cancel();
+        // self.shutdown()?;
+        tokio::time::sleep(Duration::from_secs(1)).await;
 
-        debug!("runner started");
+        let _ = tokio::join!(handle);
+        Ok(())
+    }
 
+    pub async fn elaborate_messages(&mut self) -> anyhow::Result<()> {
         while let Some(item) = self.receiver.recv().await {
             debug!("received message: {:?}", &item);
             match item {
+                Instruction::SendBytes(details) => self.transmit_bytes(details)?,
                 Instruction::Halt => break,
-                Instruction::SendBytes(details) => self.transmit_bytes(&details.cmd).await,
-                Instruction::Shutdown => {
-                    self.shutdown().await;
-                    break;
-                }
             }
         }
-        self.graceful_shutdown_actor().await;
+        // drop Sender
+        let _ = self.tx.take();
+        Ok(())
     }
 
-    async fn graceful_shutdown_actor(&mut self) {
-        if let Some(actor) = self.actor.take() {
-            actor.stop(Some(String::from("graceful shutdown")));
-        }
-
-        if let Some(handle) = self.actor_handle.take() {
-            handle.await.unwrap();
-        }
-
-        println!("Gabriele says good bye")
-    }
-
-    pub async fn transmit_bytes(&mut self, bytes: &[u8]) {
-        if let Some(actor) = self.actor.take() {
-            for byte in bytes {
-                ractor::call_t!(actor, ActorMessage::WriteByte, 5000, *byte)
-                    .expect("TX timeout exceeded");
-            }
-            self.actor = Some(actor)
+    pub fn transmit_bytes(&self, word: u16) -> anyhow::Result<()> {
+        if let Some(ref tx) = self.tx {
+            tx.send(Bytes::copy_from_slice(&word.to_be_bytes()))
+                .map(|_| ())
+                .context("cannot transmit bytes")
+        } else {
+            bail!("cannot transmit bytes, channel is disconnected")
         }
     }
 
-    pub async fn prepare(&mut self) {
-        self.go_online().await;
-        self.start_accepting_commands().await;
-    }
+    // pub fn prepare(&self) -> anyhow::Result<()> {
+    //     self.go_online()?;
+    //     self.start_accepting_commands()
+    // }
 
-    async fn go_offline(&mut self) {
-        info!("go off-line");
-        self.transmit_bytes(&[0xA0, 0x00]).await;
-    }
+    // fn go_offline(&self) -> anyhow::Result<()> {
+    //     self.transmit_bytes(&[0xA0, 0x00])
+    // }
 
-    async fn go_online(&mut self) {
-        info!("go on-line");
-        self.transmit_bytes(&[0xA1, 0x00]).await;
-    }
-
-    async fn start_accepting_commands(&mut self) {
-        info!("start accepting printing commands");
-        self.transmit_bytes(&[0xA2, 0x00]).await;
-        info!("machine is now accepting the commands");
-    }
-
-    async fn stop_accepting_commands(&mut self) {
-        info!("stop accepting printing commands");
-        self.transmit_bytes(&[0xA3, 0x00]).await;
-    }
-
-    pub async fn shutdown(&mut self) {
-        self.stop_accepting_commands().await;
-        self.go_offline().await;
-    }
+    // fn go_online(&self) -> anyhow::Result<()> {
+    //     self.transmit_bytes(&[0xA1, 0x00])
+    // }
+    //
+    // fn start_accepting_commands(&self) -> anyhow::Result<()> {
+    //     self.transmit_bytes(&[0xA2, 0x00])
+    // }
+    //
+    // fn stop_accepting_commands(&self) -> anyhow::Result<()> {
+    //     self.transmit_bytes(&[0xA3, 0x00])
+    // }
+    //
+    // pub fn shutdown(&self) -> anyhow::Result<()> {
+    //     self.stop_accepting_commands()?;
+    //     self.go_offline()
+    // }
 }

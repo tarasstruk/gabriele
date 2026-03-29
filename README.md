@@ -33,18 +33,13 @@ The feedback is based on the echo principle: a byte transmitted, the same is rec
 
 ## Running the app
 
-When the wires are connected correctly and the USB-UART adapter is recognised by the operating system,
-it is found as `/dev/tty.usbserial-`. At this point switch on the typewriter and run the command.
-
-It may fail for the first time run, due to the flow-control issues described below in "Known Issues".
-
 ```sh
 # print from the STDIN (interactive mode):
-cargo run -- --tty /dev/tty.usbserial-A10OFCFV
+cargo run -- --ip 192.168.0.11
 # print a text file:
-cargo run -- --tty /dev/tty.usbserial-A10OFCFV --text welcome.txt
+cargo run -- --ip 192.168.0.11 --text welcome.txt
 # or with debug output:
-RUST_LOG=DEBUG cargo run -- --tty /dev/tty.usbserial-A10OFCFV
+RUST_LOG=DEBUG cargo run -- --ip 192.168.0.11
 ```
 
 ### Using directives in the interactive mode

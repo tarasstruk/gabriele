@@ -1,7 +1,8 @@
-use crate::impression::Impression;
+use crate::cmd::Impression;
 use crate::machine::PrintingDirection;
 use crate::printing::Instruction;
 use crate::sign::Sign;
+use deku::DekuWrite;
 use itertools::repeat_n;
 use log::info;
 use serde::{Deserialize, Serialize};
@@ -14,15 +15,40 @@ pub enum ActionMapping {
     CarriageReturn,
 }
 
-#[derive(PartialEq, Debug, Copy, Clone, Default, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Copy, Clone, Default, Serialize, Deserialize, DekuWrite)]
+#[deku(id_type = "u8", bits = 2)]
+#[deku(endian = "big")]
+#[deku(ctx = "endian: deku::ctx::Endian")]
 pub enum AfterSymbolPrinted {
     // sets bits "7"=1 and "6"=0
     #[default]
+    #[deku(id = 0b_10)]
     MoveRight,
+
     // sets bits "7"=1 and "6"=1
+    #[deku(id = 0b_11)]
     MoveLeft,
+
     // sets bits "7"=0 and "6"=0
+    #[deku(id = 0b_00)]
     HoldOn,
+}
+
+#[derive(PartialEq, Debug, Clone, Default, DekuWrite, Copy)]
+#[deku(endian = "big")]
+#[deku(ctx = "endian: deku::ctx::Endian")]
+pub struct SymbolPrintingAttrs {
+    pub direction: AfterSymbolPrinted,
+    pub impression: Impression,
+}
+
+#[derive(DekuWrite, PartialEq, Debug, Clone, Copy, Default)]
+#[deku(endian = "big")]
+#[deku(ctx = "endian: deku::ctx::Endian")]
+pub struct CmdSymbol {
+    #[deku(bits = 6)]
+    pub code: u8,
+    pub attr: SymbolPrintingAttrs,
 }
 
 impl AfterSymbolPrinted {
@@ -38,14 +64,6 @@ impl AfterSymbolPrinted {
         match dir {
             PrintingDirection::Right => self,
             PrintingDirection::Left => self.invert(),
-        }
-    }
-
-    pub fn value(&self) -> u8 {
-        match self {
-            Self::MoveRight => 0b1000_0000,
-            Self::MoveLeft => 0b1100_0000,
-            Self::HoldOn => 0b0000_0000,
         }
     }
 }
@@ -118,7 +136,7 @@ impl Symbol {
 
     pub fn imp(mut self, impression: Impression) -> Self {
         for sign in self.signs.iter_mut() {
-            sign.imp = impression.clone()
+            sign.imp = impression
         }
         self
     }
@@ -188,7 +206,10 @@ mod tests {
     fn test_instructions_with_strong_impression() {
         let symbol = Symbol::new('ü').petal(81).strong();
         let mut result = symbol.instructions(Default::default());
-        assert_eq!(result.next(), Some(Instruction::bytes(81, 47 + 128)));
+        assert_eq!(
+            result.next(),
+            Some(Instruction::SendBytes(u16::from_be_bytes([81, 47 + 128])))
+        );
         assert_eq!(result.next(), None);
     }
 
@@ -196,14 +217,23 @@ mod tests {
     fn test_instructions_with_hold_after_printed() {
         let symbol = Symbol::new('ü').petal(81).hold();
         let mut result = symbol.instructions(Default::default());
-        assert_eq!(result.next(), Some(Instruction::bytes(81, 31 + 0)));
+        assert_eq!(
+            result.next(),
+            Some(Instruction::SendBytes(u16::from_be_bytes([81, 31 + 0])))
+        );
         assert_eq!(result.next(), None);
     }
     #[test]
     fn test_instructions_with_left_direction() {
         let symbol = Symbol::new('ü').petal(81).left();
         let mut result = symbol.instructions(Default::default());
-        assert_eq!(result.next(), Some(Instruction::bytes(81, 31 + 128 + 64)));
+        assert_eq!(
+            result.next(),
+            Some(Instruction::SendBytes(u16::from_be_bytes([
+                81,
+                31 + 128 + 64
+            ])))
+        );
         assert_eq!(result.next(), None);
     }
 
@@ -212,9 +242,15 @@ mod tests {
         let symbol = Symbol::new('à').petal(94).grave();
         let mut result = symbol.instructions(Default::default());
         // 31 for Impression normal + 0 for Direction (hold)
-        assert_eq!(result.next(), Some(Instruction::bytes(94, 31)));
+        assert_eq!(
+            result.next(),
+            Some(Instruction::SendBytes(u16::from_be_bytes([94, 31])))
+        );
         // 15 for Impression Mild + 128 for Direction normal
-        assert_eq!(result.next(), Some(Instruction::bytes(72, 15 + 128)));
+        assert_eq!(
+            result.next(),
+            Some(Instruction::SendBytes(u16::from_be_bytes([72, 15 + 128])))
+        );
         assert_eq!(result.next(), None);
     }
 }
