@@ -1,0 +1,25 @@
+[package]
+name = "gabi"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "gabi"
+path = "src/main.rs"
+
+[[bin]]
+name = "sim"
+path = "src/sim.rs"
+
+[dependencies]
+gabriele.workspace = true
+log.workspace = true
+toml.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+env_logger.workspace = true
+tokio.workspace = true
+regex.workspace = true
+bytes.workspace = true
+deku.workspace = true

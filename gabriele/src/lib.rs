@@ -1,5 +1,5 @@
+pub mod cmd;
 pub mod database;
-pub mod directive;
 pub mod hal;
 pub mod machine;
 pub mod motion;
@@ -11,4 +11,4 @@ pub mod symbol;
 pub mod tcp_talker;
 pub mod to_symbols;
 
-pub mod cmd;
+pub use database::Db;
