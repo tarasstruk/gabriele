@@ -69,7 +69,7 @@ impl Machine {
         }
     }
 
-    pub fn print(&mut self, input: &str, db: impl DaisyDatabase) {
+    pub fn print(&mut self, input: &str, db: impl DaisyDatabase + 'static) {
         for symbol in input.to_symbols(db) {
             let action = Action::new(symbol.clone(), self.settings, self.resolution);
             let instructions = action.instructions(&self.base_pos, &mut self.pos);
