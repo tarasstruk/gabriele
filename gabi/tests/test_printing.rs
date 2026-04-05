@@ -96,8 +96,8 @@ async fn prints_character_with_a_newline() {
 
     let hit = crate::hit(Default::default(), AfterSymbolPrinted::MoveRight);
 
-    let carriage_motion: Vec<Instruction> = move_relative(-1 * X_RES as i16, 0).into();
-    let roll_motion: Vec<Instruction> = move_relative(0, 1 * Y_RES as i16).into();
+    let carriage_motion: Vec<Instruction> = move_relative(-1 * X_RES as i16, 0).collect();
+    let roll_motion: Vec<Instruction> = move_relative(0, 1 * Y_RES as i16).collect();
 
     let byte = app.rx.recv().await.unwrap();
     assert_eq!(byte, 36);
