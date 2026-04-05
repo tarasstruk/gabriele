@@ -6,6 +6,7 @@ use crate::motion;
 use crate::position::Position;
 use crate::resolution::Resolution;
 use crate::symbol::{ActionMapping, Symbol};
+use either::Either;
 use log::debug;
 
 /// The basic directive for the machine
@@ -61,11 +62,16 @@ impl Action {
         &self,
         old_position: &Position,
         new_position: &Position,
-    ) -> Box<dyn Iterator<Item = Instruction>> {
+    ) -> impl Iterator<Item = Instruction> {
         match self.settings.direction {
-            PrintingDirection::Right if self.is_single() => Box::new(motion::space_jump_right()),
-            PrintingDirection::Left if self.is_single() => Box::new(motion::space_jump_left()),
-            _ => Box::new(motion::move_absolute(old_position, new_position)),
+            PrintingDirection::Left if self.is_single() => Either::Left(motion::space_jump_left()),
+            PrintingDirection::Right if self.is_single() => {
+                Either::Right(Either::Left(motion::space_jump_right()))
+            }
+            _ => Either::Right(Either::Right(motion::move_absolute(
+                old_position,
+                new_position,
+            ))),
         }
     }
 
@@ -81,13 +87,13 @@ impl Action {
         self.update_position(base_position, current_position);
         debug!("action {:?}", self.symbol.act);
         match self.symbol.act {
-            ActionMapping::Print => self.symbol.instructions(self.settings.direction),
-            ActionMapping::Whitespace => {
-                self.whitespace_instructions(&old_position, current_position)
-            }
-            ActionMapping::CarriageReturn => {
-                Box::new(motion::move_absolute(&old_position, current_position))
-            }
+            ActionMapping::Print => Either::Left(self.symbol.instructions(self.settings.direction)),
+            ActionMapping::Whitespace => Either::Right(Either::Left(
+                self.whitespace_instructions(&old_position, current_position),
+            )),
+            ActionMapping::CarriageReturn => Either::Right(Either::Right(
+                (motion::move_absolute(&old_position, current_position)),
+            )),
         }
     }
 
