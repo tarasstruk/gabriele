@@ -3,8 +3,6 @@ use crate::machine::PrintingDirection;
 use crate::printing::Instruction;
 use crate::sign::Sign;
 use deku::DekuWrite;
-use itertools::repeat_n;
-use log::info;
 use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Debug, Clone, Default, Serialize, Deserialize)]
@@ -166,22 +164,19 @@ impl Symbol {
         self.after_printed(AfterSymbolPrinted::MoveLeft)
     }
 
-    pub fn instructions(
-        &self,
-        direction: PrintingDirection,
-    ) -> Box<dyn Iterator<Item = Instruction>> {
-        let items: Vec<Instruction> = self
-            .signs
-            .iter()
-            .map(|sign| sign.build_instruction(direction))
-            .collect();
+    // Перший move (біля flat_map) дозволяє замиканню забрати значення direction
+    // всередину себе, щоб використовувати його на кожній ітерації.
+    // Другий move (біля map) робить те саме для конкретного кроку трансформації.
+    pub fn instructions(&self, direction: PrintingDirection) -> impl Iterator<Item = Instruction> {
+        let signs_owned = self.signs.clone();
         let times = self.repeat_times.unwrap_or(1);
-        info!(
-            "printing {} times the character {:?}",
-            times, self.character
-        );
-        let rep: Vec<Instruction> = repeat_n(items, times).flatten().collect();
-        Box::new(rep.into_iter())
+
+        (0..times).flat_map(move |_| {
+            signs_owned
+                .clone()
+                .into_iter()
+                .map(move |sign| sign.build_instruction(direction))
+        })
     }
 
     pub fn x_positions_increment(&self) -> i32 {

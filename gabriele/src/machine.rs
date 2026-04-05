@@ -77,8 +77,7 @@ impl Machine {
         }
     }
     pub fn offset(&mut self, value: i16) {
-        let instructions: Vec<Instruction> = move_relative(value, 0).into();
-        self.transmit(instructions.into_iter());
+        self.transmit(move_relative(value, 0));
     }
 
     pub fn send_empty_instruction(&mut self) {
