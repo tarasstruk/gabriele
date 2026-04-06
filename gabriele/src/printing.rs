@@ -74,11 +74,11 @@ impl<'a> Action<'a> {
     /// The result of these instructions is the printed Symbol or/and the associated motion.
     pub fn instructions(
         &self,
-        base_position: &Position,
         current_position: &mut Position,
     ) -> impl Iterator<Item = Instruction> + use<'_> {
+        let base_position = &self.settings.base_position;
         let old_position = *current_position;
-        self.update_position(base_position, current_position);
+        self.update_position(current_position);
         debug!("action {:?}", self.symbol.act);
         match self.symbol.act {
             ActionMapping::Print => Either::Left(self.symbol.instructions(self.settings.direction)),
@@ -94,28 +94,29 @@ impl<'a> Action<'a> {
     /// New position represents a calculated desired Position
     /// where the machine is expected to be
     /// after the generated Instructions have been executed.
-    pub fn update_position(&self, base_position: &Position, position: &mut Position) {
+    pub fn update_position(&self, position: &mut Position) {
+        let base_position = &self.settings.base_position;
         let resolution = &self.settings.resolution;
-        let pos = match self.symbol.act {
+        let new_position = match self.symbol.act {
             ActionMapping::Print => match self.settings.direction {
                 PrintingDirection::Right => {
-                    &position.increment_x(self.symbol.x_positions_increment(), resolution)
+                    position.increment_x(self.symbol.x_positions_increment(), resolution)
                 }
                 PrintingDirection::Left => {
-                    &position.decrement_x(self.symbol.x_positions_increment(), resolution)
+                    position.decrement_x(self.symbol.x_positions_increment(), resolution)
                 }
             },
 
-            ActionMapping::Whitespace => &position.increment_x(
+            ActionMapping::Whitespace => position.increment_x(
                 self.repeat as i32 * i32::from(self.settings.direction),
                 resolution,
             ),
 
             ActionMapping::LineFeed => {
-                &position.cr_multiple(base_position, self.repeat as i32, resolution)
+                position.apply_line_feeds(base_position, self.repeat as i32, resolution)
             }
         };
-        position.jump(pos)
+        *position = new_position
     }
 }
 
@@ -139,7 +140,7 @@ mod tests {
 
         let settings = Settings::default();
         let action = Action::new(&U_UMLAUT_SYMBOL, &settings, 1);
-        let mut commands = action.instructions(&base_pos, &mut pos);
+        let mut commands = action.instructions(&mut pos);
         let pos_diff = pos.diff(&base_pos);
 
         assert_eq!(pos_diff, (12, 0));
@@ -167,7 +168,7 @@ mod tests {
         let base_pos: Position = Default::default();
         let settings = Settings::default();
         let action: Action = Action::new(&LINE_FEED_SYMBOL, &settings, 1);
-        let mut instructions = action.instructions(&base_pos, &mut pos);
+        let mut instructions = action.instructions(&mut pos);
         assert!(instructions.next().is_some());
 
         // The distance between the base point should be only
@@ -186,7 +187,7 @@ mod tests {
 
         let settings = Settings::default();
         let action = Action::new(&LINE_FEED_SYMBOL, &settings, 1);
-        let mut cmd = action.instructions(&base_pos, &mut pos);
+        let mut cmd = action.instructions(&mut pos);
 
         let details = u16::from_be_bytes([0b1110_0000, 120]);
         assert_eq!(cmd.next(), Some(Instruction::SendBytes(details)));

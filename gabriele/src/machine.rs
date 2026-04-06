@@ -11,8 +11,7 @@ use tokio::sync::mpsc::UnboundedSender;
 
 pub struct Machine {
     sender: UnboundedSender<Instruction>,
-    base_pos: Position,
-    pos: Position,
+    position: Position,
     settings: Settings,
 }
 
@@ -20,6 +19,7 @@ pub struct Machine {
 pub struct Settings {
     pub direction: PrintingDirection,
     pub resolution: Resolution,
+    pub base_position: Position,
 }
 #[derive(Default, Copy, Clone, Debug)]
 pub enum PrintingDirection {
@@ -39,19 +39,17 @@ impl From<PrintingDirection> for i32 {
 
 impl Machine {
     pub fn new(sender: UnboundedSender<Instruction>) -> Self {
-        let pos = Position::default();
-        let base_pos = pos;
+        let position = Position::default();
         let settings = Settings::default();
         Self {
             sender,
-            base_pos,
-            pos,
+            position,
             settings,
         }
     }
 
     pub fn current_position(&self) -> Position {
-        self.pos
+        self.position
     }
 
     pub fn shutdown(&mut self) {
@@ -73,7 +71,7 @@ impl Machine {
             .dedup_by_with_count(|x, y| x == y && x.is_groupable())
         {
             let action = Action::new(symbol, &self.settings, rep);
-            let instructions = action.instructions(&self.base_pos, &mut self.pos);
+            let instructions = action.instructions(&mut self.position);
             self.transmit(instructions);
         }
     }
