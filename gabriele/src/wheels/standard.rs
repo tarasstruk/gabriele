@@ -123,5 +123,5 @@ pub static SYMBOLS: [Symbol; 123] = [
     Symbol::new('ó').petal(99).acute(),
     Symbol::new('Ó').petal(61).acute().strong(),
     Symbol::whitespace(),
-    Symbol::cr(),
+    Symbol::line_feed(),
 ];

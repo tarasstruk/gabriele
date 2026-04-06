@@ -10,7 +10,7 @@ pub enum ActionMapping {
     #[default]
     Print,
     Whitespace,
-    CarriageReturn,
+    LineFeed,
 }
 
 #[derive(PartialEq, Debug, Copy, Clone, Default, Serialize, Deserialize, DekuWrite)]
@@ -86,7 +86,7 @@ impl Symbol {
         match self.act {
             ActionMapping::Print => false,
             ActionMapping::Whitespace => true,
-            ActionMapping::CarriageReturn => true,
+            ActionMapping::LineFeed => true,
         }
     }
 
@@ -136,9 +136,9 @@ impl Symbol {
         item
     }
 
-    pub const fn cr() -> Self {
+    pub const fn line_feed() -> Self {
         let mut item = Self::new('\n');
-        item.act = ActionMapping::CarriageReturn;
+        item.act = ActionMapping::LineFeed;
         item
     }
 

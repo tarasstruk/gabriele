@@ -92,7 +92,7 @@ impl<'a> Action<'a> {
             ActionMapping::Whitespace => Either::Right(Either::Left(
                 self.whitespace_instructions(&old_position, current_position),
             )),
-            ActionMapping::CarriageReturn => Either::Right(Either::Right(
+            ActionMapping::LineFeed => Either::Right(Either::Right(
                 (motion::move_absolute(&old_position, current_position)),
             )),
         }
@@ -117,7 +117,7 @@ impl<'a> Action<'a> {
                 self.resolution,
             ),
 
-            ActionMapping::CarriageReturn => {
+            ActionMapping::LineFeed => {
                 &position.cr_multiple(base_position, self.repeat as i32, self.resolution)
             }
         };
@@ -135,8 +135,8 @@ mod tests {
     use crate::resolution::Resolution;
     use crate::symbol::Symbol;
 
-    static U_MLAUT: Symbol = Symbol::new('ü').petal(81);
-    static CARRIAGE_RET: Symbol = Symbol::cr();
+    static U_UMLAUT_SYMBOL: Symbol = Symbol::new('ü').petal(81);
+    static LINE_FEED_SYMBOL: Symbol = Symbol::line_feed();
 
     #[test]
     fn test_print_symbol() {
@@ -145,7 +145,7 @@ mod tests {
 
         let settings = Settings::default();
         let resolution = Resolution::default();
-        let action = Action::new(&U_MLAUT, &settings, &resolution, 1);
+        let action = Action::new(&U_UMLAUT_SYMBOL, &settings, &resolution, 1);
         let mut commands = action.instructions(&base_pos, &mut pos);
         let pos_diff = pos.diff(&base_pos);
 
@@ -159,7 +159,7 @@ mod tests {
     }
 
     #[test]
-    fn test_carriage_return_coordinates() {
+    fn test_line_feed_coordinates() {
         let resolution = Resolution::default();
         let base_pos: Position = Default::default();
         let mut pos = base_pos.clone();
@@ -174,8 +174,9 @@ mod tests {
         let base_pos: Position = Default::default();
         let settings = Settings::default();
         let resolution = Resolution::default();
-        let action: Action = Action::new(&CARRIAGE_RET, &settings, &resolution, 1);
-        let _ = action.instructions(&base_pos, &mut pos);
+        let action: Action = Action::new(&LINE_FEED_SYMBOL, &settings, &resolution, 1);
+        let mut instructions = action.instructions(&base_pos, &mut pos);
+        assert!(instructions.next().is_some());
 
         // The distance between the base point should be only
         // relevant in the +Y direction
@@ -183,7 +184,7 @@ mod tests {
     }
 
     #[test]
-    fn test_carriage_return_instructions() {
+    fn test_line_feed_instructions() {
         let resolution = Resolution::default();
         let base_pos: Position = Default::default();
         let mut pos = base_pos.clone();
@@ -193,7 +194,7 @@ mod tests {
 
         let settings = Settings::default();
         let resolution = Resolution::default();
-        let action = Action::new(&CARRIAGE_RET, &settings, &resolution, 1);
+        let action = Action::new(&LINE_FEED_SYMBOL, &settings, &resolution, 1);
         let mut cmd = action.instructions(&base_pos, &mut pos);
 
         let details = u16::from_be_bytes([0b1110_0000, 120]);
