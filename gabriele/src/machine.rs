@@ -62,7 +62,7 @@ impl Machine {
         self.transmit([Instruction::Halt].into_iter());
     }
 
-    pub fn transmit(&mut self, instructions: impl Iterator<Item = Instruction>) {
+    pub fn transmit(&self, instructions: impl Iterator<Item = Instruction>) {
         for item in instructions {
             self.sender
                 .send(item)
@@ -75,7 +75,7 @@ impl Machine {
             .to_symbols(db)
             .dedup_by_with_count(|x, y| x == y && x.is_groupable())
         {
-            let action = Action::new(symbol, self.settings, self.resolution, rep);
+            let action = Action::new(symbol, &self.settings, &self.resolution, rep);
             let instructions = action.instructions(&self.base_pos, &mut self.pos);
             self.transmit(instructions);
         }

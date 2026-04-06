@@ -35,18 +35,18 @@ pub enum Instruction {
 
 /// Action represents a concrete primitive action to be performed by the Machine
 /// in the current conditions, taking into account the base_position and the current_position.
-pub struct Action {
+pub struct Action<'a> {
     pub symbol: &'static Symbol,
-    pub settings: Settings,
-    pub resolution: Resolution,
+    pub settings: &'a Settings,
+    pub resolution: &'a Resolution,
     pub repeat: usize,
 }
 
-impl Action {
+impl<'a> Action<'a> {
     pub fn new(
         symbol: &'static Symbol,
-        settings: Settings,
-        resolution: Resolution,
+        settings: &'a Settings,
+        resolution: &'a Resolution,
         repeat: usize,
     ) -> Self {
         Self {
@@ -128,6 +128,7 @@ impl Action {
 #[cfg(test)]
 mod tests {
     use super::Action;
+    use crate::machine::Settings;
     use crate::position::Position;
     use crate::printing::Instruction;
     use crate::printing::Instruction::SendBytes;
@@ -142,7 +143,9 @@ mod tests {
         let mut pos: Position = Default::default();
         let base_pos: Position = Default::default();
 
-        let action = Action::new(&U_MLAUT, Default::default(), Default::default(), 1);
+        let settings = Settings::default();
+        let resolution = Resolution::default();
+        let action = Action::new(&U_MLAUT, &settings, &resolution, 1);
         let mut commands = action.instructions(&base_pos, &mut pos);
         let pos_diff = pos.diff(&base_pos);
 
@@ -169,7 +172,9 @@ mod tests {
 
         let mut pos: Position = Default::default();
         let base_pos: Position = Default::default();
-        let action: Action = Action::new(&CARRIAGE_RET, Default::default(), Default::default(), 1);
+        let settings = Settings::default();
+        let resolution = Resolution::default();
+        let action: Action = Action::new(&CARRIAGE_RET, &settings, &resolution, 1);
         let _ = action.instructions(&base_pos, &mut pos);
 
         // The distance between the base point should be only
@@ -186,7 +191,9 @@ mod tests {
             pos.jump(&pos.step_right(resolution));
         }
 
-        let action = Action::new(&CARRIAGE_RET, Default::default(), Default::default(), 1);
+        let settings = Settings::default();
+        let resolution = Resolution::default();
+        let action = Action::new(&CARRIAGE_RET, &settings, &resolution, 1);
         let mut cmd = action.instructions(&base_pos, &mut pos);
 
         let details = u16::from_be_bytes([0b1110_0000, 120]);

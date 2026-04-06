@@ -52,7 +52,7 @@ impl Position {
         pos
     }
 
-    pub fn cr_multiple(&self, base: &Position, ratio: i32, res: Resolution) -> Position {
+    pub fn cr_multiple(&self, base: &Position, ratio: i32, res: &Resolution) -> Position {
         let mut pos = *base;
         pos.y = self.y + (res.y * ratio);
         pos
@@ -64,13 +64,13 @@ impl Position {
         pos
     }
 
-    pub fn increment_x(&self, ratio: i32, res: Resolution) -> Position {
+    pub fn increment_x(&self, ratio: i32, res: &Resolution) -> Position {
         let mut pos = *self;
         pos.x = self.x + (res.x * ratio);
         pos
     }
 
-    pub fn decrement_x(&self, ratio: i32, res: Resolution) -> Position {
+    pub fn decrement_x(&self, ratio: i32, res: &Resolution) -> Position {
         let mut pos = *self;
         pos.x = self.x - (res.x * ratio);
         pos
