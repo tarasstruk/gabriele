@@ -82,7 +82,7 @@ impl Action {
         &self,
         base_position: &Position,
         current_position: &mut Position,
-    ) -> impl Iterator<Item = Instruction> {
+    ) -> impl Iterator<Item = Instruction> + use<'_> {
         let old_position = *current_position;
         self.update_position(base_position, current_position);
         debug!("action {:?}", self.symbol.act);

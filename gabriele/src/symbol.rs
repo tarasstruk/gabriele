@@ -157,14 +157,15 @@ impl Symbol {
     // Перший move (біля flat_map) дозволяє замиканню забрати значення direction
     // всередину себе, щоб використовувати його на кожній ітерації.
     // Другий move (біля map) робить те саме для конкретного кроку трансформації.
-    pub fn instructions(&self, direction: PrintingDirection) -> impl Iterator<Item = Instruction> {
-        let signs_owned = self.signs.clone();
+    pub fn instructions(
+        &self,
+        direction: PrintingDirection,
+    ) -> impl Iterator<Item = Instruction> + use<'_> {
         let times = self.repeat_times.unwrap_or(1);
 
         (0..times).flat_map(move |_| {
-            signs_owned
-                .clone()
-                .into_iter()
+            self.signs
+                .iter()
                 .flatten()
                 .map(move |sign| sign.build_instruction(direction))
         })
