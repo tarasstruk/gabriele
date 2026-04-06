@@ -25,54 +25,20 @@ pub struct Position {
 }
 
 impl Position {
-    pub fn jump(&mut self, new_pos: &Position) {
-        self.x = new_pos.x;
-        self.y = new_pos.y;
-    }
-
     pub fn diff(&self, base: &Position) -> (i32, i32) {
         (self.x - base.x, self.y - base.y)
     }
 
-    pub fn step_right(&self, res: Resolution) -> Position {
-        let mut pos = *self;
-        pos.x += res.x;
-        pos
+    pub fn update_x(&mut self, value: i32, res: &Resolution) {
+        self.x += res.x * value;
     }
 
-    pub fn step_left(&self, res: Resolution) -> Position {
-        let mut pos = *self;
-        pos.x -= res.x;
-        pos
+    pub fn update_y(&mut self, value: i32, res: &Resolution) {
+        self.y += res.y * value;
     }
 
-    pub fn cr(&self, base: &Position, res: Resolution) -> Position {
-        let mut pos = *base;
-        pos.y = self.y + res.y;
-        pos
-    }
-
-    pub fn apply_line_feeds(&self, base: &Position, ratio: i32, res: &Resolution) -> Position {
-        let mut pos = *base;
-        pos.y = self.y + (res.y * ratio);
-        pos
-    }
-
-    pub fn newline(&self, res: Resolution) -> Position {
-        let mut pos = *self;
-        pos.y = self.y + res.y;
-        pos
-    }
-
-    pub fn increment_x(&self, ratio: i32, res: &Resolution) -> Position {
-        let mut pos = *self;
-        pos.x = self.x + (res.x * ratio);
-        pos
-    }
-
-    pub fn decrement_x(&self, ratio: i32, res: &Resolution) -> Position {
-        let mut pos = *self;
-        pos.x = self.x - (res.x * ratio);
-        pos
+    pub fn apply_line_feed(&mut self, value: i32, res: &Resolution) {
+        self.update_y(value, res);
+        self.x = 0;
     }
 }

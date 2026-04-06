@@ -95,28 +95,24 @@ impl<'a> Action<'a> {
     /// where the machine is expected to be
     /// after the generated Instructions have been executed.
     pub fn update_position(&self, position: &mut Position) {
-        let base_position = &self.settings.base_position;
         let resolution = &self.settings.resolution;
-        let new_position = match self.symbol.act {
+        match self.symbol.act {
             ActionMapping::Print => match self.settings.direction {
                 PrintingDirection::Right => {
-                    position.increment_x(self.symbol.x_positions_increment(), resolution)
+                    position.update_x(self.symbol.x_positions_increment(), resolution)
                 }
                 PrintingDirection::Left => {
-                    position.decrement_x(self.symbol.x_positions_increment(), resolution)
+                    position.update_x(-self.symbol.x_positions_increment(), resolution)
                 }
             },
 
-            ActionMapping::Whitespace => position.increment_x(
+            ActionMapping::Whitespace => position.update_x(
                 self.repeat as i32 * i32::from(self.settings.direction),
                 resolution,
             ),
 
-            ActionMapping::LineFeed => {
-                position.apply_line_feeds(base_position, self.repeat as i32, resolution)
-            }
+            ActionMapping::LineFeed => position.apply_line_feed(self.repeat as i32, resolution),
         };
-        *position = new_position
     }
 }
 
@@ -159,9 +155,8 @@ mod tests {
         let mut pos = base_pos.clone();
         // emulate the motion result caused by printing of 10 characters
         // causing the carriage to move by X=+120 units, when Y=0
-        for _ in 0..10 {
-            pos.jump(&pos.step_right(resolution));
-        }
+        pos.update_x(10, &resolution);
+
         assert_eq!(pos.diff(&base_pos), (120, 0));
 
         let mut pos: Position = Default::default();
@@ -181,9 +176,7 @@ mod tests {
         let resolution = Resolution::default();
         let base_pos: Position = Default::default();
         let mut pos = base_pos.clone();
-        for _ in 0..10 {
-            pos.jump(&pos.step_right(resolution));
-        }
+        pos.update_x(10, &resolution);
 
         let settings = Settings::default();
         let action = Action::new(&LINE_FEED_SYMBOL, &settings, 1);
