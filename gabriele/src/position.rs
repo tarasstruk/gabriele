@@ -22,6 +22,7 @@ use std::default::Default;
 pub struct Position {
     pub x: i32,
     pub y: i32,
+    pub res: Resolution,
 }
 
 impl Position {
@@ -29,16 +30,16 @@ impl Position {
         (self.x - base.x, self.y - base.y)
     }
 
-    pub fn update_x(&mut self, value: i32, res: &Resolution) {
-        self.x += res.x * value;
+    pub fn update_x(&mut self, value: i32) {
+        self.x += self.res.x * value;
     }
 
-    pub fn update_y(&mut self, value: i32, res: &Resolution) {
-        self.y += res.y * value;
+    pub fn update_y(&mut self, value: i32) {
+        self.y += self.res.y * value;
     }
 
-    pub fn apply_line_feed(&mut self, value: i32, res: &Resolution) {
-        self.update_y(value, res);
+    pub fn apply_line_feed(&mut self, value: i32) {
+        self.update_y(value);
         self.x = 0;
     }
 }

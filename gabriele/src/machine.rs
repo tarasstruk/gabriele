@@ -2,7 +2,6 @@ use crate::database::DaisyDatabase;
 use crate::motion::move_relative;
 use crate::position::Position;
 use crate::printing::{Action, Instruction};
-use crate::resolution::Resolution;
 use crate::to_symbols::ToSymbols;
 use itertools::Itertools;
 use log::info;
@@ -18,7 +17,6 @@ pub struct Machine {
 #[derive(Default, Copy, Clone, Debug)]
 pub struct Settings {
     pub direction: PrintingDirection,
-    pub resolution: Resolution,
     pub base_position: Position,
 }
 #[derive(Default, Copy, Clone, Debug)]
