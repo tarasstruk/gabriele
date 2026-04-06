@@ -1,13 +1,13 @@
 use crate::symbol::Symbol;
 
 pub trait DaisyDatabase {
-    fn get(&self, character: char) -> Symbol;
+    fn get(&self, character: char) -> &'static Symbol;
 }
 
 impl DaisyDatabase for &'static [Symbol] {
-    fn get(&self, character: char) -> Symbol {
+    fn get(&self, character: char) -> &'static Symbol {
         if let Some(sym) = self.iter().find(|symbol| symbol.character == character) {
-            return sym.clone();
+            return sym;
         }
         panic!("Symbol not found");
     }

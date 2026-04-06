@@ -36,14 +36,19 @@ pub enum Instruction {
 /// Action represents a concrete primitive action to be performed by the Machine
 /// in the current conditions, taking into account the base_position and the current_position.
 pub struct Action {
-    pub symbol: Symbol,
+    pub symbol: &'static Symbol,
     pub settings: Settings,
     pub resolution: Resolution,
     pub repeat: usize,
 }
 
 impl Action {
-    pub fn new(symbol: Symbol, settings: Settings, resolution: Resolution, repeat: usize) -> Self {
+    pub fn new(
+        symbol: &'static Symbol,
+        settings: Settings,
+        resolution: Resolution,
+        repeat: usize,
+    ) -> Self {
         Self {
             symbol,
             settings,
@@ -129,13 +134,15 @@ mod tests {
     use crate::resolution::Resolution;
     use crate::symbol::Symbol;
 
+    static U_MLAUT: Symbol = Symbol::new('ü').petal(81);
+    static CARRIAGE_RET: Symbol = Symbol::cr();
+
     #[test]
     fn test_print_symbol() {
-        let symbol = Symbol::new('ü').petal(81);
         let mut pos: Position = Default::default();
         let base_pos: Position = Default::default();
 
-        let action = Action::new(symbol, Default::default(), Default::default(), 1);
+        let action = Action::new(&U_MLAUT, Default::default(), Default::default(), 1);
         let mut commands = action.instructions(&base_pos, &mut pos);
         let pos_diff = pos.diff(&base_pos);
 
@@ -151,7 +158,6 @@ mod tests {
     #[test]
     fn test_carriage_return_coordinates() {
         let resolution = Resolution::default();
-        let symbol = Symbol::cr();
         let base_pos: Position = Default::default();
         let mut pos = base_pos.clone();
         // emulate the motion result caused by printing of 10 characters
@@ -163,7 +169,7 @@ mod tests {
 
         let mut pos: Position = Default::default();
         let base_pos: Position = Default::default();
-        let action: Action = Action::new(symbol, Default::default(), Default::default(), 1);
+        let action: Action = Action::new(&CARRIAGE_RET, Default::default(), Default::default(), 1);
         let _ = action.instructions(&base_pos, &mut pos);
 
         // The distance between the base point should be only
@@ -174,14 +180,13 @@ mod tests {
     #[test]
     fn test_carriage_return_instructions() {
         let resolution = Resolution::default();
-        let symbol = Symbol::cr();
         let base_pos: Position = Default::default();
         let mut pos = base_pos.clone();
         for _ in 0..10 {
             pos.jump(&pos.step_right(resolution));
         }
 
-        let action = Action::new(symbol, Default::default(), Default::default(), 1);
+        let action = Action::new(&CARRIAGE_RET, Default::default(), Default::default(), 1);
         let mut cmd = action.instructions(&base_pos, &mut pos);
 
         let details = u16::from_be_bytes([0b1110_0000, 120]);
