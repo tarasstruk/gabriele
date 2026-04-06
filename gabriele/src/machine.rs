@@ -4,6 +4,7 @@ use crate::position::Position;
 use crate::printing::{Action, Instruction};
 use crate::resolution::Resolution;
 use crate::to_symbols::ToSymbols;
+use itertools::Itertools;
 use log::info;
 use std::default::Default;
 use tokio::sync::mpsc::UnboundedSender;
@@ -70,8 +71,11 @@ impl Machine {
     }
 
     pub fn print(&mut self, input: &str, db: impl DaisyDatabase + 'static) {
-        for symbol in input.to_symbols(db) {
-            let action = Action::new(symbol.clone(), self.settings, self.resolution);
+        for (rep, symbol) in input
+            .to_symbols(db)
+            .dedup_by_with_count(|x, y| x == y && x.is_groupable())
+        {
+            let action = Action::new(symbol.clone(), self.settings, self.resolution, rep);
             let instructions = action.instructions(&self.base_pos, &mut self.pos);
             self.transmit(instructions);
         }

@@ -71,7 +71,6 @@ pub struct Symbol {
     pub signs: [Option<Sign>; 2],
     pub character: char,
     pub act: ActionMapping,
-    pub repeat_times: Option<usize>,
 }
 
 impl Symbol {
@@ -80,7 +79,14 @@ impl Symbol {
             character,
             signs: [None, None],
             act: ActionMapping::Print,
-            repeat_times: None,
+        }
+    }
+
+    pub fn is_groupable(&self) -> bool {
+        match self.act {
+            ActionMapping::Print => false,
+            ActionMapping::Whitespace => true,
+            ActionMapping::CarriageReturn => true,
         }
     }
 
@@ -154,21 +160,14 @@ impl Symbol {
         self.imp(Impression::Strong)
     }
 
-    // Перший move (біля flat_map) дозволяє замиканню забрати значення direction
-    // всередину себе, щоб використовувати його на кожній ітерації.
-    // Другий move (біля map) робить те саме для конкретного кроку трансформації.
     pub fn instructions(
         &self,
         direction: PrintingDirection,
     ) -> impl Iterator<Item = Instruction> + use<'_> {
-        let times = self.repeat_times.unwrap_or(1);
-
-        (0..times).flat_map(move |_| {
-            self.signs
-                .iter()
-                .flatten()
-                .map(move |sign| sign.build_instruction(direction))
-        })
+        self.signs
+            .iter()
+            .flatten()
+            .map(move |sign| sign.build_instruction(direction))
     }
 
     pub fn x_positions_increment(&self) -> i32 {
@@ -180,7 +179,7 @@ impl Symbol {
                 _ => (),
             }
         }
-        x * (self.repeat_times.unwrap_or(1) as i32)
+        x
     }
 }
 

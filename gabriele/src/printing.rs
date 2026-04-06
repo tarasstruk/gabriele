@@ -39,23 +39,17 @@ pub struct Action {
     pub symbol: Symbol,
     pub settings: Settings,
     pub resolution: Resolution,
+    pub repeat: usize,
 }
 
 impl Action {
-    pub fn new(symbol: Symbol, settings: Settings, resolution: Resolution) -> Self {
+    pub fn new(symbol: Symbol, settings: Settings, resolution: Resolution, repeat: usize) -> Self {
         Self {
             symbol,
             settings,
             resolution,
+            repeat,
         }
-    }
-
-    pub fn multi_factor(&self) -> usize {
-        self.symbol.repeat_times.unwrap_or(1)
-    }
-
-    pub fn is_single(&self) -> bool {
-        self.multi_factor() == 1
     }
 
     pub fn whitespace_instructions(
@@ -64,8 +58,10 @@ impl Action {
         new_position: &Position,
     ) -> impl Iterator<Item = Instruction> {
         match self.settings.direction {
-            PrintingDirection::Left if self.is_single() => Either::Left(motion::space_jump_left()),
-            PrintingDirection::Right if self.is_single() => {
+            PrintingDirection::Left if (self.repeat == 1) => {
+                Either::Left(motion::space_jump_left())
+            }
+            PrintingDirection::Right if (self.repeat == 1) => {
                 Either::Right(Either::Left(motion::space_jump_right()))
             }
             _ => Either::Right(Either::Right(motion::move_absolute(
@@ -112,11 +108,12 @@ impl Action {
             },
 
             ActionMapping::Whitespace => &position.increment_x(
-                (self.multi_factor() as i32) * i32::from(self.settings.direction),
+                self.repeat as i32 * i32::from(self.settings.direction),
                 self.resolution,
             ),
+
             ActionMapping::CarriageReturn => {
-                &position.cr_multiple(base_position, self.multi_factor() as i32, self.resolution)
+                &position.cr_multiple(base_position, self.repeat as i32, self.resolution)
             }
         };
         position.jump(pos)
@@ -138,7 +135,7 @@ mod tests {
         let mut pos: Position = Default::default();
         let base_pos: Position = Default::default();
 
-        let action = Action::new(symbol, Default::default(), Default::default());
+        let action = Action::new(symbol, Default::default(), Default::default(), 1);
         let mut commands = action.instructions(&base_pos, &mut pos);
         let pos_diff = pos.diff(&base_pos);
 
@@ -166,7 +163,7 @@ mod tests {
 
         let mut pos: Position = Default::default();
         let base_pos: Position = Default::default();
-        let action: Action = Action::new(symbol, Default::default(), Default::default());
+        let action: Action = Action::new(symbol, Default::default(), Default::default(), 1);
         let _ = action.instructions(&base_pos, &mut pos);
 
         // The distance between the base point should be only
@@ -184,7 +181,7 @@ mod tests {
             pos.jump(&pos.step_right(resolution));
         }
 
-        let action = Action::new(symbol, Default::default(), Default::default());
+        let action = Action::new(symbol, Default::default(), Default::default(), 1);
         let mut cmd = action.instructions(&base_pos, &mut pos);
 
         let details = u16::from_be_bytes([0b1110_0000, 120]);
