@@ -38,21 +38,14 @@ pub enum Instruction {
 pub struct Action<'a> {
     pub symbol: &'static Symbol,
     pub settings: &'a Settings,
-    pub resolution: &'a Resolution,
     pub repeat: usize,
 }
 
 impl<'a> Action<'a> {
-    pub fn new(
-        symbol: &'static Symbol,
-        settings: &'a Settings,
-        resolution: &'a Resolution,
-        repeat: usize,
-    ) -> Self {
+    pub fn new(symbol: &'static Symbol, settings: &'a Settings, repeat: usize) -> Self {
         Self {
             symbol,
             settings,
-            resolution,
             repeat,
         }
     }
@@ -102,23 +95,24 @@ impl<'a> Action<'a> {
     /// where the machine is expected to be
     /// after the generated Instructions have been executed.
     pub fn update_position(&self, base_position: &Position, position: &mut Position) {
+        let resolution = &self.settings.resolution;
         let pos = match self.symbol.act {
             ActionMapping::Print => match self.settings.direction {
                 PrintingDirection::Right => {
-                    &position.increment_x(self.symbol.x_positions_increment(), self.resolution)
+                    &position.increment_x(self.symbol.x_positions_increment(), resolution)
                 }
                 PrintingDirection::Left => {
-                    &position.decrement_x(self.symbol.x_positions_increment(), self.resolution)
+                    &position.decrement_x(self.symbol.x_positions_increment(), resolution)
                 }
             },
 
             ActionMapping::Whitespace => &position.increment_x(
                 self.repeat as i32 * i32::from(self.settings.direction),
-                self.resolution,
+                resolution,
             ),
 
             ActionMapping::LineFeed => {
-                &position.cr_multiple(base_position, self.repeat as i32, self.resolution)
+                &position.cr_multiple(base_position, self.repeat as i32, resolution)
             }
         };
         position.jump(pos)
@@ -144,8 +138,7 @@ mod tests {
         let base_pos: Position = Default::default();
 
         let settings = Settings::default();
-        let resolution = Resolution::default();
-        let action = Action::new(&U_UMLAUT_SYMBOL, &settings, &resolution, 1);
+        let action = Action::new(&U_UMLAUT_SYMBOL, &settings, 1);
         let mut commands = action.instructions(&base_pos, &mut pos);
         let pos_diff = pos.diff(&base_pos);
 
@@ -173,8 +166,7 @@ mod tests {
         let mut pos: Position = Default::default();
         let base_pos: Position = Default::default();
         let settings = Settings::default();
-        let resolution = Resolution::default();
-        let action: Action = Action::new(&LINE_FEED_SYMBOL, &settings, &resolution, 1);
+        let action: Action = Action::new(&LINE_FEED_SYMBOL, &settings, 1);
         let mut instructions = action.instructions(&base_pos, &mut pos);
         assert!(instructions.next().is_some());
 
@@ -193,8 +185,7 @@ mod tests {
         }
 
         let settings = Settings::default();
-        let resolution = Resolution::default();
-        let action = Action::new(&LINE_FEED_SYMBOL, &settings, &resolution, 1);
+        let action = Action::new(&LINE_FEED_SYMBOL, &settings, 1);
         let mut cmd = action.instructions(&base_pos, &mut pos);
 
         let details = u16::from_be_bytes([0b1110_0000, 120]);

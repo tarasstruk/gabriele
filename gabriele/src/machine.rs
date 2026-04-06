@@ -14,15 +14,14 @@ pub struct Machine {
     base_pos: Position,
     pos: Position,
     settings: Settings,
-    #[allow(unused)]
-    resolution: Resolution,
 }
 
-#[derive(Default, Copy, Clone)]
+#[derive(Default, Copy, Clone, Debug)]
 pub struct Settings {
     pub direction: PrintingDirection,
+    pub resolution: Resolution,
 }
-#[derive(Default, Copy, Clone)]
+#[derive(Default, Copy, Clone, Debug)]
 pub enum PrintingDirection {
     #[default]
     Right,
@@ -42,13 +41,11 @@ impl Machine {
     pub fn new(sender: UnboundedSender<Instruction>) -> Self {
         let pos = Position::default();
         let base_pos = pos;
-        let resolution = Resolution::default();
         let settings = Settings::default();
         Self {
             sender,
             base_pos,
             pos,
-            resolution,
             settings,
         }
     }
@@ -75,7 +72,7 @@ impl Machine {
             .to_symbols(db)
             .dedup_by_with_count(|x, y| x == y && x.is_groupable())
         {
-            let action = Action::new(symbol, &self.settings, &self.resolution, rep);
+            let action = Action::new(symbol, &self.settings, rep);
             let instructions = action.instructions(&self.base_pos, &mut self.pos);
             self.transmit(instructions);
         }
