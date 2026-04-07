@@ -10,7 +10,7 @@ pub enum ActionMapping {
     #[default]
     Print,
     Whitespace,
-    CarriageReturn,
+    LineFeed,
 }
 
 #[derive(PartialEq, Debug, Copy, Clone, Default, Serialize, Deserialize, DekuWrite)]
@@ -68,127 +68,118 @@ impl AfterSymbolPrinted {
 
 #[derive(PartialEq, Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Symbol {
-    pub signs: Vec<Sign>,
+    pub signs: [Option<Sign>; 2],
     pub character: char,
     pub act: ActionMapping,
-    pub repeat_times: Option<usize>,
 }
 
 impl Symbol {
-    pub fn new(character: char) -> Self {
+    pub const fn new(character: char) -> Self {
         Self {
             character,
-            signs: Vec::with_capacity(2),
-            ..Default::default()
+            signs: [None, None],
+            act: ActionMapping::Print,
         }
     }
 
-    pub fn petal(mut self, idx: u8) -> Self {
+    pub fn is_groupable(&self) -> bool {
+        match self.act {
+            ActionMapping::Print => false,
+            ActionMapping::Whitespace => true,
+            ActionMapping::LineFeed => true,
+        }
+    }
+
+    pub const fn petal(mut self, idx: u8) -> Self {
         let sign = Sign {
             idx,
-            ..Default::default()
+            imp: Impression::Normal,
+            after: AfterSymbolPrinted::MoveRight,
         };
-        self.signs.push(sign);
+        self.signs[0] = Some(sign);
         self
     }
 
     /// Add a grave accent (è)
     /// example: `caffè` (Italian "coffee", open spelling)
-    pub fn grave(mut self) -> Self {
-        let sign = &mut self.signs[0];
-        sign.after = AfterSymbolPrinted::HoldOn;
-        let mark = Sign {
-            idx: 72,
-            imp: Impression::Mild,
-            ..Default::default()
+    pub const fn grave(mut self) -> Self {
+        if let Some(ref mut sign) = self.signs[0] {
+            sign.after = AfterSymbolPrinted::HoldOn;
+            let mark = Sign {
+                idx: 72,
+                imp: Impression::Mild,
+                after: AfterSymbolPrinted::MoveRight,
+            };
+            self.signs[1] = Some(mark);
         };
-        self.signs.push(mark);
         self
     }
 
     /// Add an acute accent (é)
     /// example: `perché?` (Italian "why?", closed spelling)
-    pub fn acute(mut self) -> Self {
-        let sign = &mut self.signs[0];
-        sign.after = AfterSymbolPrinted::HoldOn;
-        let mark = Sign {
-            idx: 14,
-            imp: Impression::Mild,
-            ..Default::default()
+    pub const fn acute(mut self) -> Self {
+        if let Some(ref mut sign) = self.signs[0] {
+            sign.after = AfterSymbolPrinted::HoldOn;
+            let mark = Sign {
+                idx: 14,
+                imp: Impression::Mild,
+                after: AfterSymbolPrinted::MoveRight,
+            };
+            self.signs[1] = Some(mark);
         };
-        self.signs.push(mark);
         self
     }
 
-    pub fn whitespace() -> Self {
+    pub const fn whitespace() -> Self {
         let mut item = Self::new(' ');
         item.act = ActionMapping::Whitespace;
         item
     }
 
-    pub fn cr() -> Self {
+    pub const fn line_feed() -> Self {
         let mut item = Self::new('\n');
-        item.act = ActionMapping::CarriageReturn;
+        item.act = ActionMapping::LineFeed;
         item
     }
 
-    pub fn imp(mut self, impression: Impression) -> Self {
-        for sign in self.signs.iter_mut() {
+    pub const fn imp(mut self, impression: Impression) -> Self {
+        if let Some(ref mut sign) = self.signs[0] {
+            sign.imp = impression
+        }
+        if let Some(ref mut sign) = self.signs[1] {
             sign.imp = impression
         }
         self
     }
 
-    pub fn after_printed(mut self, after: AfterSymbolPrinted) -> Self {
-        for sign in self.signs.iter_mut() {
-            sign.after = after
-        }
-        self
-    }
-
-    pub fn mild(self) -> Self {
+    pub const fn mild(self) -> Self {
         self.imp(Impression::Mild)
     }
 
-    pub fn strong(self) -> Self {
+    pub const fn strong(self) -> Self {
         self.imp(Impression::Strong)
     }
 
-    #[allow(unused)]
-    pub fn hold(self) -> Self {
-        self.after_printed(AfterSymbolPrinted::HoldOn)
-    }
-
-    #[allow(unused)]
-    pub fn left(self) -> Self {
-        self.after_printed(AfterSymbolPrinted::MoveLeft)
-    }
-
-    // Перший move (біля flat_map) дозволяє замиканню забрати значення direction
-    // всередину себе, щоб використовувати його на кожній ітерації.
-    // Другий move (біля map) робить те саме для конкретного кроку трансформації.
-    pub fn instructions(&self, direction: PrintingDirection) -> impl Iterator<Item = Instruction> {
-        let signs_owned = self.signs.clone();
-        let times = self.repeat_times.unwrap_or(1);
-
-        (0..times).flat_map(move |_| {
-            signs_owned
-                .clone()
-                .into_iter()
-                .map(move |sign| sign.build_instruction(direction))
-        })
+    pub fn instructions(
+        &self,
+        direction: PrintingDirection,
+    ) -> impl Iterator<Item = Instruction> + use<'_> {
+        self.signs
+            .iter()
+            .flatten()
+            .map(move |sign| sign.build_instruction(direction))
     }
 
     pub fn x_positions_increment(&self) -> i32 {
         let mut x = 0_i32;
-        for sign in self.signs.iter() {
+        for sign in self.signs.iter().flatten() {
             match sign.after {
-                AfterSymbolPrinted::HoldOn => (),
                 AfterSymbolPrinted::MoveLeft => x -= 1,
                 AfterSymbolPrinted::MoveRight => x += 1,
+                _ => (),
             }
         }
-        x * (self.repeat_times.unwrap_or(1) as i32)
+        x
     }
 }
 
@@ -204,30 +195,6 @@ mod tests {
         assert_eq!(
             result.next(),
             Some(Instruction::SendBytes(u16::from_be_bytes([81, 47 + 128])))
-        );
-        assert_eq!(result.next(), None);
-    }
-
-    #[test]
-    fn test_instructions_with_hold_after_printed() {
-        let symbol = Symbol::new('ü').petal(81).hold();
-        let mut result = symbol.instructions(Default::default());
-        assert_eq!(
-            result.next(),
-            Some(Instruction::SendBytes(u16::from_be_bytes([81, 31 + 0])))
-        );
-        assert_eq!(result.next(), None);
-    }
-    #[test]
-    fn test_instructions_with_left_direction() {
-        let symbol = Symbol::new('ü').petal(81).left();
-        let mut result = symbol.instructions(Default::default());
-        assert_eq!(
-            result.next(),
-            Some(Instruction::SendBytes(u16::from_be_bytes([
-                81,
-                31 + 128 + 64
-            ])))
         );
         assert_eq!(result.next(), None);
     }

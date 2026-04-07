@@ -2,26 +2,24 @@ use crate::database::DaisyDatabase;
 use crate::motion::move_relative;
 use crate::position::Position;
 use crate::printing::{Action, Instruction};
-use crate::resolution::Resolution;
 use crate::to_symbols::ToSymbols;
+use itertools::Itertools;
 use log::info;
 use std::default::Default;
 use tokio::sync::mpsc::UnboundedSender;
 
 pub struct Machine {
     sender: UnboundedSender<Instruction>,
-    base_pos: Position,
-    pos: Position,
+    position: Position,
     settings: Settings,
-    #[allow(unused)]
-    resolution: Resolution,
 }
 
-#[derive(Default, Copy, Clone)]
+#[derive(Default, Copy, Clone, Debug)]
 pub struct Settings {
     pub direction: PrintingDirection,
+    pub base_position: Position,
 }
-#[derive(Default, Copy, Clone)]
+#[derive(Default, Copy, Clone, Debug)]
 pub enum PrintingDirection {
     #[default]
     Right,
@@ -39,21 +37,17 @@ impl From<PrintingDirection> for i32 {
 
 impl Machine {
     pub fn new(sender: UnboundedSender<Instruction>) -> Self {
-        let pos = Position::default();
-        let base_pos = pos;
-        let resolution = Resolution::default();
+        let position = Position::default();
         let settings = Settings::default();
         Self {
             sender,
-            base_pos,
-            pos,
-            resolution,
+            position,
             settings,
         }
     }
 
     pub fn current_position(&self) -> Position {
-        self.pos
+        self.position
     }
 
     pub fn shutdown(&mut self) {
@@ -61,7 +55,7 @@ impl Machine {
         self.transmit([Instruction::Halt].into_iter());
     }
 
-    pub fn transmit(&mut self, instructions: impl Iterator<Item = Instruction>) {
+    pub fn transmit(&self, instructions: impl Iterator<Item = Instruction>) {
         for item in instructions {
             self.sender
                 .send(item)
@@ -69,10 +63,13 @@ impl Machine {
         }
     }
 
-    pub fn print(&mut self, input: &str, db: impl DaisyDatabase) {
-        for symbol in input.to_symbols(db) {
-            let action = Action::new(symbol.clone(), self.settings, self.resolution);
-            let instructions = action.instructions(&self.base_pos, &mut self.pos);
+    pub fn print(&mut self, input: &str, db: impl DaisyDatabase + 'static) {
+        for (rep, symbol) in input
+            .to_symbols(db)
+            .dedup_by_with_count(|x, y| x == y && x.is_groupable())
+        {
+            let action = Action::new(symbol, &self.settings, rep);
+            let instructions = action.instructions(&mut self.position);
             self.transmit(instructions);
         }
     }
