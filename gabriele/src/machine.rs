@@ -37,8 +37,8 @@ impl From<PrintingDirection> for i32 {
 
 impl Machine {
     pub fn new(sender: UnboundedSender<Instruction>) -> Self {
-        let position = Position::default();
-        let settings = Settings::default();
+        let position = Default::default();
+        let settings = Default::default();
         Self {
             sender,
             position,
@@ -63,16 +63,43 @@ impl Machine {
         }
     }
 
-    pub fn print(&mut self, input: &str, db: impl DaisyDatabase + 'static) {
-        for (rep, symbol) in input
+    pub fn transmit_instruction(&self, instr: Instruction) {
+        self.sender
+            .send(instr)
+            .expect("the communication channel is closed");
+    }
+
+    pub fn generate<F>(&mut self, input: &str, db: impl DaisyDatabase + 'static, mut output: F)
+    where
+        F: FnMut(Instruction),
+    {
+        let symbols = input
             .to_symbols(db)
-            .dedup_by_with_count(|x, y| x == y && x.is_groupable())
-        {
-            let action = Action::new(symbol, &self.settings, rep);
-            let instructions = action.instructions(&mut self.position);
-            self.transmit(instructions);
+            .dedup_by_with_count(|x, y| x == y && x.is_groupable());
+
+        for (rep, symbol) in symbols {
+            let action = Action::new(symbol, &self.settings, rep, &self.position);
+            let target_pos = action.target_position();
+
+            for instr in action.instructions(&target_pos) {
+                output(instr);
+            }
+            self.position = target_pos;
         }
     }
+
+    pub fn print(&mut self, input: &str, db: impl DaisyDatabase + 'static) {
+        let sender = self.sender.clone();
+
+        let tr = |instr| {
+            sender
+                .send(instr)
+                .expect("the communication channel is closed");
+        };
+
+        self.generate(input, db, tr);
+    }
+
     pub fn offset(&mut self, value: i16) {
         self.transmit(move_relative(value, 0));
     }
