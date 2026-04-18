@@ -7,7 +7,8 @@ use core::default::Default;
 use itertools::Itertools;
 
 pub trait InstructionSender {
-    fn send(&self, instr: Instruction) -> impl core::future::Future<Output = ()> + '_;
+    #[allow(async_fn_in_trait)]
+    async fn send(&self, instr: Instruction);
 }
 
 pub struct Machine<T: InstructionSender> {
