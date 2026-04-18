@@ -1,4 +1,3 @@
-use super::tcp_talker::run_tcp_client;
 use crate::printing::Instruction;
 use anyhow::{bail, Context};
 use bytes::Bytes;
@@ -6,6 +5,7 @@ use log::debug;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
+use tcp_client::run_tcp_client;
 use tokio::sync::broadcast::{self, Sender};
 use tokio::sync::mpsc::UnboundedReceiver;
 use tokio::sync::Notify;

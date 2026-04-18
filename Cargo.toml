@@ -4,6 +4,7 @@ resolver = "2"
 members = [
     "gabi",
     "gabriele",
+    "tcp-client",
 ]
 
 
@@ -16,6 +17,7 @@ repository = "https://github.com/tarasstruk/gabriele"
 [workspace.dependencies]
 gabriele = {path = "gabriele"}
 gabi = {path = "gabi"}
+tcp-client = {path = "tcp-client"}
 
 anyhow = "1.0.75"
 clap = { version = "4.5.16", features = ["derive"] }
