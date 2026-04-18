@@ -6,8 +6,8 @@ use crate::to_symbols::ToSymbols;
 use core::default::Default;
 use itertools::Itertools;
 
-pub trait InstructionSender: Sized {
-    fn send(&self, instr: Instruction);
+pub trait InstructionSender {
+    fn send(&self, instr: Instruction) -> impl core::future::Future<Output = ()> + Send;
 }
 
 pub struct Machine<T: InstructionSender> {
@@ -52,17 +52,17 @@ impl<T: InstructionSender> Machine<T> {
         self.position
     }
 
-    pub fn shutdown(&mut self) {
-        self.transmit([Instruction::Halt].into_iter());
+    pub async fn shutdown(&mut self) {
+        self.transmit([Instruction::Halt].into_iter()).await;
     }
 
-    pub fn transmit(&self, instructions: impl Iterator<Item = Instruction>) {
+    pub async fn transmit(&self, instructions: impl Iterator<Item = Instruction>) {
         for item in instructions {
-            self.sender.send(item);
+            self.sender.send(item).await;
         }
     }
 
-    pub fn print(&mut self, input: &str, db: impl DaisyDatabase + 'static) {
+    pub async fn print(&mut self, input: &str, db: impl DaisyDatabase + 'static) {
         let symbols = input
             .to_symbols(db)
             .dedup_by_with_count(|x, y| x == y && x.is_groupable());
@@ -72,17 +72,17 @@ impl<T: InstructionSender> Machine<T> {
             let target_pos = action.target_position();
 
             for instr in action.instructions(&target_pos) {
-                self.sender.send(instr);
+                self.sender.send(instr).await;
             }
             self.position = target_pos;
         }
     }
 
-    pub fn offset(&mut self, value: i16) {
-        self.transmit(move_relative(value, 0));
+    pub async fn offset(&mut self, value: i16) {
+        self.transmit(move_relative(value, 0)).await;
     }
 
-    pub fn send_empty_instruction(&mut self) {
-        self.transmit([].into_iter());
+    pub async fn send_empty_instruction(&mut self) {
+        self.transmit([].into_iter()).await;
     }
 }

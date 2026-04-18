@@ -32,12 +32,12 @@ impl TestApp {
         }
     }
 
-    pub fn halt(&mut self) {
-        self.machine.shutdown();
+    pub async fn halt(&mut self) {
+        self.machine.shutdown().await;
     }
 
     pub async fn teardown(mut self) {
-        self.machine.shutdown();
+        self.machine.shutdown().await;
         let _ = self.machine_handle.await.unwrap();
         self.server_handle.abort();
         let _ = self.server_handle.await;

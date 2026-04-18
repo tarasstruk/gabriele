@@ -25,7 +25,7 @@ async fn prints_two_characters() {
     let mut app = TestApp::run(1234).await;
     let db: &'static [Symbol] = &gabriele::wheels::standard::SYMBOLS;
 
-    app.machine.print("AT", db);
+    app.machine.print("AT", db).await;
 
     let hit = hit(Default::default(), Default::default());
 
@@ -55,7 +55,7 @@ async fn prints_two_characters() {
 async fn prints_special_character() {
     let mut app = TestApp::run(1235).await;
     let db: &'static [Symbol] = &gabriele::wheels::standard::SYMBOLS;
-    app.machine.print("à", db);
+    app.machine.print("à", db).await;
 
     let first_hit = hit(Default::default(), AfterSymbolPrinted::HoldOn);
 
@@ -88,8 +88,8 @@ async fn prints_character_with_a_newline() {
     let mut app = TestApp::run(1236).await;
     let db: &'static [Symbol] = &gabriele::wheels::standard::SYMBOLS;
 
-    app.machine.print("A\n", db);
-    app.machine.shutdown();
+    app.machine.print("A\n", db).await;
+    app.machine.shutdown().await;
 
     let hit = crate::hit(Default::default(), AfterSymbolPrinted::MoveRight);
 
@@ -133,9 +133,9 @@ async fn prints_welcome_file() {
     let content = include_str!("../welcome.txt");
     let expected = Bytes::from_static(include_bytes!("../ref_output.bin"));
 
-    app.machine.offset(4 * 12);
-    app.machine.print(content, db);
-    app.halt();
+    app.machine.offset(4 * 12).await;
+    app.machine.print(content, db).await;
+    app.halt().await;
 
     let mut buf = BytesMut::with_capacity(1024);
 

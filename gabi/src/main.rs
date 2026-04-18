@@ -27,14 +27,17 @@ struct Args {
     text: Option<String>,
 }
 
-fn standard_in(machine: &mut Machine<SenderWrapper>, db: impl DaisyDatabase + 'static + Clone) {
+async fn standard_in(
+    machine: &mut Machine<SenderWrapper>,
+    db: impl DaisyDatabase + 'static + Clone,
+) {
     debug!("Printing stdin");
     let stdin = io::stdin();
     for line in stdin.lines() {
         if let Ok(mut input) = line {
             if input != *"exit" {
                 input.push('\n');
-                machine.print(&input, db.clone());
+                machine.print(&input, db.clone()).await;
             } else {
                 break;
             }
@@ -44,13 +47,13 @@ fn standard_in(machine: &mut Machine<SenderWrapper>, db: impl DaisyDatabase + 's
     }
 }
 
-fn print_file(
+async fn print_file(
     machine: &mut Machine<SenderWrapper>,
     db: impl DaisyDatabase + 'static,
     file_path: &str,
 ) {
     let content = fs::read_to_string(file_path).unwrap();
-    machine.print(&content, db);
+    machine.print(&content, db).await;
 }
 
 #[tokio::main]
@@ -77,12 +80,13 @@ async fn main() {
 
     let db: &'static [Symbol] = &gabriele::wheels::standard::SYMBOLS;
 
-    machine.offset(4 * 12);
+    machine.offset(4 * 12).await;
 
     match args.text {
-        Some(path) => print_file(&mut machine, db, &path),
-        None => standard_in(&mut machine, db),
+        Some(path) => print_file(&mut machine, db, &path).await,
+        None => standard_in(&mut machine, db).await,
     };
-    machine.shutdown();
+
+    machine.shutdown().await;
     _ = tokio::join!(handle);
 }

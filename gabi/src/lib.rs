@@ -8,7 +8,10 @@ use tokio::sync::mpsc::UnboundedSender;
 pub struct SenderWrapper(pub UnboundedSender<Instruction>);
 
 impl InstructionSender for SenderWrapper {
-    fn send(&self, instr: Instruction) {
-        self.0.send(instr).expect("cannot send instruction");
+    #[allow(clippy::manual_async_fn)]
+    fn send(&self, instr: Instruction) -> impl core::future::Future<Output = ()> + Send {
+        async move {
+            self.0.send(instr).expect("cannot send instruction");
+        }
     }
 }
