@@ -7,7 +7,6 @@ use crate::position::Position;
 use crate::resolution::Resolution;
 use crate::symbol::{ActionMapping, Symbol};
 use either::Either;
-use log::debug;
 
 /// The basic directive for the machine
 /// Idle specifies milliseconds
@@ -80,7 +79,6 @@ impl<'a> Action<'a> {
     /// taking the current Position as a reference point.
     /// The result of these instructions is the printed Symbol or/and the associated motion.
     pub fn instructions(self, new_position: &Position) -> impl Iterator<Item = Instruction> {
-        debug!("action {:?}", self.symbol.act);
         match self.symbol.act {
             ActionMapping::Print => Either::Left(self.symbol.instructions(self.settings.direction)),
             ActionMapping::Whitespace => Either::Right(Either::Left(

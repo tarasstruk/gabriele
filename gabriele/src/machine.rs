@@ -4,7 +4,6 @@ use crate::position::Position;
 use crate::printing::{Action, Instruction};
 use crate::to_symbols::ToSymbols;
 use itertools::Itertools;
-use log::info;
 use std::default::Default;
 
 pub trait InstructionSender: Sized {
@@ -54,7 +53,6 @@ impl<T: InstructionSender> Machine<T> {
     }
 
     pub fn shutdown(&mut self) {
-        info!("stopping the machine");
         self.transmit([Instruction::Halt].into_iter());
     }
 

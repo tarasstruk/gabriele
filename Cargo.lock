@@ -295,7 +295,6 @@ dependencies = [
  "deku",
  "either",
  "itertools",
- "log",
  "serde",
 ]
 
