@@ -292,16 +292,11 @@ dependencies = [
 name = "gabriele"
 version = "0.1.0"
 dependencies = [
- "anyhow",
- "bytes",
  "deku",
  "either",
  "itertools",
  "log",
  "serde",
- "tcp-client",
- "tokio",
- "tokio-util",
 ]
 
 [[package]]

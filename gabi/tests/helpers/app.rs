@@ -7,10 +7,10 @@ use tokio::net::TcpListener;
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver};
 use tokio::task::JoinHandle;
 
-use gabi::Hal;
+use gabi::{Hal, SenderWrapper};
 
 pub struct TestApp {
-    pub machine: Machine,
+    pub machine: Machine<SenderWrapper>,
     machine_handle: JoinHandle<Result<()>>,
     pub rx: UnboundedReceiver<u8>,
     server_handle: JoinHandle<()>,
@@ -19,7 +19,7 @@ impl TestApp {
     pub async fn run(port: u16) -> TestApp {
         let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), port);
         let (sender, receiver) = unbounded_channel();
-        let machine = Machine::new(sender);
+        let machine = Machine::new(SenderWrapper(sender));
 
         let mut hal = Hal::new(receiver, addr.clone());
         let machine_handle = tokio::spawn(async move { hal.run().await });

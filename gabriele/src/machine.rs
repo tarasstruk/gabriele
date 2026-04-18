@@ -6,10 +6,13 @@ use crate::to_symbols::ToSymbols;
 use itertools::Itertools;
 use log::info;
 use std::default::Default;
-use tokio::sync::mpsc::UnboundedSender;
 
-pub struct Machine {
-    sender: UnboundedSender<Instruction>,
+pub trait InstructionSender: Sized {
+    fn send(&self, instr: Instruction);
+}
+
+pub struct Machine<T: InstructionSender> {
+    sender: T,
     position: Position,
     settings: Settings,
 }
@@ -35,8 +38,8 @@ impl From<PrintingDirection> for i32 {
     }
 }
 
-impl Machine {
-    pub fn new(sender: UnboundedSender<Instruction>) -> Self {
+impl<T: InstructionSender> Machine<T> {
+    pub fn new(sender: T) -> Self {
         let position = Default::default();
         let settings = Default::default();
         Self {
@@ -57,22 +60,11 @@ impl Machine {
 
     pub fn transmit(&self, instructions: impl Iterator<Item = Instruction>) {
         for item in instructions {
-            self.sender
-                .send(item)
-                .expect("the communication channel is closed");
+            self.sender.send(item);
         }
     }
 
-    pub fn transmit_instruction(&self, instr: Instruction) {
-        self.sender
-            .send(instr)
-            .expect("the communication channel is closed");
-    }
-
-    pub fn generate<F>(&mut self, input: &str, db: impl DaisyDatabase + 'static, mut output: F)
-    where
-        F: FnMut(Instruction),
-    {
+    pub fn print(&mut self, input: &str, db: impl DaisyDatabase + 'static) {
         let symbols = input
             .to_symbols(db)
             .dedup_by_with_count(|x, y| x == y && x.is_groupable());
@@ -82,22 +74,10 @@ impl Machine {
             let target_pos = action.target_position();
 
             for instr in action.instructions(&target_pos) {
-                output(instr);
+                self.sender.send(instr);
             }
             self.position = target_pos;
         }
-    }
-
-    pub fn print(&mut self, input: &str, db: impl DaisyDatabase + 'static) {
-        let sender = self.sender.clone();
-
-        let tr = |instr| {
-            sender
-                .send(instr)
-                .expect("the communication channel is closed");
-        };
-
-        self.generate(input, db, tr);
     }
 
     pub fn offset(&mut self, value: i16) {
