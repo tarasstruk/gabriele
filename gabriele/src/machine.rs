@@ -3,8 +3,8 @@ use crate::motion::move_relative;
 use crate::position::Position;
 use crate::printing::{Action, Instruction};
 use crate::to_symbols::ToSymbols;
+use core::default::Default;
 use itertools::Itertools;
-use std::default::Default;
 
 pub trait InstructionSender: Sized {
     fn send(&self, instr: Instruction);

@@ -7,6 +7,5 @@ authors.workspace = true
 
 [dependencies]
 itertools.workspace = true
-serde.workspace = true
 deku.workspace = true
 either = { version = "1.15.0", default-features = false }

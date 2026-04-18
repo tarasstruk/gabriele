@@ -3,9 +3,8 @@ use crate::machine::PrintingDirection;
 use crate::printing::Instruction;
 use crate::sign::Sign;
 use deku::DekuWrite;
-use serde::{Deserialize, Serialize};
 
-#[derive(PartialEq, Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Clone, Default)]
 pub enum ActionMapping {
     #[default]
     Print,
@@ -13,7 +12,7 @@ pub enum ActionMapping {
     LineFeed,
 }
 
-#[derive(PartialEq, Debug, Copy, Clone, Default, Serialize, Deserialize, DekuWrite)]
+#[derive(PartialEq, Debug, Copy, Clone, Default, DekuWrite)]
 #[deku(id_type = "u8", bits = 2)]
 #[deku(endian = "big")]
 #[deku(ctx = "endian: deku::ctx::Endian")]
@@ -66,7 +65,7 @@ impl AfterSymbolPrinted {
     }
 }
 
-#[derive(PartialEq, Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Clone, Default)]
 pub struct Symbol {
     pub signs: [Option<Sign>; 2],
     pub character: char,

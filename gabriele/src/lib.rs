@@ -1,3 +1,4 @@
+#![no_std]
 pub mod cmd;
 pub mod database;
 pub mod machine;

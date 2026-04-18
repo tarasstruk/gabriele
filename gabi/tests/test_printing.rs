@@ -2,7 +2,6 @@ mod helpers;
 
 use crate::helpers::app::TestApp;
 use bytes::{Bytes, BytesMut};
-use deku::DekuContainerWrite;
 use gabriele::cmd::{Cmd, Impression};
 use gabriele::motion::move_relative;
 use gabriele::printing::Instruction;
@@ -18,7 +17,7 @@ fn hit(impression: Impression, direction: AfterSymbolPrinted) -> u8 {
         direction,
         impression,
     };
-    Cmd::SymbolLow(sym).to_bytes().unwrap()[1]
+    Cmd::SymbolLow(sym).as_u16().to_be_bytes()[1]
 }
 
 #[tokio::test]

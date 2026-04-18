@@ -1,5 +1,5 @@
 use crate::resolution::Resolution;
-use std::default::Default;
+use core::default::Default;
 
 /// Represents current coordinates of the printing element
 /// against the Paper coordinate system.
