@@ -1,6 +1,5 @@
 pub mod cmd;
 pub mod database;
-pub mod hal;
 pub mod machine;
 pub mod motion;
 pub mod position;

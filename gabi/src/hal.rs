@@ -1,6 +1,6 @@
-use crate::printing::Instruction;
 use anyhow::{bail, Context};
 use bytes::Bytes;
+use gabriele::printing::Instruction;
 use log::debug;
 use std::net::SocketAddr;
 use std::sync::Arc;

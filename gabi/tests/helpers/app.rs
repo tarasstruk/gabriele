@@ -1,5 +1,4 @@
 use anyhow::Result;
-use gabriele::hal::Hal;
 use gabriele::machine::Machine;
 use log::warn;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
@@ -7,6 +6,8 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver};
 use tokio::task::JoinHandle;
+
+use gabi::Hal;
 
 pub struct TestApp {
     pub machine: Machine,

@@ -20,4 +20,8 @@ clap.workspace = true
 env_logger.workspace = true
 tokio.workspace = true
 bytes.workspace = true
+tcp-client.workspace = true
+tokio-util.workspace = true
+
+[dev-dependencies]
 deku.workspace = true

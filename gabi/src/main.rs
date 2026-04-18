@@ -1,6 +1,8 @@
+mod hal;
+pub use hal::Hal;
+
 use env_logger::{Builder, Target};
 use gabriele::database::DaisyDatabase;
-use gabriele::hal::Hal;
 use gabriele::machine::Machine;
 use gabriele::printing::Instruction;
 use log::{debug, info};
