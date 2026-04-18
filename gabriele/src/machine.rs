@@ -7,7 +7,7 @@ use core::default::Default;
 use itertools::Itertools;
 
 pub trait InstructionSender {
-    fn send(&self, instr: Instruction) -> impl core::future::Future<Output = ()> + Send;
+    fn send(&self, instr: Instruction) -> impl core::future::Future<Output = ()> + '_;
 }
 
 pub struct Machine<T: InstructionSender> {
