@@ -1,6 +1,6 @@
+#![no_std]
 pub mod cmd;
 pub mod database;
-pub mod hal;
 pub mod machine;
 pub mod motion;
 pub mod position;
@@ -8,7 +8,5 @@ pub mod printing;
 pub mod resolution;
 pub mod sign;
 pub mod symbol;
-pub mod tcp_talker;
 pub mod to_symbols;
-
-pub use database::Db;
+pub mod wheels;

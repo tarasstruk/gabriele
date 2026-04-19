@@ -1,21 +1,18 @@
-mod db_loader;
-mod directive;
-use directive::process_directive;
+mod hal;
+pub use hal::Hal;
 
 use env_logger::{Builder, Target};
-use gabriele::database::{DaisyDatabase, Db};
-use gabriele::hal::Hal;
+use gabriele::database::DaisyDatabase;
 use gabriele::machine::Machine;
 use gabriele::printing::Instruction;
 use log::{debug, info};
-use std::cell::RefCell;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-use std::ops::Deref;
+use std::net::{Ipv4Addr, SocketAddr};
 use std::{fs, io};
 use tokio::sync::mpsc;
-use tokio::sync::mpsc::UnboundedReceiver;
 
 use clap::Parser;
+use gabi::SenderWrapper;
+use gabriele::symbol::Symbol;
 
 /// Gabriele
 #[derive(Parser, Debug)]
@@ -30,16 +27,17 @@ struct Args {
     text: Option<String>,
 }
 
-fn standard_in(machine: &mut Machine, db: RefCell<Db>) {
+async fn standard_in(
+    machine: &mut Machine<SenderWrapper>,
+    db: impl DaisyDatabase + 'static + Clone,
+) {
     debug!("Printing stdin");
     let stdin = io::stdin();
     for line in stdin.lines() {
         if let Ok(mut input) = line {
-            if input.starts_with("@>") {
-                process_directive(&input, db.borrow_mut());
-            } else if input != *"exit" {
+            if input != *"exit" {
                 input.push('\n');
-                machine.print(&input, db.borrow().deref());
+                machine.print(&input, db.clone()).await;
             } else {
                 break;
             }
@@ -49,16 +47,13 @@ fn standard_in(machine: &mut Machine, db: RefCell<Db>) {
     }
 }
 
-fn print_file(machine: &mut Machine, db: impl DaisyDatabase, file_path: &str) {
+async fn print_file(
+    machine: &mut Machine<SenderWrapper>,
+    db: impl DaisyDatabase + 'static,
+    file_path: &str,
+) {
     let content = fs::read_to_string(file_path).unwrap();
-    machine.print(&content, db);
-}
-
-async fn start_runner(rx: UnboundedReceiver<Instruction>, addr: Ipv4Addr) {
-    info!("Started worker");
-    let addr = SocketAddr::new(IpAddr::V4(addr), 1234);
-    let mut runner = Hal::new(rx, addr);
-    let _ = runner.run().await;
+    machine.print(&content, db).await;
 }
 
 #[tokio::main]
@@ -74,22 +69,24 @@ async fn main() {
 
     let handle = tokio::task::spawn(async move {
         info!("the runner is starting");
-        start_runner(rx, args.ip).await;
+        let addr = SocketAddr::new(args.ip.into(), 1234);
+        let mut runner = Hal::new(rx, addr);
+        let _ = runner.run().await;
         info!("the runner is finished");
     });
 
     info!("Machine is starting up");
-    let mut machine = Machine::new(tx);
+    let mut machine = Machine::new(SenderWrapper(tx));
 
-    let wheel = fs::read_to_string("gabi/wheels/German.toml").expect("Cannot read the wheel file");
-    let db: Db = toml::from_str(&wheel).expect("Cannot deserialize the wheel file");
+    let db: &'static [Symbol] = &gabriele::wheels::standard::SYMBOLS;
 
-    machine.offset(4 * 12);
+    machine.offset(4 * 12).await;
 
     match args.text {
-        Some(path) => print_file(&mut machine, &db, &path),
-        None => standard_in(&mut machine, RefCell::new(db)),
+        Some(path) => print_file(&mut machine, db, &path).await,
+        None => standard_in(&mut machine, db).await,
     };
-    machine.shutdown();
+
+    machine.shutdown().await;
     _ = tokio::join!(handle);
 }

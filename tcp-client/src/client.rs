@@ -10,7 +10,7 @@ use tokio::sync::Notify;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
-pub(crate) fn run_tcp_client(
+pub fn run_tcp_client(
     addr: SocketAddr,
     rx: Receiver<Bytes>,
     notifier: Arc<Notify>,

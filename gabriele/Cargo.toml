@@ -6,12 +6,6 @@ authors.workspace = true
 
 
 [dependencies]
-anyhow.workspace = true
 itertools.workspace = true
-log.workspace = true
-serde.workspace = true
-tokio.workspace = true
-bytes.workspace = true
-tokio-util.workspace = true
 deku.workspace = true
-either = { version = "1.15.0", default-features = false }
+either.workspace = true

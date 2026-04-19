@@ -4,6 +4,7 @@ resolver = "2"
 members = [
     "gabi",
     "gabriele",
+    "tcp-client",
 ]
 
 
@@ -16,17 +17,16 @@ repository = "https://github.com/tarasstruk/gabriele"
 [workspace.dependencies]
 gabriele = {path = "gabriele"}
 gabi = {path = "gabi"}
+tcp-client = {path = "tcp-client"}
 
 anyhow = "1.0.75"
 clap = { version = "4.5.16", features = ["derive"] }
 env_logger = "0.11.9"
-itertools = "0.14.0"
+itertools = { version = "0.14.0", default-features = false }
 log = "0.4.20"
-regex = "1.11.1"
-serde = { version = "1.0.210", features = ["derive"] }
 tokio = { version = "1.37.0", features = ["full"] }
-toml = "0.8.20"
 tracing = "0.1.41"
 bytes = "1.10.1"
 tokio-util = "0.7.18"
-deku = "0.20.3"
+deku = { version =  "0.20.3", features = ["bits"], default-features = false}
+either = { version = "1.15.0", default-features = false }

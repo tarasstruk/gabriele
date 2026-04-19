@@ -2,26 +2,27 @@ use crate::database::DaisyDatabase;
 use crate::motion::move_relative;
 use crate::position::Position;
 use crate::printing::{Action, Instruction};
-use crate::resolution::Resolution;
 use crate::to_symbols::ToSymbols;
-use log::info;
-use std::default::Default;
-use tokio::sync::mpsc::UnboundedSender;
+use core::default::Default;
+use itertools::Itertools;
 
-pub struct Machine {
-    sender: UnboundedSender<Instruction>,
-    base_pos: Position,
-    pos: Position,
-    settings: Settings,
-    #[allow(unused)]
-    resolution: Resolution,
+pub trait InstructionSender {
+    #[allow(async_fn_in_trait)]
+    async fn send(&self, instr: Instruction);
 }
 
-#[derive(Default, Copy, Clone)]
+pub struct Machine<T: InstructionSender> {
+    sender: T,
+    position: Position,
+    settings: Settings,
+}
+
+#[derive(Default, Copy, Clone, Debug)]
 pub struct Settings {
     pub direction: PrintingDirection,
+    pub base_position: Position,
 }
-#[derive(Default, Copy, Clone)]
+#[derive(Default, Copy, Clone, Debug)]
 pub enum PrintingDirection {
     #[default]
     Right,
@@ -37,50 +38,52 @@ impl From<PrintingDirection> for i32 {
     }
 }
 
-impl Machine {
-    pub fn new(sender: UnboundedSender<Instruction>) -> Self {
-        let pos = Position::default();
-        let base_pos = pos;
-        let resolution = Resolution::default();
-        let settings = Settings::default();
+impl<T: InstructionSender> Machine<T> {
+    pub fn new(sender: T) -> Self {
+        let position = Default::default();
+        let settings = Default::default();
         Self {
             sender,
-            base_pos,
-            pos,
-            resolution,
+            position,
             settings,
         }
     }
 
     pub fn current_position(&self) -> Position {
-        self.pos
+        self.position
     }
 
-    pub fn shutdown(&mut self) {
-        info!("stopping the machine");
-        self.transmit([Instruction::Halt].into_iter());
+    pub async fn shutdown(&mut self) {
+        self.transmit([Instruction::Halt].into_iter()).await;
     }
 
-    pub fn transmit(&mut self, instructions: impl Iterator<Item = Instruction>) {
+    pub async fn transmit(&self, instructions: impl Iterator<Item = Instruction>) {
         for item in instructions {
-            self.sender
-                .send(item)
-                .expect("the communication channel is closed");
+            self.sender.send(item).await;
         }
     }
 
-    pub fn print(&mut self, input: &str, db: impl DaisyDatabase) {
-        for symbol in input.to_symbols(db) {
-            let action = Action::new(symbol.clone(), self.settings, self.resolution);
-            let instructions = action.instructions(&self.base_pos, &mut self.pos);
-            self.transmit(instructions);
+    pub async fn print(&mut self, input: &str, db: impl DaisyDatabase + 'static) {
+        let symbols = input
+            .to_symbols(db)
+            .dedup_by_with_count(|x, y| x == y && x.is_groupable());
+
+        for (rep, symbol) in symbols {
+            let action = Action::new(symbol, &self.settings, rep, &self.position);
+            let target_pos = action.target_position();
+
+            for instr in action.instructions(&target_pos) {
+                self.sender.send(instr).await;
+            }
+            self.position = target_pos;
         }
     }
-    pub fn offset(&mut self, value: i16) {
-        self.transmit(move_relative(value, 0));
+
+    pub async fn offset(&mut self, value: i16) {
+        self.transmit(move_relative(value, 0)).await;
     }
 
-    pub fn send_empty_instruction(&mut self) {
-        self.transmit([].into_iter());
+    pub async fn send_empty_instruction(&mut self) {
+        self.transmit([].into_iter()).await;
     }
 }

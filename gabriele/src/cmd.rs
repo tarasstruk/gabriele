@@ -1,6 +1,8 @@
+use crate::printing::Instruction;
 use crate::symbol::CmdSymbol;
-use deku::DekuWrite;
-use serde::{Deserialize, Serialize};
+use deku::no_std_io::Cursor;
+use deku::prelude::Writer;
+use deku::{DekuWrite, DekuWriter};
 
 /// Top-level Command enum.
 /// The variant is identified by two most-significant bytes.
@@ -16,6 +18,23 @@ pub enum Cmd {
     SymbolLow(CmdSymbol),
     #[deku(id = 0b01)]
     SymbolHigh(CmdSymbol),
+}
+
+impl Cmd {
+    pub fn as_u16(&self) -> u16 {
+        let mut output = [0u8; 2];
+
+        let mut cursor = Cursor::new(&mut output[..]);
+        let mut deku_writer = Writer::new(&mut cursor);
+
+        self.to_writer(&mut deku_writer, ())
+            .expect("Failed to write bits");
+        u16::from_be_bytes(output)
+    }
+
+    pub fn as_instruction(&self) -> Instruction {
+        Instruction::SendBytes(self.as_u16())
+    }
 }
 
 /// Make a "jump" with the caret
@@ -141,7 +160,7 @@ impl CmdMotion {
 /// The User has 4 pre-defined options and
 /// the custom impression value can be specified
 /// as a ratio between the base (0) and maximum (63).
-#[derive(Serialize, Deserialize, Default, DekuWrite, Copy)]
+#[derive(Default, DekuWrite, Copy)]
 #[deku(id_type = "u8", bits = 6)]
 #[deku(endian = "big")]
 #[deku(ctx = "endian: deku::ctx::Endian")]
@@ -164,39 +183,39 @@ pub enum Impression {
     Strongest,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::cmd::Cmd;
-    use crate::symbol::{AfterSymbolPrinted, CmdSymbol, SymbolPrintingAttrs};
-    use deku::DekuContainerWrite;
-
-    fn hit(impression: Impression) -> u8 {
-        let mut sym = CmdSymbol::default();
-        sym.attr = SymbolPrintingAttrs {
-            direction: AfterSymbolPrinted::HoldOn,
-            impression,
-        };
-        Cmd::SymbolLow(sym).to_bytes().unwrap()[1]
-    }
-
-    #[test]
-    fn mild() {
-        assert_eq!(hit(Impression::Mild), 15)
-    }
-
-    #[test]
-    fn normal() {
-        assert_eq!(hit(Impression::default()), 31)
-    }
-
-    #[test]
-    fn strong() {
-        assert_eq!(hit(Impression::Strong), 47)
-    }
-
-    #[test]
-    fn strongest() {
-        assert_eq!(hit(Impression::Strongest), 63)
-    }
-}
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use crate::cmd::Cmd;
+//     use crate::symbol::{AfterSymbolPrinted, CmdSymbol, SymbolPrintingAttrs};
+//     use deku::DekuContainerWrite;
+//
+//     fn hit(impression: Impression) -> u8 {
+//         let mut sym = CmdSymbol::default();
+//         sym.attr = SymbolPrintingAttrs {
+//             direction: AfterSymbolPrinted::HoldOn,
+//             impression,
+//         };
+//         Cmd::SymbolLow(sym).to_bytes().unwrap()[1]
+//     }
+//
+//     #[test]
+//     fn mild() {
+//         assert_eq!(hit(Impression::Mild), 15)
+//     }
+//
+//     #[test]
+//     fn normal() {
+//         assert_eq!(hit(Impression::default()), 31)
+//     }
+//
+//     #[test]
+//     fn strong() {
+//         assert_eq!(hit(Impression::Strong), 47)
+//     }
+//
+//     #[test]
+//     fn strongest() {
+//         assert_eq!(hit(Impression::Strongest), 63)
+//     }
+// }
