@@ -5,7 +5,7 @@ use bytes::{Bytes, BytesMut};
 use gabriele::cmd::{Cmd, Impression};
 use gabriele::motion::move_relative;
 use gabriele::printing::Instruction;
-use gabriele::symbol::{AfterSymbolPrinted, CmdSymbol, Symbol, SymbolPrintingAttrs};
+use gabriele::symbol::{AfterSymbolPrinted, CmdSymbol, SymbolPrintingAttrs};
 use gabriele::{
     position::Position,
     resolution::{DEFAULT_X_RESOLUTION as X_RES, DEFAULT_Y_RESOLUTION as Y_RES},
@@ -23,9 +23,8 @@ fn hit(impression: Impression, direction: AfterSymbolPrinted) -> u8 {
 #[tokio::test]
 async fn prints_two_characters() {
     let mut app = TestApp::run(1234).await;
-    let db: &'static [Symbol] = &gabriele::wheels::standard::SYMBOLS;
 
-    app.machine.print("AT", db).await;
+    app.machine.print("AT").await;
 
     let hit = hit(Default::default(), Default::default());
 
@@ -54,8 +53,7 @@ async fn prints_two_characters() {
 #[tokio::test]
 async fn prints_special_character() {
     let mut app = TestApp::run(1235).await;
-    let db: &'static [Symbol] = &gabriele::wheels::standard::SYMBOLS;
-    app.machine.print("à", db).await;
+    app.machine.print("à").await;
 
     let first_hit = hit(Default::default(), AfterSymbolPrinted::HoldOn);
 
@@ -86,9 +84,8 @@ async fn prints_special_character() {
 #[tokio::test]
 async fn prints_character_with_a_newline() {
     let mut app = TestApp::run(1236).await;
-    let db: &'static [Symbol] = &gabriele::wheels::standard::SYMBOLS;
 
-    app.machine.print("A\n", db).await;
+    app.machine.print("A\n").await;
     app.machine.shutdown().await;
 
     let hit = crate::hit(Default::default(), AfterSymbolPrinted::MoveRight);
@@ -128,13 +125,12 @@ async fn prints_welcome_file() {
     let _ = env_logger::builder().is_test(true).try_init();
 
     let mut app = TestApp::run(1237).await;
-    let db: &'static [Symbol] = &gabriele::wheels::standard::SYMBOLS;
 
     let content = include_str!("../welcome.txt");
     let expected = Bytes::from_static(include_bytes!("../ref_output.bin"));
 
     app.machine.offset(4 * 12).await;
-    app.machine.print(content, db).await;
+    app.machine.print(content).await;
     app.halt().await;
 
     let mut buf = BytesMut::with_capacity(1024);

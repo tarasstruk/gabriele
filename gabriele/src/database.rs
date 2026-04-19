@@ -12,3 +12,9 @@ impl DaisyDatabase for &'static [Symbol] {
         panic!("Symbol not found");
     }
 }
+
+impl<T: DaisyDatabase + ?Sized> DaisyDatabase for &T {
+    fn get(&self, chr: char) -> &'static Symbol {
+        (*self).get(chr)
+    }
+}
