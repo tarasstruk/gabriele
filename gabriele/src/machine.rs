@@ -11,10 +11,11 @@ pub trait InstructionSender {
     async fn send(&self, instr: Instruction);
 }
 
-pub struct Machine<T: InstructionSender> {
+pub struct Machine<T: InstructionSender, D: DaisyDatabase + 'static> {
     sender: T,
     position: Position,
     settings: Settings,
+    db: D,
 }
 
 #[derive(Default, Copy, Clone, Debug)]
@@ -38,14 +39,15 @@ impl From<PrintingDirection> for i32 {
     }
 }
 
-impl<T: InstructionSender> Machine<T> {
-    pub fn new(sender: T) -> Self {
+impl<T: InstructionSender, D: DaisyDatabase + 'static> Machine<T, D> {
+    pub fn new(sender: T, db: D) -> Self {
         let position = Default::default();
         let settings = Default::default();
         Self {
             sender,
             position,
             settings,
+            db,
         }
     }
 
@@ -63,9 +65,9 @@ impl<T: InstructionSender> Machine<T> {
         }
     }
 
-    pub async fn print(&mut self, input: &str, db: impl DaisyDatabase + 'static) {
+    pub async fn print(&mut self, input: &str) {
         let symbols = input
-            .to_symbols(db)
+            .to_symbols(&self.db)
             .dedup_by_with_count(|x, y| x == y && x.is_groupable());
 
         for (rep, symbol) in symbols {

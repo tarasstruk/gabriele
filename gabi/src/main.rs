@@ -2,7 +2,6 @@ mod hal;
 pub use hal::Hal;
 
 use env_logger::{Builder, Target};
-use gabriele::database::DaisyDatabase;
 use gabriele::machine::Machine;
 use gabriele::printing::Instruction;
 use log::{debug, info};
@@ -27,17 +26,14 @@ struct Args {
     text: Option<String>,
 }
 
-async fn standard_in(
-    machine: &mut Machine<SenderWrapper>,
-    db: impl DaisyDatabase + 'static + Clone,
-) {
+async fn standard_in(machine: &mut Machine<SenderWrapper, &'static [Symbol]>) {
     debug!("Printing stdin");
     let stdin = io::stdin();
     for line in stdin.lines() {
         if let Ok(mut input) = line {
             if input != *"exit" {
                 input.push('\n');
-                machine.print(&input, db.clone()).await;
+                machine.print(&input).await;
             } else {
                 break;
             }
@@ -47,13 +43,9 @@ async fn standard_in(
     }
 }
 
-async fn print_file(
-    machine: &mut Machine<SenderWrapper>,
-    db: impl DaisyDatabase + 'static,
-    file_path: &str,
-) {
+async fn print_file(machine: &mut Machine<SenderWrapper, &'static [Symbol]>, file_path: &str) {
     let content = fs::read_to_string(file_path).unwrap();
-    machine.print(&content, db).await;
+    machine.print(&content).await;
 }
 
 #[tokio::main]
@@ -76,15 +68,14 @@ async fn main() {
     });
 
     info!("Machine is starting up");
-    let mut machine = Machine::new(SenderWrapper(tx));
-
     let db: &'static [Symbol] = &gabriele::wheels::standard::SYMBOLS;
+    let mut machine = Machine::new(SenderWrapper(tx), db);
 
     machine.offset(4 * 12).await;
 
     match args.text {
-        Some(path) => print_file(&mut machine, db, &path).await,
-        None => standard_in(&mut machine, db).await,
+        Some(path) => print_file(&mut machine, &path).await,
+        None => standard_in(&mut machine).await,
     };
 
     machine.shutdown().await;
